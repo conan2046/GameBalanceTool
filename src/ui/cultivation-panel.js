@@ -86,26 +86,26 @@ function _buildBranchCard(line, b) {
   var refineSummary = isRefine ? buildRefineSummary(b, costs, attrs) : '';
 
   var item = document.createElement('div');
-  item.className = 'rule-item';
+  item.className = 'cult-branch-card';
   item.innerHTML =
-    '<div class="rule-badge">'+(isRefine ? '精炼' : '分支')+'</div>' +
-    '<div class="rule-name" style="font-size:14px;font-weight:700">' + b.name + '</div>' +
-    '<div class="rule-lvl" style="display:flex;align-items:center;gap:6px;margin:4px 0">' +
-      '<span style="font-size:12px;color:var(--text3)">等级上限</span>' +
-      '<span style="font-size:14px;color:var(--warning);font-weight:700">第' + b.maxLevel + '级</span>' +
+    '<div class="cult-branch-head">' +
+      '<div class="cult-branch-title">' +
+        '<span class="badge badge-w">'+(isRefine ? '精炼' : '分支')+'</span>' +
+        '<span class="cult-branch-name">' + b.name + '</span>' +
+        '<span class="cult-branch-limit">等级上限: <b style="color:var(--warning)">第' + b.maxLevel + '级</b></span>' +
+      '</div>' +
+      '<div class="cult-branch-actions">' +
+        '<button class="btn btn-ghost btn-xs" onclick="previewBranchCurve(\''+line.id+'\',\''+b.id+'\')">预览曲线</button>' +
+        '<button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">编辑</button>' +
+        '<button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">删除</button>' +
+      '</div>' +
     '</div>' +
-    '<div class="rule-cost" style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px;color:var(--text2)">' +
-      costHtml +
-    '</div>' +
-    '<div class="rule-attr" style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px">' +
-      attrHtml +
+    '<div class="cult-branch-meta">' +
+      '<div>每级消耗: '+costHtml+'</div>' +
+      '<div>属性增益: '+attrHtml+'</div>' +
     '</div>' +
     refineSummary +
-    '<div style="display:flex;gap:4px;justify-content:flex-end;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">' +
-      '<button class="btn btn-ghost btn-xs" onclick="previewBranchCurve(\''+line.id+'\',\''+b.id+'\')">预览曲线</button>' +
-      '<button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">编辑</button>' +
-      '<button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">删除</button>' +
-    '</div>';
+    '';
 
   return item;
 }

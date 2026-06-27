@@ -98,11 +98,19 @@ textarea.fc{resize:vertical;min-height:70px}
 .toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:6px;color:#fff;font-size:13px;z-index:2000;box-shadow:var(--sh);animation:fadeIn .2s}
 .toast.s{background:var(--success);color:#0f1117}.toast.e{background:var(--danger)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.cult-row{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);margin-bottom:8px}
-.cult-hd{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.cult-lb{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.cult-row{padding:0;border:1px solid var(--border);border-radius:6px;background:var(--bg2);margin:0 auto 10px;max-width:760px;box-shadow:0 0 18px rgba(47,130,255,.22)}
+.cult-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:12px 14px;border-bottom:1px solid var(--border)}
+.cult-lb{display:none;padding:10px 12px 14px}
 .cult-lb.open{display:block}
 .rule-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px}
+.cult-branch-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px}
+.cult-branch-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.cult-branch-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.cult-branch-name{font-size:13px;font-weight:700;color:var(--accent2)}
+.cult-branch-limit{font-size:12px;color:var(--text2)}
+.cult-branch-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)}
+.cult-branch-actions{display:flex;gap:4px;flex:0 0 auto}
+@media(max-width:760px){.cult-row{max-width:none}.cult-hd,.cult-branch-head{align-items:flex-start;flex-direction:column}.cult-branch-actions{align-self:flex-end}}
 .sim-grid{display:grid;grid-template-columns:280px 1fr;gap:16px;height:100%;overflow:hidden}
 @media(max-width:900px){.sim-grid{grid-template-columns:1fr;overflow-y:auto}}
 .sim-left{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
@@ -342,8 +350,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.28</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">装备槽位卡片修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.29</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成线卡片布局回退版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -1785,7 +1793,7 @@ function rCult(){
         var costs=b.consumes||(b.resId?[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}]:[]);
         var attrs=b.gains||(b.attrId?[{attrId:b.attrId,val:b.attrVal||10}]:[]);
         var isRefine = (b.id === 'b_refine');
-        var item=document.createElement('div');item.className='rule-item';
+        var item=document.createElement('div');item.className='cult-branch-card';
         var costHtml=costs.map(function(c){
           var res=S.resources?S.resources.find(function(x){return x.id===c.resId;}):null;
           var cv=S.curves?S.curves.find(function(x){return x.id===c.cvId;}):null;
@@ -1818,11 +1826,11 @@ function rCult(){
             +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">归属模型</span><b style="display:block;color:var(--accent2)">三层养成线</b></div>'
             +'</div>';
         }
-        item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-          +'<div><span class="badge badge-w">'+badgeLabel+'</span> <b style="font-size:13px;color:var(--accent2)">'+b.name+'</b> <span style="color:var(--text2);font-size:12px;margin-left:8px">等级上限: '+b.maxLevel+'级</span></div>'
-          +'<div><button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">'+btnLabel+'</button> <button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">'+delLabel+'</button></div>'
+        item.innerHTML='<div class="cult-branch-head">'
+          +'<div class="cult-branch-title"><span class="badge badge-w">'+badgeLabel+'</span> <b class="cult-branch-name">'+b.name+'</b> <span class="cult-branch-limit">等级上限: <b style="color:var(--warning)">第'+b.maxLevel+'级</b></span></div>'
+          +'<div class="cult-branch-actions"><button class="btn btn-ghost btn-xs" onclick="previewBranchCurve(\''+line.id+'\',\''+b.id+'\')">预览曲线</button> <button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">'+btnLabel+'</button> <button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">'+delLabel+'</button></div>'
           +'</div>'
-          +'<div style="display:flex;gap:16px;font-size:12px;color:var(--text2);flex-wrap:wrap">'
+          +'<div class="cult-branch-meta">'
           +'<div>每级消耗: '+costHtml+'</div>'
           +'<div>属性增益: '+attrHtml+'</div></div>'
           +refineSummary;
@@ -3572,6 +3580,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.28"></script>
+<script type="module" src="src/index-loader.js?v=3.10.29"></script>
 </body>
 </html>
