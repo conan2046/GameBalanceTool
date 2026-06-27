@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 
-test('project versioning restores current v3.6 envelopes', () => {
+test('project versioning restores current v3.7 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -10,7 +10,7 @@ test('project versioning restores current v3.6 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.6.0');
+  expect(restored.to).toBe('3.7.0');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -20,6 +20,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.7.0');
+  await expect(page.locator('#app-release-name')).toHaveText('界面维护版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
 
   await page.locator('.tab[data-p="panel-curve"]').click();

@@ -1,5 +1,5 @@
 /**
- * GBT v3.6 — Project Scenario Panel
+ * GBT v3.7 — Project Scenario Panel
  * 管理工程内置多方案数据结构，供 ROI/Simulator/导入导出共用。
  */
 import { ProjectState } from '../core/project-state.js';

@@ -1,4 +1,4 @@
-# GameBalanceTool V3.6 使用手册
+# GameBalanceTool V3.7.0 使用手册
 
 ## 1. 快速启动
 
@@ -144,7 +144,7 @@ Get-NetTCPConnection -LocalPort 8080 -State Listen
 
 ## 7. 版本历史
 
-V3.1 到 V3.6 的版本报告已整合到：
+V3.1 到 V3.7 的版本报告已整合到：
 
 ```text
 docs/VERSION_HISTORY.md

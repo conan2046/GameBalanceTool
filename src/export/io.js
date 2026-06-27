@@ -1,11 +1,11 @@
 /**
- * GBT v3.6 — JSON导出/导入 + 版本化工程封包
+ * GBT v3.7 — JSON导出/导入 + 版本化工程封包
  */
 
 import { initDB, saveGame, loadGame } from './db.js';
 import { createProjectEnvelope, normalizeImportedProject, downloadJSON, PROJECT_VERSION } from '../core/project-versioning.js';
 
-export function exportToFile(gameData, filename = 'gbt_project_v3.6.json') {
+export function exportToFile(gameData, filename = `gbt_project_v${PROJECT_VERSION}.json`) {
   downloadJSON(gameData, filename);
 }
 

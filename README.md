@@ -1,6 +1,8 @@
-# GameBalanceTool V3.6
+# GameBalanceTool V3.7.0
 
 游戏数值模拟平台，用于属性、职业、境界、装备、养成、经济、曲线、战斗、ROI 和多方案工程版本化管理。
+
+当前版本：`v3.7.0 界面维护版`
 
 ## 快速启动
 
@@ -31,7 +33,8 @@ http://127.0.0.1:8080/
 |---|---|
 | [docs/USER_MANUAL.md](docs/USER_MANUAL.md) | 日常使用、启动、模块说明、导入导出、常见问题 |
 | [docs/TECHNICAL_MANUAL.md](docs/TECHNICAL_MANUAL.md) | 项目结构、状态源、维护边界、测试命令 |
-| [docs/VERSION_HISTORY.md](docs/VERSION_HISTORY.md) | V3.1 到 V3.6 的版本演进记录 |
+| [docs/VERSIONING_POLICY.md](docs/VERSIONING_POLICY.md) | 版本号规则、发版流程、同步清单 |
+| [docs/VERSION_HISTORY.md](docs/VERSION_HISTORY.md) | V3.1 到 V3.7 的版本演进记录 |
 | [docs/FUNCTION_TEST_REPORT.md](docs/FUNCTION_TEST_REPORT.md) | 全功能清单与模块自测报告 |
 
 ## 常用命令

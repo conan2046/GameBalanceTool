@@ -1,13 +1,15 @@
 import { clonePaymentConfig } from '../data/payment-defaults.js';
 
 /**
- * GBT v3.6 — Project Versioning
+ * GBT v3.7 — Project Versioning
  * 统一工程封包、版本号、导入导出迁移入口。
  */
 
 export const PROJECT_SCHEMA = 'gbt-project';
-export const PROJECT_VERSION = '3.6.0';
-export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0'];
+export const PROJECT_VERSION = '3.7.0';
+export const APP_VERSION_LABEL = `v${PROJECT_VERSION}`;
+export const APP_RELEASE_NAME = '界面维护版';
+export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0'];
 
 function clone(data) { return JSON.parse(JSON.stringify(data || {})); }
 function nowISO() { return new Date().toISOString(); }
@@ -131,7 +133,7 @@ export function normalizeImportedProject(input) {
   return { data: normalized, from, to: PROJECT_VERSION };
 }
 
-export function downloadJSON(payload, filename = 'gbt_project_v3.6.json') {
+export function downloadJSON(payload, filename = `gbt_project_v${PROJECT_VERSION}.json`) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

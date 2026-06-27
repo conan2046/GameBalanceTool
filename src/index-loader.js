@@ -26,6 +26,7 @@ import { drawLineChart, drawBarChart, drawPieChart, drawMixedChart, drawCultivat
 import { initDB, saveGame, loadGame, listSaves, deleteSave, autoSave } from './export/db.js';
 import { exportVersionedProject, importVersionedProject } from './export/io.js';
 import { ProjectState } from './core/project-state.js';
+import { APP_RELEASE_NAME, APP_VERSION_LABEL, PROJECT_VERSION } from './core/project-versioning.js';
 import { EventBus } from './core/event-bus.js';
 import { patchV3Snapshot } from './export/migration.js';
 import { calcDamage, simulateCombat, simulateRoundBattle } from './engine/combat.js';
@@ -34,6 +35,14 @@ import { installBranchEditor, openBranchModal, addBranchCostRow, addBranchAttrRo
 import { initSimulatorPanel, runSimulationV34, roiResetAllV34, roiInvestV34, roiAutoInvestV34, roiAdvanceDayV34, roiRenderAllV34 } from './ui/simulator-panel.js';
 import { initProjectScenarioPanel, renderProjectScenarioPanel } from './ui/project-scenario-panel.js';
 import { initPaymentPanel, renderPaymentPanel } from './ui/payment-panel.js';
+
+function applyAppVersionUI() {
+  const versionEl = document.getElementById('app-version-label');
+  if (versionEl) versionEl.textContent = APP_VERSION_LABEL;
+  const releaseEl = document.getElementById('app-release-name');
+  if (releaseEl) releaseEl.textContent = APP_RELEASE_NAME;
+  document.documentElement.dataset.appVersion = PROJECT_VERSION;
+}
 
 // ── 2. 挂载到 window — 让 inline onclick 可调用 ───────────
 
@@ -130,7 +139,7 @@ function getV3Snapshot() {
   const base = ProjectState.snapshot({ from: '3.5' });
   return {
     ...base,
-    version: '3.6',
+    version: PROJECT_VERSION,
     timestamp: Date.now(),
     v2State: ProjectState.snapshot(),
     realms: JSON.parse(JSON.stringify(REALM_DATA)),
@@ -207,7 +216,7 @@ async function importV3Data() {
     try {
       const imported = await importVersionedProject(file);
       const data = imported.data;
-      ProjectState.restore(data, 'json-import-v3.6');
+      ProjectState.restore(data, `json-import-v${PROJECT_VERSION}`);
       restoreV3Snapshot(data);
       // 重新渲染所有面板
       initClassPanel();
@@ -215,7 +224,7 @@ async function importV3Data() {
       initEquipmentPanel();
       initEconomyPanel();
       initProjectScenarioPanel();
-      if (typeof toast === 'function') toast('v3.6 版本化工程导入成功');
+      if (typeof toast === 'function') toast(`${APP_VERSION_LABEL} 版本化工程导入成功`);
     } catch (err) {
       if (typeof toast === 'function') toast('导入失败: ' + err.message, 'e');
     }
@@ -293,13 +302,14 @@ function initV3Panels() {
 
 // 拦截原有 tab click：在切换后调用 v3.0 面板初始化
 document.addEventListener('DOMContentLoaded', async () => {
+  applyAppVersionUI();
   // 初始化 IndexedDB
   try {
     await initDB();
     ProjectState.bind(getLegacyState(), { saveAdapter: saveGame });
     console.log('[v3.1] IndexedDB 已就绪，ProjectState 已绑定');
 
-    // 尝试恢复上一次存档；v3.6 之后统一走版本化封包迁移入口。
+    // 尝试恢复上一次存档；v3.7 之后统一走版本化封包迁移入口。
     const saved = await loadGame('v3main');
     if (saved && (saved.schema === 'gbt-project' || saved.schema === 'gbt-project-state' || saved.v2State || saved.data)) {
       ProjectState.restore(saved, 'idb-restore');
