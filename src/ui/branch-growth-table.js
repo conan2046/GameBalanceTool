@@ -53,6 +53,7 @@ export function renderBranchGrowthTable(containerId, S, branchRaw) {
         </div>
       </div>
     </div>`;
+  if (typeof window.initCollapsibleSections === 'function') window.initCollapsibleSections(el);
 }
 
 export default renderBranchGrowthTable;

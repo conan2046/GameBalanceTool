@@ -320,6 +320,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initV3Panels();
 
   // 监听 tab 切换 - 补充 v3.0 面板初始化
+  if (typeof window.initCollapsibleSections === 'function') setTimeout(() => window.initCollapsibleSections(document), 80);
+
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => {
       const p = t.dataset.p;
@@ -342,6 +344,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.S && window.S.curves) {
           setTimeout(function(){ drawCurveComparison('cv-compare', window.S.curves, 20); }, 100);
         }
+      }
+      if (typeof window.initCollapsibleSections === 'function') {
+        setTimeout(() => window.initCollapsibleSections(document.getElementById(p)), 120);
       }
     });
   });

@@ -30,6 +30,21 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();
   await expect(page.locator('#realm-metrics')).not.toBeEmpty();
   await expect(page.locator('#cult-tree')).not.toBeEmpty();
+  const cultSectionState = await page.locator('#panel-cult').evaluate(panel => {
+    const sections = Array.from(panel.querySelectorAll('.section'));
+    return {
+      count: sections.length,
+      firstThreeOpen: sections.slice(0, 3).every(section => !section.classList.contains('is-collapsed')),
+      fourthCollapsed: sections[3]?.classList.contains('is-collapsed') || false,
+      toggleCount: sections.filter(section => section.querySelector(':scope > .section-header > .section-collapse-toggle')).length,
+    };
+  });
+  expect(cultSectionState.count).toBeGreaterThan(3);
+  expect(cultSectionState.firstThreeOpen).toBe(true);
+  expect(cultSectionState.fourthCollapsed).toBe(true);
+  expect(cultSectionState.toggleCount).toBe(cultSectionState.count);
+  await page.locator('#panel-cult .section').nth(3).locator(':scope > .section-header').click();
+  await expect(page.locator('#panel-cult .section').nth(3)).not.toHaveClass(/is-collapsed/);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

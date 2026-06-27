@@ -43,6 +43,7 @@ export function runSimulationV34() {
       <span style="font-size:12px;color:var(--text3);font-weight:600">各系统及分支最终进阶级别评估</span><div style="background:var(--bg3);border-radius:6px;padding:6px">${cultHTML}</div>
     </div></div>`;
   target.style.display = 'flex';
+  if (typeof window.initCollapsibleSections === 'function') window.initCollapsibleSections(target);
   return result;
 }
 
