@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.1 envelopes', () => {
+test('project versioning restores current v3.10.2 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.1 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.1');
+  expect(restored.to).toBe('3.10.2');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.1');
-  await expect(page.locator('#app-release-name')).toHaveText('战斗配置布局修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.2');
+  await expect(page.locator('#app-release-name')).toHaveText('战力层级折叠修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -123,6 +123,13 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#combat-target-parser')).not.toContainText('守方目标属性');
   await expect(page.locator('#combat-target-parser')).toContainText('战力解析结果');
   await expect(page.locator('.combat-result-grid')).toBeVisible();
+  await expect(page.locator('#combat-tier-section .section-collapse-toggle')).toHaveCount(1);
+  await expect(page.locator('#combat-tier-section .section-body')).toBeVisible();
+  await page.locator('#combat-tier-section .section-collapse-toggle').click();
+  await expect(page.locator('#combat-tier-section')).toHaveClass(/is-collapsed/);
+  await expect(page.locator('#combat-tier-section .section-body')).not.toBeVisible();
+  await page.locator('#combat-tier-section .section-collapse-toggle').click();
+  await expect(page.locator('#combat-tier-section')).not.toHaveClass(/is-collapsed/);
   await expect(page.locator('#cb-battle-stage .fighter-header button', { hasText: '编辑' })).toHaveCount(2);
 
   const defaultMaxDamage = await page.locator('#cb-dmg-max').textContent();

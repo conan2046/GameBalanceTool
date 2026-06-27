@@ -307,8 +307,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.1</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战斗配置布局修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.2</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战力层级折叠修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -809,17 +809,21 @@ textarea.fc{resize:vertical;min-height:70px}
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">战力层级划分分位参考表（战力分段阈值与对应评级）</div>
-        <div class="tbl-wrap">
-          <table class="tbl" id="tbl-cb-tier">
-            <thead><tr><th>战力分层</th><th>战力阈值</th><th>建议付费分层</th><th>评级颜色</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <div class="section" id="combat-tier-section">
+        <div class="section-header">
+          <span class="section-title">战力层级划分分位参考表（战力分段阈值与对应评级）</span>
         </div>
-        <div class="btn-group" style="margin-top:10px">
-          <button class="btn btn-ghost btn-xs" onclick="addCombatTier()">新增层级</button>
-          <button class="btn btn-ghost btn-xs" onclick="resetCombatTier()">恢复默认7档</button>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="tbl" id="tbl-cb-tier">
+              <thead><tr><th>战力分层</th><th>战力阈值</th><th>建议付费分层</th><th>评级颜色</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="btn-group" style="margin-top:10px">
+            <button class="btn btn-ghost btn-xs" onclick="addCombatTier()">新增层级</button>
+            <button class="btn btn-ghost btn-xs" onclick="resetCombatTier()">恢复默认7档</button>
+          </div>
         </div>
       </div>
     </div>
