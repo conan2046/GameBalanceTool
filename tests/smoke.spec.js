@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.21 envelopes', () => {
+test('project versioning restores current v3.10.22 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.21 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.21');
+  expect(restored.to).toBe('3.10.22');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.21');
-  await expect(page.locator('#app-release-name')).toHaveText('兑换比率配置修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.22');
+  await expect(page.locator('#app-release-name')).toHaveText('产出模型行编辑修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -217,6 +217,18 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   const exchangeCardCountAfterAdd = await page.locator('#exchange-rates .exchange-rate-card').count();
   await page.locator('#exchange-rates .exchange-rate-card').last().locator('button[onclick^="deleteExchangeRate"]').click();
   await expect(page.locator('#exchange-rates .exchange-rate-card')).toHaveCount(exchangeCardCountAfterAdd - 1);
+
+  await page.locator('#eco-output-section .section-collapse-toggle').click();
+  await expect(page.locator('#eco-output-section')).not.toHaveClass(/is-collapsed/);
+  await expect(page.locator('#tbl-eco-config')).toContainText('编辑');
+  await expect(page.locator('#tbl-eco-config')).toContainText('删除');
+  await page.locator('#tbl-eco-config button[onclick="editEcoOutputRow(\\\'r1\\\')"]').click();
+  await page.locator('#tbl-eco-config input[data-rid="r1"][onchange*="dayProd"]').fill('3333');
+  await page.locator('#tbl-eco-config button[onclick="saveEcoOutputRow(\\\'r1\\\')"]').click();
+  await expect(page.locator('#tbl-eco-config')).toContainText('3333');
+  const ecoOutputRowCount = await page.locator('#tbl-eco-config tbody tr').count();
+  await page.locator('#tbl-eco-config button[onclick="deleteEcoOutputRow(\\\'r1\\\')"]').click();
+  await expect(page.locator('#tbl-eco-config tbody tr')).toHaveCount(ecoOutputRowCount - 1);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

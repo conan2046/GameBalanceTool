@@ -96,6 +96,140 @@ window.cancelExchangeRateEdit = cancelExchangeRateEdit;
 window.deleteExchangeRate = deleteExchangeRate;
 window.resetExchangeRates = resetExchangeRates;
 
+let editingEcoOutputResourceId = '';
+
+function ensureEcoOutputConfig(state) {
+  if (!state.ecoConfig) state.ecoConfig = {};
+  if (!Array.isArray(state.ecoDisabledResources)) state.ecoDisabledResources = [];
+  (state.resources || []).forEach(resource => {
+    if (!state.ecoConfig[resource.id]) {
+      state.ecoConfig[resource.id] = {
+        dayProd: 100,
+        smallR: 1.5,
+        midR: 2.5,
+        bigR: 4,
+        superR: 6,
+        maxLimit: 500
+      };
+    }
+  });
+}
+
+function saveEcoOutputField(el, field) {
+  const state = getLegacyState();
+  ensureEcoOutputConfig(state);
+  const resourceId = el.dataset.rid;
+  if (!state.ecoConfig[resourceId]) return;
+  const value = parseFloat(el.value);
+  state.ecoConfig[resourceId][field] = Number.isFinite(value) ? value : 0;
+}
+
+function collectEcoOutputInputs(resourceId) {
+  const state = getLegacyState();
+  ensureEcoOutputConfig(state);
+  const fields = ['dayProd', 'smallR', 'midR', 'bigR', 'superR', 'maxLimit'];
+  fields.forEach(field => {
+    const input = document.querySelector(`#tbl-eco-config input[data-rid="${resourceId}"][onchange*="${field}"]`);
+    if (!input) return;
+    const value = parseFloat(input.value);
+    state.ecoConfig[resourceId][field] = Number.isFinite(value) ? value : 0;
+  });
+}
+
+function renderEcoOutputPanel() {
+  const state = getLegacyState();
+  const tbody = document.querySelector('#tbl-eco-config tbody');
+  if (!tbody) return;
+  ensureEcoOutputConfig(state);
+  const resources = (state.resources || []).filter(resource => !state.ecoDisabledResources.includes(resource.id));
+  if (!resources.length) {
+    const emptyText = (state.resources || []).length ? '当前产出模型暂无启用资源' : '请先在资源管理页签添加核心资源';
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text2);padding:30px">${emptyText}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = resources.map(resource => {
+    const cfg = state.ecoConfig[resource.id] || {};
+    if (editingEcoOutputResourceId === resource.id) {
+      const input = (field, step, width) => `<input type="number" ${step ? `step="${step}"` : ''} class="fc eco-output-input" value="${cfg[field] ?? 0}" data-rid="${resource.id}" onchange="saveEcoCfg(this,'${field}')" style="font-size:12px;width:${width}px;text-align:center">`;
+      return `<tr>
+        <td><span class="badge badge-t">${resource.id}</span></td>
+        <td><b style="color:var(--accent);font-size:13px">${resource.name}</b></td>
+        <td>${input('dayProd', '', 90)}</td>
+        <td>${input('smallR', '0.1', 65)}</td>
+        <td>${input('midR', '0.1', 65)}</td>
+        <td>${input('bigR', '0.1', 65)}</td>
+        <td>${input('superR', '0.1', 65)}</td>
+        <td>${input('maxLimit', '', 90)}</td>
+        <td><div class="btn-group"><button class="btn btn-primary btn-xs" onclick="saveEcoOutputRow('${resource.id}')">保存</button><button class="btn btn-ghost btn-xs" onclick="cancelEcoOutputEdit()">取消</button></div></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td><span class="badge badge-t">${resource.id}</span></td>
+      <td><b style="color:var(--accent);font-size:13px">${resource.name}</b></td>
+      <td>${cfg.dayProd ?? 0}</td>
+      <td>${cfg.smallR ?? 0}</td>
+      <td>${cfg.midR ?? 0}</td>
+      <td>${cfg.bigR ?? 0}</td>
+      <td>${cfg.superR ?? 0}</td>
+      <td>${cfg.maxLimit ?? 0}</td>
+      <td><div class="btn-group"><button class="btn btn-ghost btn-xs" onclick="editEcoOutputRow('${resource.id}')">编辑</button><button class="btn btn-danger btn-xs" onclick="deleteEcoOutputRow('${resource.id}')">删除</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function editEcoOutputRow(resourceId) {
+  editingEcoOutputResourceId = resourceId;
+  renderEcoOutputPanel();
+}
+
+function cancelEcoOutputEdit() {
+  editingEcoOutputResourceId = '';
+  renderEcoOutputPanel();
+}
+
+function saveEcoOutputRow(resourceId) {
+  collectEcoOutputInputs(resourceId);
+  editingEcoOutputResourceId = '';
+  renderEcoOutputPanel();
+  const state = getLegacyState();
+  if (window.ProjectState) {
+    window.ProjectState.bind(state);
+    window.ProjectState.persist('eco-output-save');
+  } else if (typeof save === 'function') save();
+  if (typeof toast === 'function') toast('产出配置已保存');
+}
+
+function deleteEcoOutputRow(resourceId) {
+  const state = getLegacyState();
+  ensureEcoOutputConfig(state);
+  if (!state.ecoDisabledResources.includes(resourceId)) state.ecoDisabledResources.push(resourceId);
+  if (editingEcoOutputResourceId === resourceId) editingEcoOutputResourceId = '';
+  renderEcoOutputPanel();
+  if (window.ProjectState) {
+    window.ProjectState.bind(state);
+    window.ProjectState.persist('eco-output-delete');
+  } else if (typeof save === 'function') save();
+}
+
+function saveEcoOutputData() {
+  editingEcoOutputResourceId = '';
+  renderEcoOutputPanel();
+  const state = getLegacyState();
+  if (window.ProjectState) {
+    window.ProjectState.bind(state);
+    window.ProjectState.persist('eco-output-lock');
+  } else if (typeof save === 'function') save();
+  if (typeof toast === 'function') toast('产出数据已锁定');
+}
+
+window.saveEcoCfg = saveEcoOutputField;
+window.renderEconomyPanel = renderEcoOutputPanel;
+window.editEcoOutputRow = editEcoOutputRow;
+window.cancelEcoOutputEdit = cancelEcoOutputEdit;
+window.saveEcoOutputRow = saveEcoOutputRow;
+window.deleteEcoOutputRow = deleteEcoOutputRow;
+window.saveEconomyData = saveEcoOutputData;
+
 // 导出/持久化
 window.exportV3Data = exportV3Data;
 window.importV3Data = importV3Data;
@@ -234,6 +368,7 @@ async function importV3Data() {
       initRealmPanel();
       initEquipmentPanel();
       initEconomyPanel();
+      renderEcoOutputPanel();
       initProjectScenarioPanel();
       if (typeof toast === 'function') toast(`${APP_VERSION_LABEL} 版本化工程导入成功`);
     } catch (err) {
@@ -303,6 +438,7 @@ function initV3Panels() {
   // initRealmPanel — 由 inline script 的渲染函数接管
   initEquipmentPanel();
   initEconomyPanel();
+  renderEcoOutputPanel();
   initCurveLibraryPanel();
   installBranchEditor();
   initSimulatorPanel();
@@ -354,7 +490,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderCultPanel();
         initEquipmentPanel();
       }
-      if (p === 'panel-eco') initEconomyPanel();
+      if (p === 'panel-eco') {
+        initEconomyPanel();
+        renderEcoOutputPanel();
+      }
       if (p === 'panel-sim') { initSimulatorPanel(); initProjectScenarioPanel(); }
       if (p === 'panel-payment') initPaymentPanel();
       if (p === 'panel-curve') {
