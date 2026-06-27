@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.19 envelopes', () => {
+test('project versioning restores current v3.10.20 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.19 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.19');
+  expect(restored.to).toBe('3.10.20');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.19');
-  await expect(page.locator('#app-release-name')).toHaveText('曲线图表清晰修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.20');
+  await expect(page.locator('#app-release-name')).toHaveText('经济配置行编辑修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -183,6 +183,24 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#eco-currency-section')).toHaveClass(/is-collapsed/);
   await page.locator('#eco-currency-section .section-collapse-toggle').click();
   await expect(page.locator('#eco-currency-section')).not.toHaveClass(/is-collapsed/);
+  await expect(page.locator('#currency-table')).toContainText('编辑');
+  await expect(page.locator('#vip-table')).toContainText('编辑');
+  await page.locator('#currency-table button[onclick="editCurrency(\\\'real_money\\\')"]').click();
+  await page.locator('#eco-cur-name-real_money').fill('测试货币');
+  await page.locator('#eco-cur-tier-real_money').fill('8');
+  await page.locator('#eco-cur-purpose-real_money').fill('测试用途');
+  await page.locator('#eco-cur-source-real_money').fill('测试来源');
+  await page.locator('#eco-cur-rate-real_money').fill('测试兑换');
+  await page.locator('#currency-table button[onclick="saveCurrency(\\\'real_money\\\')"]').click();
+  await expect(page.locator('#currency-table')).toContainText('测试货币');
+  await expect(page.locator('#currency-table')).toContainText('第8层');
+  await expect(page.locator('#currency-table')).toContainText('测试兑换');
+  await page.locator('#vip-table button[onclick="editVip(1)"]').click();
+  await page.locator('#eco-vip-cumulative-1').fill('188');
+  await page.locator('#eco-vip-perk-1').fill('测试特权');
+  await page.locator('#vip-table button[onclick="saveVip(1)"]').click();
+  await expect(page.locator('#vip-table')).toContainText('¥188');
+  await expect(page.locator('#vip-table')).toContainText('测试特权');
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

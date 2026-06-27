@@ -16,7 +16,7 @@ import { CURRENCY_DATA } from './data/currencies.js';
 import { initClassPanel, selectClass, toggleDamageType, addClass, deleteClass, addDamageType, deleteDamageType, editClass, saveClass, setSimCount, setClassLevel } from './ui/class-panel.js';
 import { initRealmPanel, switchRealmType, selectRealm, updateRealmField, renderRealmDiffTable, addRealm, deleteRealm, resetRealms } from './ui/realm-panel.js';
 import { initEquipmentPanel, previewQualityEffect, calcEquipTotalPower, updateRefineDisplay, addSlot, deleteSlot, resetEquipment, openSlotModal, saveSlotModal } from './ui/equipment-panel.js';
-import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, deleteCurrency, resetCurrencies, addVip, deleteVip, resetVip } from './ui/economy-panel.js';
+import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, editCurrency, saveCurrency, cancelCurrencyEdit, deleteCurrency, resetCurrencies, addVip, editVip, saveVip, cancelVipEdit, deleteVip, resetVip } from './ui/economy-panel.js';
 import { renderCultPanel, toggleLine, previewBranchCurve } from './ui/cultivation-panel.js';
 import { ATTRS, ATTR_MAP } from './data/attrs.js';
 
@@ -78,9 +78,15 @@ window.EQUIPMENT_DATA = EQUIPMENT_DATA;
 // Tab6: 经济
 window.initEconomyPanel = initEconomyPanel;
 window.addCurrency = addCurrency;
+window.editCurrency = editCurrency;
+window.saveCurrency = saveCurrency;
+window.cancelCurrencyEdit = cancelCurrencyEdit;
 window.deleteCurrency = deleteCurrency;
 window.resetCurrencies = resetCurrencies;
 window.addVip = addVip;
+window.editVip = editVip;
+window.saveVip = saveVip;
+window.cancelVipEdit = cancelVipEdit;
 window.deleteVip = deleteVip;
 window.resetVip = resetVip;
 

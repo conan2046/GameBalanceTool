@@ -5,6 +5,19 @@
 
 import { CURRENCY_DATA, getExchangeRates } from '../data/currencies.js';
 
+let editingCurrencyId = '';
+let editingVipLevel = null;
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
 /**
  * 初始化经济面板
  */
@@ -21,18 +34,37 @@ function renderCurrencyTable() {
   const tbody = document.getElementById('currency-table');
   if (!tbody) return;
 
-  tbody.innerHTML = CURRENCY_DATA.tiers.map(c => `
-    <tr>
-      <td><b>${c.name}</b></td>
-      <td>第${c.tier}层</td>
-      <td>${c.purpose}</td>
-      <td>${c.source}</td>
-      <td><code>${c.exchangeRate}</code></td>
-      <td><button class="btn btn-danger btn-xs" onclick="deleteCurrency('${c.id}')">删除</button></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = CURRENCY_DATA.tiers.map(c => {
+    if (editingCurrencyId === c.id) {
+      return `
+        <tr class="editing-row">
+          <td><input class="fc eco-edit-input" id="eco-cur-name-${c.id}" value="${esc(c.name)}"></td>
+          <td><input class="fc eco-edit-input" id="eco-cur-tier-${c.id}" type="number" min="1" value="${Number(c.tier) || 1}"></td>
+          <td><input class="fc eco-edit-input" id="eco-cur-purpose-${c.id}" value="${esc(c.purpose)}"></td>
+          <td><input class="fc eco-edit-input" id="eco-cur-source-${c.id}" value="${esc(c.source)}"></td>
+          <td><input class="fc eco-edit-input" id="eco-cur-rate-${c.id}" value="${esc(c.exchangeRate)}"></td>
+          <td>
+            <button class="btn btn-primary btn-xs" onclick="saveCurrency('${c.id}')">\u4fdd\u5b58</button>
+            <button class="btn btn-ghost btn-xs" onclick="cancelCurrencyEdit()">\u53d6\u6d88</button>
+          </td>
+        </tr>
+      `;
+    }
+    return `
+      <tr>
+        <td><b>${esc(c.name)}</b></td>
+        <td>\u7b2c${Number(c.tier) || 1}\u5c42</td>
+        <td>${esc(c.purpose)}</td>
+        <td>${esc(c.source)}</td>
+        <td><code>${esc(c.exchangeRate)}</code></td>
+        <td>
+          <button class="btn btn-ghost btn-xs" onclick="editCurrency('${c.id}')">\u7f16\u8f91</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteCurrency('${c.id}')">\u5220\u9664</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
-
 /**
  * 渲染VIP等级表
  */
@@ -40,16 +72,33 @@ function renderVipTable() {
   const tbody = document.getElementById('vip-table');
   if (!tbody) return;
 
-  tbody.innerHTML = CURRENCY_DATA.vipThresholds.map(v => `
-    <tr>
-      <td><span class="badge badge-a">贵宾${v.level}级</span></td>
-      <td>¥${v.cumulative.toLocaleString()}</td>
-      <td>${v.perk}</td>
-      <td><button class="btn btn-danger btn-xs" onclick="deleteVip(${v.level})">删除</button></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = CURRENCY_DATA.vipThresholds.map(v => {
+    if (editingVipLevel === v.level) {
+      return `
+        <tr class="editing-row">
+          <td><input class="fc eco-edit-input" id="eco-vip-level-${v.level}" type="number" min="1" value="${Number(v.level) || 1}"></td>
+          <td><input class="fc eco-edit-input" id="eco-vip-cumulative-${v.level}" type="number" min="0" value="${Number(v.cumulative) || 0}"></td>
+          <td><input class="fc eco-edit-input" id="eco-vip-perk-${v.level}" value="${esc(v.perk)}"></td>
+          <td>
+            <button class="btn btn-primary btn-xs" onclick="saveVip(${v.level})">\u4fdd\u5b58</button>
+            <button class="btn btn-ghost btn-xs" onclick="cancelVipEdit()">\u53d6\u6d88</button>
+          </td>
+        </tr>
+      `;
+    }
+    return `
+      <tr>
+        <td><span class="badge badge-a">\u8d35\u5bbe${Number(v.level) || 1}\u7ea7</span></td>
+        <td>\u00a5${Number(v.cumulative || 0).toLocaleString()}</td>
+        <td>${esc(v.perk)}</td>
+        <td>
+          <button class="btn btn-ghost btn-xs" onclick="editVip(${v.level})">\u7f16\u8f91</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteVip(${v.level})">\u5220\u9664</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
-
 /**
  * 渲染兑换比率
  */
@@ -115,10 +164,34 @@ export function addCurrency() {
 }
 
 /** 删除货币 */
+export function editCurrency(currencyId) {
+  editingCurrencyId = currencyId;
+  renderCurrencyTable();
+}
+
+export function cancelCurrencyEdit() {
+  editingCurrencyId = '';
+  renderCurrencyTable();
+}
+
+export function saveCurrency(currencyId) {
+  const item = CURRENCY_DATA.tiers.find(c => c.id === currencyId);
+  if (!item) return;
+  item.name = document.getElementById(`eco-cur-name-${currencyId}`)?.value.trim() || item.name;
+  item.tier = Math.max(1, parseInt(document.getElementById(`eco-cur-tier-${currencyId}`)?.value, 10) || item.tier || 1);
+  item.purpose = document.getElementById(`eco-cur-purpose-${currencyId}`)?.value.trim() || '';
+  item.source = document.getElementById(`eco-cur-source-${currencyId}`)?.value.trim() || '';
+  item.exchangeRate = document.getElementById(`eco-cur-rate-${currencyId}`)?.value.trim() || '';
+  editingCurrencyId = '';
+  CURRENCY_DATA.tiers.sort((a, b) => (Number(a.tier) || 0) - (Number(b.tier) || 0));
+  renderCurrencyTable();
+}
+
 export function deleteCurrency(currencyId) {
   const idx = CURRENCY_DATA.tiers.findIndex(c => c.id === currencyId);
   if (idx === -1) return;
   CURRENCY_DATA.tiers.splice(idx, 1);
+  if (editingCurrencyId === currencyId) editingCurrencyId = '';
   renderCurrencyTable();
 }
 
@@ -152,10 +225,33 @@ export function addVip() {
 }
 
 /** 删除VIP等级 */
+export function editVip(level) {
+  editingVipLevel = level;
+  renderVipTable();
+}
+
+export function cancelVipEdit() {
+  editingVipLevel = null;
+  renderVipTable();
+}
+
+export function saveVip(level) {
+  const item = CURRENCY_DATA.vipThresholds.find(v => v.level === level);
+  if (!item) return;
+  const nextLevel = Math.max(1, parseInt(document.getElementById(`eco-vip-level-${level}`)?.value, 10) || item.level || 1);
+  item.level = nextLevel;
+  item.cumulative = Math.max(0, parseInt(document.getElementById(`eco-vip-cumulative-${level}`)?.value, 10) || 0);
+  item.perk = document.getElementById(`eco-vip-perk-${level}`)?.value.trim() || '';
+  editingVipLevel = null;
+  CURRENCY_DATA.vipThresholds.sort((a, b) => (Number(a.level) || 0) - (Number(b.level) || 0));
+  renderVipTable();
+}
+
 export function deleteVip(level) {
   const idx = CURRENCY_DATA.vipThresholds.findIndex(v => v.level === level);
   if (idx === -1) return;
   CURRENCY_DATA.vipThresholds.splice(idx, 1);
+  if (editingVipLevel === level) editingVipLevel = null;
   renderVipTable();
 }
 
