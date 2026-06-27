@@ -33,7 +33,7 @@ import { initCurveLibraryPanel } from './curve/curve-panel.js';
 import { installBranchEditor, openBranchModal, addBranchCostRow, addBranchAttrRow, previewBranch, saveBranch, deleteBranch } from './ui/cultivation-branch-editor.js';
 import { initSimulatorPanel, runSimulationV34, roiResetAllV34, roiInvestV34, roiAutoInvestV34, roiAdvanceDayV34, roiRenderAllV34 } from './ui/simulator-panel.js';
 import { initProjectScenarioPanel, renderProjectScenarioPanel } from './ui/project-scenario-panel.js';
-import { initPaymentPanel, renderPaymentPanel } from './ui/payment-panel.js';
+import { initPaymentPanel, renderPaymentPanel, addPaymentTier, editPaymentTier, savePaymentTier, cancelPaymentTierEdit, deletePaymentTier, addPaymentPack, editPaymentPack, savePaymentPack, cancelPaymentPackEdit, deletePaymentPack, addPaymentModuleMix, editPaymentModuleMix, savePaymentModuleMix, cancelPaymentModuleMixEdit, deletePaymentModuleMix } from './ui/payment-panel.js';
 
 function applyAppVersionUI() {
   const versionEl = document.getElementById('app-version-label');
@@ -272,6 +272,21 @@ window.roiRenderAll = roiRenderAllV34;
 window.renderROIPanel2 = roiResetAllV34;
 window.initPaymentPanel = initPaymentPanel;
 window.renderPaymentPanel = renderPaymentPanel;
+window.addPaymentTier = addPaymentTier;
+window.editPaymentTier = editPaymentTier;
+window.savePaymentTier = savePaymentTier;
+window.cancelPaymentTierEdit = cancelPaymentTierEdit;
+window.deletePaymentTier = deletePaymentTier;
+window.addPaymentPack = addPaymentPack;
+window.editPaymentPack = editPaymentPack;
+window.savePaymentPack = savePaymentPack;
+window.cancelPaymentPackEdit = cancelPaymentPackEdit;
+window.deletePaymentPack = deletePaymentPack;
+window.addPaymentModuleMix = addPaymentModuleMix;
+window.editPaymentModuleMix = editPaymentModuleMix;
+window.savePaymentModuleMix = savePaymentModuleMix;
+window.cancelPaymentModuleMixEdit = cancelPaymentModuleMixEdit;
+window.deletePaymentModuleMix = deletePaymentModuleMix;
 
 // ── 3. 合成 v3.0 全量快照（用于 IndexedDB 存档） ─────────
 

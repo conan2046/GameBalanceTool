@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.23 envelopes', () => {
+test('project versioning restores current v3.10.24 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.23 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.23');
+  expect(restored.to).toBe('3.10.24');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.23');
-  await expect(page.locator('#app-release-name')).toHaveText('星级阈值配置修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.24');
+  await expect(page.locator('#app-release-name')).toHaveText('付费配置编辑修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -656,6 +656,43 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(paymentDetailLayout.firstWidth).toBeGreaterThan(paymentDetailLayout.stackWidth * 0.95);
   expect(paymentDetailLayout.secondWidth).toBeGreaterThan(paymentDetailLayout.stackWidth * 0.95);
   expect(paymentDetailLayout.secondTop).toBeGreaterThan(paymentDetailLayout.firstBottom);
+  await page.locator('#payment-tier-section .section-header button').filter({ hasText: '新增档位' }).click();
+  await page.locator('#payment-tier-tier_6-name').fill('测试付费档位');
+  await page.locator('#payment-tier-tier_6-budget').fill('88');
+  await page.locator('#payment-tier-tier_6-roi').fill('1.5');
+  await page.locator('#payment-tier-tier_6-repurchase').fill('55');
+  await page.locator('#payment-tier-table button').filter({ hasText: '保存' }).click();
+  await expect(page.locator('#payment-tier-table')).toContainText('测试付费档位');
+  await page.locator('button[onclick="deletePaymentTier(\'tier_6\')"]').click();
+  await expect(page.locator('#payment-tier-table')).not.toContainText('测试付费档位');
+
+  await page.locator('#payment-purchase-section .section-header button').filter({ hasText: '新增礼包' }).click();
+  await page.locator('#payment-pack-p3-name').fill('测试付费礼包');
+  await page.locator('#payment-pack-p3-price').fill('8');
+  await page.locator('#payment-pack-p3-targets').fill('low_r');
+  await page.locator('#payment-pack-p3-items').fill('r1:100,r2:1');
+  await page.locator('#payment-purchase-list button').filter({ hasText: '保存' }).click();
+  await expect(page.locator('#payment-purchase-list')).toContainText('测试付费礼包');
+  await page.locator('button[onclick="deletePaymentPack(\'p3\')"]').click();
+  await expect(page.locator('#payment-purchase-list')).not.toContainText('测试付费礼包');
+
+  const moduleLayout = await page.locator('#payment-module-section .payment-module-layout').evaluate(layout => {
+    const children = Array.from(layout.children).map(child => child.getBoundingClientRect());
+    return {
+      leftOfChart: children[0].right <= children[1].left,
+      chartWidth: children[1].width,
+    };
+  });
+  expect(moduleLayout.leftOfChart).toBe(true);
+  expect(moduleLayout.chartWidth).toBeGreaterThan(200);
+  await expect(page.locator('#payment-module-pie svg')).toBeVisible();
+  await page.locator('#payment-module-section .section-header button').filter({ hasText: '新增模块' }).click();
+  await page.locator('#payment-module-module_6-name').fill('测试模块');
+  await page.locator('#payment-module-module_6-ratio').fill('5');
+  await page.locator('#payment-module-table button').filter({ hasText: '保存' }).click();
+  await expect(page.locator('#payment-module-table')).toContainText('测试模块');
+  await page.locator('button[onclick="deletePaymentModuleMix(\'module_6\')"]').click();
+  await expect(page.locator('#payment-module-table')).not.toContainText('测试模块');
 
   await page.locator('.tab[data-p="panel-map"]').click();
   await expect(page.locator('#panel-map')).toContainText('地图模块占位');

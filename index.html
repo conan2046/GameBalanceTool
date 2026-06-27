@@ -335,8 +335,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.23</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">星级阈值配置修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.24</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">付费配置编辑修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -959,11 +959,12 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="section" id="payment-tier-section">
         <div class="section-header">
           <span class="section-title">玩家分层付费行为对比</span>
+          <button class="btn btn-primary btn-xs" onclick="addPaymentTier()">+ 新增档位</button>
         </div>
         <div class="section-body">
           <div class="tbl-wrap">
             <table class="tbl" id="payment-tier-table">
-              <thead><tr><th>玩家档位</th><th>预算</th><th>实际消费</th><th>礼包投入回报</th><th>付费后战力</th><th>对免费/小额付费优势</th><th>复购分</th><th>复购意愿</th></tr></thead>
+              <thead><tr><th>玩家档位</th><th>预算</th><th>实际消费</th><th>礼包投入回报</th><th>付费后战力</th><th>对免费/小额付费优势</th><th>复购分</th><th>复购意愿</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -974,6 +975,7 @@ textarea.fc{resize:vertical;min-height:70px}
         <div class="section" id="payment-purchase-section">
           <div class="section-header">
             <span class="section-title">选中档位礼包购买路径</span>
+            <button class="btn btn-primary btn-xs" onclick="addPaymentPack()">+ 新增礼包</button>
           </div>
           <div class="section-body">
             <div id="payment-purchase-list"></div>
@@ -982,15 +984,21 @@ textarea.fc{resize:vertical;min-height:70px}
         <div class="section" id="payment-module-section">
           <div class="section-header">
             <span class="section-title">功能模块投放占比校验</span>
+            <button class="btn btn-primary btn-xs" onclick="addPaymentModuleMix()">+ 新增模块</button>
           </div>
           <div class="section-body">
-            <div class="tbl-wrap">
-              <table class="tbl" id="payment-module-table">
-                <thead><tr><th>功能模块</th><th>投放占比</th></tr></thead>
-                <tbody></tbody>
-              </table>
+            <div class="payment-module-layout" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start">
+              <div>
+                <div class="tbl-wrap">
+                  <table class="tbl" id="payment-module-table">
+                    <thead><tr><th>功能模块</th><th>投放占比</th><th>操作</th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <div class="help-block" style="margin-top:8px">当前合计：<b id="payment-module-total">0%</b></div>
+              </div>
+              <div id="payment-module-pie" class="payment-module-pie"></div>
             </div>
-            <div class="help-block" style="margin-top:8px">当前合计：<b id="payment-module-total">0%</b></div>
           </div>
         </div>
       </div>
@@ -3557,6 +3565,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.23"></script>
+<script type="module" src="src/index-loader.js?v=3.10.24"></script>
 </body>
 </html>
