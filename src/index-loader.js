@@ -9,7 +9,7 @@
 
 // ── 1. 导入 v3.0 全部模块 ────────────────────────────────
 import { REALM_DATA } from './data/realms.js';
-import { EQUIPMENT_DATA } from './data/equipment.js';
+import { EQUIPMENT_DATA, normalizeEquipmentLabels } from './data/equipment.js';
 import { CLASS_DATA } from './data/classes.js';
 import { CURRENCY_DATA } from './data/currencies.js';
 
@@ -174,6 +174,7 @@ function restoreV3Snapshot(data) {
       }
       slots.push(s);
     });
+    normalizeEquipmentLabels(EQUIPMENT_DATA);
   }
   if (data.classes) {
     const cls = CLASS_DATA.classes;

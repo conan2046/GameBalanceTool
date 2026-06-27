@@ -1,4 +1,4 @@
-# GameBalanceTool V3.7.0 使用手册
+# GameBalanceTool V3.7.1 使用手册
 
 ## 1. 快速启动
 

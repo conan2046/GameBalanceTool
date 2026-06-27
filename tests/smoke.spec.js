@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
+import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.7 envelopes', () => {
+test('project versioning restores current v3.7.1 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -10,9 +11,25 @@ test('project versioning restores current v3.7 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.7.0');
+  expect(restored.to).toBe('3.7.1');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
+});
+
+test('equipment labels recover from mojibake snapshots', () => {
+  const equipment = {
+    slots: [
+      { id: 'slt_wep', name: '姝﹀櫒' },
+      { id: 'slt_helm', name: '澶寸洈' }
+    ],
+    qualities: [
+      { id: 'white', name: '鐧借壊' },
+      { id: 'purple', name: '绱壊' }
+    ]
+  };
+  normalizeEquipmentLabels(equipment);
+  expect(equipment.slots.map(slot => slot.name)).toEqual(['武器', '头盔']);
+  expect(equipment.qualities.map(quality => quality.name)).toEqual(['白色', '紫色']);
 });
 
 test('main UI boots and renders v3 modules', async ({ page }) => {
@@ -20,7 +37,7 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.7.0');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.7.1');
   await expect(page.locator('#app-release-name')).toHaveText('界面维护版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
 
@@ -192,6 +209,14 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#class-selector')).toContainText('速度');
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#slot-editor')).toContainText('速度');
+  await expect(page.locator('#slot-editor')).toContainText('武器');
+  await expect(page.locator('#slot-editor')).toContainText('头盔');
+  await expect(page.locator('#slot-editor')).toContainText('编辑');
+  await expect(page.locator('#slot-editor')).toContainText('删除');
+  await expect(page.locator('#quality-editor')).toContainText('倍率');
+  await expect(page.locator('#quality-editor')).toContainText('槽位');
+  const equipmentText = await page.locator('#slot-editor, #quality-editor').evaluateAll(nodes => nodes.map(node => node.textContent).join(' '));
+  expect(equipmentText).not.toMatch(/姝﹀櫒|澶寸洈|琛ｆ湇|鎶よ厱|鑵板甫|闉嬪瓙|鎴掓寚|椤归摼|鐧借壊|缁胯壊|钃濊壊|绱壊|姗欒壊|绾㈣壊|缂栬緫|鍒犻櫎|鍊嶇巼|妲戒綅/);
   await page.evaluate(() => {
     window.S.attrs = window.S.attrs.filter(attr => attr.id !== 'a_speed_test');
     window.rAttrs();

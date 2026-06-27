@@ -1,28 +1,31 @@
-﻿/**
- * UI妯″潡 - 瑁呭闈㈡澘
- * 妲戒綅缂栬緫鍣?+ 鍝佽川缂栬緫鍣?+ 绮剧偧璁＄畻鍣?+ 鎬绘垬鍔涢瑙? * 閲囩敤 ES module export + index-loader 鎸傝浇 window 鐨勬爣鍑嗘ā寮? * 缁濆涓嶄娇鐢?inline onclick锛屽洜涓?ES module 涓?inline onclick 鐨?this/window 浣滅敤鍩熶笉涓€鑷? */
+/**
+ * 装备面板 UI 模块。
+ * 包含槽位编辑器、品质编辑器、精炼计算器和总战力预览。
+ * 通过 ES module export + index-loader 挂载到 window，兼容旧 inline onclick。
+ */
 
-import { EQUIPMENT_DATA, calcEquipmentStats } from '../data/equipment.js';
+import { EQUIPMENT_DATA, calcEquipmentStats, normalizeEquipmentLabels } from '../data/equipment.js';
 import { ATTR_MAP, getAttrName } from '../data/attrs.js';
 
-const TYPE_LABEL = { attack: '鏀诲嚮', defense: '闃插尽', sub: '杈呭姪' };
+const TYPE_LABEL = { attack: '攻击', defense: '防御', sub: '辅助' };
 
 const QUALITY_COLORS = [
-  { label: '鐧借壊', value: '#cccccc' },
-  { label: '缁胯壊', value: '#2ed573' },
-  { label: '钃濊壊', value: '#4fc3f7' },
-  { label: '绱壊', value: '#ba68c8' },
-  { label: '姗欒壊', value: '#ffa502' },
-  { label: '绾㈣壊', value: '#ff4757' },
-  { label: '闈掕壊', value: '#1dd1a1' },
-  { label: '绮夎壊', value: '#fd79a8' },
-  { label: '閲戣壊', value: '#f9ca24' },
-  { label: '娣辩传', value: '#6c5ce7' },
+  { label: '白色', value: '#cccccc' },
+  { label: '绿色', value: '#2ed573' },
+  { label: '蓝色', value: '#4fc3f7' },
+  { label: '紫色', value: '#ba68c8' },
+  { label: '橙色', value: '#ffa502' },
+  { label: '红色', value: '#ff4757' },
+  { label: '青色', value: '#1dd1a1' },
+  { label: '粉色', value: '#fd79a8' },
+  { label: '金色', value: '#f9ca24' },
+  { label: '深紫', value: '#6c5ce7' },
 ];
 
 /**
  * 鍒濆鍖栬澶囬潰鏉? */
 export function initEquipmentPanel() {
+  normalizeEquipmentLabels(EQUIPMENT_DATA);
   renderSlotEditor();
   renderQualityEditor();
 }
@@ -57,6 +60,7 @@ export function saveSlotModal() {
   s.qualities = Array.from(document.querySelectorAll('#ms-qualities input[type="checkbox"]:checked'))
     .map(cb => cb.value);
   // 瑙ｆ瀽灞炴€?鈥?浠庡琛岃〃鍗曡鍙栵紙涓枃鍚?鈫?鑻辨枃key锛?  const attrRows = document.querySelectorAll('#ms-attr-rows > div');
+  const attrRows = document.querySelectorAll('#ms-attr-rows > div');
   const newAttrs = {};
   attrRows.forEach(row => {
     const sel = row.querySelector('[data-ms-attr]');
@@ -106,18 +110,18 @@ export function addSlot() {
   renderQualityEditor();
 }
 
-/** 鎭㈠榛樿瑁呭棰勮 */
+/** 恢复默认装备预设 */
 export function resetEquipment() {
   const defSlots = [
-    { id: 'slt_wep', name: '姝﹀櫒', type: 'attack', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 50, a3: 100 } },
-    { id: 'slt_helm', name: '澶寸洈', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a2: 30, a3: 80 } },
-    { id: 'slt_armor', name: '琛ｆ湇', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a2: 40, a3: 100 } },
-    { id: 'slt_bracer', name: '鎶よ厱', type: 'defense', qualities: ['blue', 'purple', 'orange'], baseAttrs: { a1: 10, a2: 15 } },
-    { id: 'slt_belt', name: '鑵板甫', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a3: 120, a2: 20 } },
-    { id: 'slt_boots', name: '闉嬪瓙', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 15, a3: 80 } },
-    { id: 'slt_ring1', name: '鎴掓寚A', type: 'sub', qualities: ['purple', 'orange', 'red'], baseAttrs: { a1: 5, a2: 5, a3: 5 } },
-    { id: 'slt_ring2', name: '鎴掓寚B', type: 'sub', qualities: ['purple', 'orange', 'red'], baseAttrs: { a1: 5, a2: 5, a3: 5 } },
-    { id: 'slt_neck', name: '椤归摼', type: 'sub', qualities: ['blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 8, a2: 8, a3: 8 } }
+    { id: 'slt_wep', name: '武器', type: 'attack', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 50, a3: 100 } },
+    { id: 'slt_helm', name: '头盔', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a2: 30, a3: 80 } },
+    { id: 'slt_armor', name: '衣服', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a2: 40, a3: 100 } },
+    { id: 'slt_bracer', name: '护腕', type: 'defense', qualities: ['blue', 'purple', 'orange'], baseAttrs: { a1: 10, a2: 15 } },
+    { id: 'slt_belt', name: '腰带', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a3: 120, a2: 20 } },
+    { id: 'slt_boots', name: '鞋子', type: 'defense', qualities: ['white', 'green', 'blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 15, a3: 80 } },
+    { id: 'slt_ring1', name: '戒指A', type: 'sub', qualities: ['purple', 'orange', 'red'], baseAttrs: { a1: 5, a2: 5, a3: 5 } },
+    { id: 'slt_ring2', name: '戒指B', type: 'sub', qualities: ['purple', 'orange', 'red'], baseAttrs: { a1: 5, a2: 5, a3: 5 } },
+    { id: 'slt_neck', name: '项链', type: 'sub', qualities: ['blue', 'purple', 'orange', 'red'], baseAttrs: { a1: 8, a2: 8, a3: 8 } }
   ];
   const arr = EQUIPMENT_DATA.slots;
   arr.length = 0;
@@ -149,8 +153,8 @@ function renderSlotEditor() {
         ${attrEntries.map(([k, v]) => `<span>${attrLabel(k)}: ${v}</span>`).join(' ')}
       </div>
       <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:2px;border-top:1px solid var(--border);padding-top:4px">
-        <button class="btn btn-ghost btn-xs" data-action="slot-edit" data-slot-id="${slot.id}">缂栬緫</button>
-        <button class="btn btn-danger btn-xs" data-action="slot-delete" data-slot-id="${slot.id}">鍒犻櫎</button>
+        <button class="btn btn-ghost btn-xs" data-action="slot-edit" data-slot-id="${slot.id}">编辑</button>
+        <button class="btn btn-danger btn-xs" data-action="slot-delete" data-slot-id="${slot.id}">删除</button>
       </div>
     </div>`;
   }).join('');
@@ -194,9 +198,9 @@ export function renderQualityEditor() {
       <span class="qc-dot" style="display:inline-block; width:14px; height:14px; background:${q.color}; border-radius:50%; border:1px solid rgba(255,255,255,0.2); flex-shrink:0;"></span>
       <div style="display:flex; align-items:center; gap:4px; font-size:12px; width:100%;">
         <select style="font-size:12px; flex:1; min-width:0; border:1px solid var(--border); border-radius:4px; padding:2px 4px; background:var(--bg); color:var(--text); box-sizing:border-box; text-align:center;" data-qa-field="color" data-qa-id="${q.id}">${colorOpts}</select>
-        <span style="color:var(--text3); flex-shrink:0;">鍊嶇巼</span>
+        <span style="color:var(--text3); flex-shrink:0;">倍率</span>
         <input type="number" style="font-size:12px; width:48px; border:1px solid var(--border); border-radius:4px; padding:2px 4px; background:var(--bg); color:var(--text); box-sizing:border-box; text-align:center;" value="${q.mult}" step="0.1" min="0" data-qa-field="mult" data-qa-id="${q.id}">
-        <span style="color:var(--text3); flex-shrink:0;">妲戒綅</span>
+        <span style="color:var(--text3); flex-shrink:0;">槽位</span>
         <input type="number" style="font-size:12px; width:40px; border:1px solid var(--border); border-radius:4px; padding:2px 4px; background:var(--bg); color:var(--text); box-sizing:border-box; text-align:center;" value="${q.bonusSlots}" min="0" data-qa-field="bonusSlots" data-qa-id="${q.id}">
       </div>
     </div>`;

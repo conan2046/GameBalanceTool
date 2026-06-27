@@ -6,10 +6,10 @@ import { clonePaymentConfig } from '../data/payment-defaults.js';
  */
 
 export const PROJECT_SCHEMA = 'gbt-project';
-export const PROJECT_VERSION = '3.7.0';
+export const PROJECT_VERSION = '3.7.1';
 export const APP_VERSION_LABEL = `v${PROJECT_VERSION}`;
 export const APP_RELEASE_NAME = '界面维护版';
-export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0'];
+export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0', '3.7.1'];
 
 function clone(data) { return JSON.parse(JSON.stringify(data || {})); }
 function nowISO() { return new Date().toISOString(); }
