@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.13 envelopes', () => {
+test('project versioning restores current v3.10.14 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.13 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.13');
+  expect(restored.to).toBe('3.10.14');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.13');
-  await expect(page.locator('#app-release-name')).toHaveText('职业属性紧凑修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.14');
+  await expect(page.locator('#app-release-name')).toHaveText('境界层数冗余修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -66,6 +66,7 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
 
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();
+  await expect(page.locator('#cr-level-count')).toHaveCount(0);
   await expect(page.locator('#realm-metrics')).not.toBeEmpty();
   const realmMetricLayout = await page.locator('#realm-metrics').evaluate(metrics => {
     const cards = Array.from(metrics.querySelectorAll('.metric-c')).map(card => {

@@ -328,8 +328,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.13</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">职业属性紧凑修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.14</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">境界层数冗余修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -505,7 +505,6 @@ textarea.fc{resize:vertical;min-height:70px}
             <span>大境界: <span id="cr-name" style="color:var(--accent);font-weight:600">炼气境</span>
             <span id="cr-sub" style="margin-left:6px;color:var(--text3);font-size:11px">修仙之始</span>
             <span style="margin-left:12px;color:var(--text3);font-size:11px">当前: 第 <span id="cr-lvl" style="color:var(--warning);font-weight:600">1</span> 层</span></span>
-            <span id="cr-level-count" style="font-size:11px;color:var(--text3)">0 层</span>
           </div>
           <div id="level-bar" class="level-bar"></div>
           <div id="level-bar" class="level-bar"></div>
@@ -3265,7 +3264,6 @@ function renderRealms(){
   const r=_R()[realmIdx];
   $('cr-name').textContent=r.name;
   $('cr-sub').textContent=r.desc;
-  $('cr-level-count').textContent=r.levels.length+' 层';
   $('realm-type-label').textContent=realmType==='cultivation'?'修为':'炼体';
   const lvs=_RL();
   lb.innerHTML=lvs.map(l=>{
