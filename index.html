@@ -282,13 +282,19 @@ textarea.fc{resize:vertical;min-height:70px}
 .combat-sandbox-section .chart-container{position:relative;display:block;flex:0 0 auto;height:280px;width:100%;max-width:none;margin:18px 0 0;overflow:hidden;clear:both}
 .combat-sandbox-section .chart-container canvas{display:block;position:static!important}
 .combat-log-wrap{max-height:340px;overflow:auto;width:100%}
-.combat-config-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
-.combat-config-pane{min-width:0}
+.combat-config-grid{display:flex;flex-direction:column;gap:14px}
+.combat-config-pane{min-width:0;width:100%}
+.combat-config-pane + .combat-config-pane{border-top:1px solid var(--border);padding-top:14px}
+.combat-result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.combat-result-card{background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)}
+.combat-result-card .label{font-size:11px;color:var(--text3)}
+.combat-result-card .value{font-size:18px;font-weight:bold;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.combat-result-grid{grid-template-columns:1fr}}
 .combat-attr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .combat-attr-input-store{display:none}
 .combat-role-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media(max-width:900px){.battle-row{grid-template-columns:1fr;gap:16px}.battle-mid{order:2}.fighter{max-width:none}.fighter-card{width:132px;height:140px}.role-stats,.hp-wrap{max-width:360px}}
-@media(max-width:900px){.combat-config-grid{grid-template-columns:1fr}.combat-role-editor-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.combat-role-editor-grid{grid-template-columns:1fr}}
 @keyframes battleHit{0%,100%{filter:none}35%{filter:brightness(1.8);transform:translateX(4px)}70%{transform:translateX(-4px)}}
 @keyframes damagePop{0%{opacity:0;transform:translateY(8px) scale(.9)}35%{opacity:1;transform:translateY(-6px) scale(1.08)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fighterIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
@@ -301,8 +307,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.0</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">地图怪物占位版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.1</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战斗配置布局修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -709,20 +715,20 @@ textarea.fc{resize:vertical;min-height:70px}
             <div style="background:var(--bg2);border-left:3px solid var(--accent);padding:10px 12px;border-radius:6px;margin-top:10px;font-family:'Courier New',monospace;font-size:12px;color:var(--accent2)" id="cb-formula-preview">伤害 = 攻击 × 0.5 + (攻击 × 1.0 - 防御 × 0.8)</div>
           </div>
           <div class="combat-config-pane" id="combat-target-parser">
-            <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单体系目标战力解析器</div>
+            <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">战力解析结果</div>
             <div class="help-block" style="margin-bottom:10px">敌我双方属性在下方沙盘角色卡内编辑，属性项自动读取“属性与权重”。</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
-              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
-                <div style="font-size:11px;color:var(--text3)">单次最大伤害</div>
-                <div style="font-size:18px;font-weight:bold;color:var(--danger);font-variant-numeric:tabular-nums" id="cb-dmg-max">0</div>
+            <div class="combat-result-grid">
+              <div class="combat-result-card">
+                <div class="label">单次最大伤害</div>
+                <div class="value" style="color:var(--danger)" id="cb-dmg-max">0</div>
               </div>
-              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
-                <div style="font-size:11px;color:var(--text3)">期望秒伤（带暴击）</div>
-                <div style="font-size:18px;font-weight:bold;color:var(--warning);font-variant-numeric:tabular-nums" id="cb-expected-dmg">0</div>
+              <div class="combat-result-card">
+                <div class="label">期望秒伤</div>
+                <div class="value" style="color:var(--warning)" id="cb-expected-dmg">0</div>
               </div>
-              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
-                <div style="font-size:11px;color:var(--text3)">通关回合数</div>
-                <div style="font-size:18px;font-weight:bold;color:var(--accent2);font-variant-numeric:tabular-nums" id="cb-rounds">0</div>
+              <div class="combat-result-card">
+                <div class="label">通关回合数</div>
+                <div class="value" style="color:var(--accent2)" id="cb-rounds">0</div>
               </div>
             </div>
             <div class="combat-attr-input-store" aria-hidden="true">

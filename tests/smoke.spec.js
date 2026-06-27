@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.0 envelopes', () => {
+test('project versioning restores current v3.10.1 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.0 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.0');
+  expect(restored.to).toBe('3.10.1');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.0');
-  await expect(page.locator('#app-release-name')).toHaveText('地图怪物占位版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.1');
+  await expect(page.locator('#app-release-name')).toHaveText('战斗配置布局修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -79,12 +79,15 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
     const panes = Array.from(grid.querySelectorAll('.combat-config-pane')).map(pane => pane.getBoundingClientRect());
     return {
       gridWidth: gridBox.width,
-      leftWidth: panes[0]?.width || 0,
-      rightWidth: panes[1]?.width || 0,
+      firstWidth: panes[0]?.width || 0,
+      secondWidth: panes[1]?.width || 0,
+      firstBottom: panes[0]?.bottom || 0,
+      secondTop: panes[1]?.top || 0,
     };
   });
-  expect(combatConfigLayout.leftWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
-  expect(combatConfigLayout.rightWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
+  expect(combatConfigLayout.firstWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.95);
+  expect(combatConfigLayout.secondWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.95);
+  expect(combatConfigLayout.secondTop).toBeGreaterThan(combatConfigLayout.firstBottom);
 
   const combatFormLayout = await page.locator('#cb-formula-type').evaluate(select => {
     const group = select.closest('.form-group');
@@ -118,6 +121,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(defenderCombatAttrLabels).toEqual(combatAttrLabels);
   await expect(page.locator('#combat-target-parser')).not.toContainText('进攻方属性');
   await expect(page.locator('#combat-target-parser')).not.toContainText('守方目标属性');
+  await expect(page.locator('#combat-target-parser')).toContainText('战力解析结果');
+  await expect(page.locator('.combat-result-grid')).toBeVisible();
   await expect(page.locator('#cb-battle-stage .fighter-header button', { hasText: '编辑' })).toHaveCount(2);
 
   const defaultMaxDamage = await page.locator('#cb-dmg-max').textContent();
