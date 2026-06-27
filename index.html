@@ -89,6 +89,8 @@ textarea.fc{resize:vertical;min-height:70px}
 .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:end;gap:10px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:600px){.grid-2{grid-template-columns:1fr}}
+.curve-library-stack{display:grid;grid-template-columns:1fr;gap:12px}
+.curve-preview-panel{background:var(--bg2);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 @media(max-width:600px){.grid-3{grid-template-columns:1fr}}
 .toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:6px;color:#fff;font-size:13px;z-index:2000;box-shadow:var(--sh);animation:fadeIn .2s}
@@ -326,8 +328,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.10</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投入回报工具条修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.11</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">曲线库上下布局修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -441,9 +443,9 @@ textarea.fc{resize:vertical;min-height:70px}
           <span class="section-title">Curve Library｜消耗与成长曲线配置库</span>
           <button class="btn btn-primary btn-sm" onclick="openCurveModal()">+ 创建新曲线</button>
         </div>
-        <div class="section-body grid-2">
+        <div class="section-body curve-library-stack">
           <div><table class="tbl" id="t-curve"><thead><tr><th>曲线编号</th><th>曲线名称</th><th>类型</th><th>操作</th></tr></thead><tbody></tbody></table></div>
-          <div style="background:var(--bg2);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <div class="curve-preview-panel">
             <span style="font-size:12px;color:var(--text2)">⚙ 选中曲线1-15级离散变化趋势可视化</span>
             <svg id="cv-svg" style="width:100%;height:150px;background:var(--bg3);border-radius:4px"></svg>
             <span style="font-size:12px;color:var(--accent2);margin-top:8px">📊 全曲线对比（第1级到第20级）</span>

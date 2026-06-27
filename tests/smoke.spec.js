@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.10 envelopes', () => {
+test('project versioning restores current v3.10.11 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.10 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.10');
+  expect(restored.to).toBe('3.10.11');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.10');
-  await expect(page.locator('#app-release-name')).toHaveText('投入回报工具条修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.11');
+  await expect(page.locator('#app-release-name')).toHaveText('曲线库上下布局修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -46,6 +46,23 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await page.locator('.tab[data-p="panel-curve"]').click();
   await expect(page.locator('#t-curve tbody tr').first()).toBeVisible();
   await expect(page.locator('#t-curve tbody tr').first()).not.toBeEmpty();
+  const curveLayout = await page.locator('#panel-curve .curve-library-stack').evaluate(stack => {
+    const tableWrap = stack.children[0].getBoundingClientRect();
+    const preview = stack.querySelector('.curve-preview-panel').getBoundingClientRect();
+    const stackBox = stack.getBoundingClientRect();
+    return {
+      stackWidth: stackBox.width,
+      tableWidth: tableWrap.width,
+      previewWidth: preview.width,
+      previewTop: preview.top,
+      tableBottom: tableWrap.bottom,
+      columns: getComputedStyle(stack).gridTemplateColumns,
+    };
+  });
+  expect(curveLayout.columns.split(' ').length).toBe(1);
+  expect(curveLayout.tableWidth).toBeGreaterThan(curveLayout.stackWidth * 0.95);
+  expect(curveLayout.previewWidth).toBeGreaterThan(curveLayout.stackWidth * 0.95);
+  expect(curveLayout.previewTop).toBeGreaterThan(curveLayout.tableBottom);
 
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();

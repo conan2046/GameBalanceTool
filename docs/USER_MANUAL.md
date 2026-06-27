@@ -1,4 +1,4 @@
-# GameBalanceTool V3.10.10 使用手册
+# GameBalanceTool V3.10.11 使用手册
 
 ## 1. 快速启动
 
