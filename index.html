@@ -307,8 +307,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.3</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">经济页折叠修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.4</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">付费页折叠修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -903,36 +903,52 @@ textarea.fc{resize:vertical;min-height:70px}
         <button class="btn btn-primary" onclick="renderPaymentPanel()">重新模拟</button>
       </div>
 
-      <div class="card" style="padding:14px">
-        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">玩家分层付费行为对比</div>
-        <div class="tbl-wrap">
-          <table class="tbl" id="payment-tier-table">
-            <thead><tr><th>玩家档位</th><th>预算</th><th>实际消费</th><th>礼包投入回报</th><th>付费后战力</th><th>对免费/小额付费优势</th><th>复购分</th><th>复购意愿</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <div class="section" id="payment-tier-section">
+        <div class="section-header">
+          <span class="section-title">玩家分层付费行为对比</span>
+        </div>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="tbl" id="payment-tier-table">
+              <thead><tr><th>玩家档位</th><th>预算</th><th>实际消费</th><th>礼包投入回报</th><th>付费后战力</th><th>对免费/小额付费优势</th><th>复购分</th><th>复购意愿</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div class="payment-detail-stack" style="display:grid;grid-template-columns:1fr;gap:16px">
-        <div class="card" style="padding:14px">
-          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">选中档位礼包购买路径</div>
-          <div id="payment-purchase-list"></div>
-        </div>
-        <div class="card" style="padding:14px">
-          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">功能模块投放占比校验</div>
-          <div class="tbl-wrap">
-            <table class="tbl" id="payment-module-table">
-              <thead><tr><th>功能模块</th><th>投放占比</th></tr></thead>
-              <tbody></tbody>
-            </table>
+        <div class="section" id="payment-purchase-section">
+          <div class="section-header">
+            <span class="section-title">选中档位礼包购买路径</span>
           </div>
-          <div class="help-block" style="margin-top:8px">当前合计：<b id="payment-module-total">0%</b></div>
+          <div class="section-body">
+            <div id="payment-purchase-list"></div>
+          </div>
+        </div>
+        <div class="section" id="payment-module-section">
+          <div class="section-header">
+            <span class="section-title">功能模块投放占比校验</span>
+          </div>
+          <div class="section-body">
+            <div class="tbl-wrap">
+              <table class="tbl" id="payment-module-table">
+                <thead><tr><th>功能模块</th><th>投放占比</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="help-block" style="margin-top:8px">当前合计：<b id="payment-module-total">0%</b></div>
+          </div>
         </div>
       </div>
 
-      <div class="card" style="padding:14px">
-        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">复购与付费优势风险诊断</div>
-        <div id="payment-risk-list"></div>
+      <div class="section" id="payment-risk-section">
+        <div class="section-header">
+          <span class="section-title">复购与付费优势风险诊断</span>
+        </div>
+        <div class="section-body">
+          <div id="payment-risk-list"></div>
+        </div>
       </div>
     </div>
 

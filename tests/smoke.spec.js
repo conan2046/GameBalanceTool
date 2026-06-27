@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.3 envelopes', () => {
+test('project versioning restores current v3.10.4 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.3 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.3');
+  expect(restored.to).toBe('3.10.4');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.3');
-  await expect(page.locator('#app-release-name')).toHaveText('经济页折叠修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.4');
+  await expect(page.locator('#app-release-name')).toHaveText('付费页折叠修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -290,6 +290,24 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#project-scenario-panel')).not.toBeEmpty();
 
   await page.locator('.tab[data-p="panel-payment"]').click();
+  const paymentSectionState = await page.locator('#panel-payment').evaluate(panel => {
+    const sections = Array.from(panel.querySelectorAll('.section'));
+    return {
+      count: sections.length,
+      firstThreeOpen: sections.slice(0, 3).every(section => !section.classList.contains('is-collapsed')),
+      fourthCollapsed: sections[3]?.classList.contains('is-collapsed') || false,
+      toggleCount: sections.filter(section => section.querySelector(':scope > .section-header > .section-collapse-toggle')).length,
+    };
+  });
+  expect(paymentSectionState.count).toBe(4);
+  expect(paymentSectionState.firstThreeOpen).toBe(true);
+  expect(paymentSectionState.fourthCollapsed).toBe(true);
+  expect(paymentSectionState.toggleCount).toBe(paymentSectionState.count);
+  await expect(page.locator('#payment-tier-section .section-body')).toBeVisible();
+  await page.locator('#payment-tier-section .section-collapse-toggle').click();
+  await expect(page.locator('#payment-tier-section')).toHaveClass(/is-collapsed/);
+  await page.locator('#payment-tier-section .section-collapse-toggle').click();
+  await expect(page.locator('#payment-tier-section')).not.toHaveClass(/is-collapsed/);
   const paymentToolbarLayout = await page.locator('#payment-tier').evaluate(select => {
     const group = select.closest('.roi-bar-item');
     const label = group.querySelector('label').getBoundingClientRect();
@@ -304,7 +322,7 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#payment-tier-table tbody tr').first()).toBeVisible();
   await expect(page.locator('#payment-risk-list')).not.toBeEmpty();
   const paymentDetailLayout = await page.locator('.payment-detail-stack').evaluate(stack => {
-    const cards = Array.from(stack.querySelectorAll(':scope > .card')).map(card => card.getBoundingClientRect());
+    const cards = Array.from(stack.querySelectorAll(':scope > .section')).map(card => card.getBoundingClientRect());
     const stackBox = stack.getBoundingClientRect();
     return {
       stackWidth: stackBox.width,
