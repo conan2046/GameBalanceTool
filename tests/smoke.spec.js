@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.30 envelopes', () => {
+test('project versioning restores current v3.10.31 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.30 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.30');
+  expect(restored.to).toBe('3.10.31');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.30');
-  await expect(page.locator('#app-release-name')).toHaveText('怪物配置基础版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.31');
+  await expect(page.locator('#app-release-name')).toHaveText('怪物属性结构化版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -788,13 +788,19 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#panel-monster')).toContainText('怪物相关配置');
   await expect(page.locator('#monster-table')).toContainText('10001');
   await expect(page.locator('#monster-table')).toContainText('测试怪');
-  await expect(page.locator('#monster-table')).toContainText('攻击+50；防御+20；生命+1000');
+  await expect(page.locator('#monster-table')).toContainText('攻击力+50；防御力+20；生命值+1000');
   await expect(page.locator('#monster-table')).toContainText('0');
   await page.locator('button[onclick="openMonsterModal()"]').click();
   await page.locator('#mm-id').fill('10002');
   await page.locator('#mm-name').fill('测试首领');
   await page.locator('#mm-type').selectOption('3');
-  await page.locator('#mm-attrs').fill('攻击+200；防御+80；生命+5000');
+  await page.locator('#mm-attr-rows .monster-attr-val').nth(0).fill('200');
+  await page.locator('#mm-attr-rows .monster-attr-val').nth(1).fill('80');
+  await page.locator('#mm-attr-rows .monster-attr-val').nth(2).fill('5000');
+  await page.locator('button[onclick="addMonsterAttrRow()"]').click();
+  await expect(page.locator('#mm-attr-rows .monster-attr-row')).toHaveCount(4);
+  await page.locator('#mm-attr-rows .monster-attr-row button').last().click();
+  await expect(page.locator('#mm-attr-rows .monster-attr-row')).toHaveCount(3);
   await page.locator('#mm-skills').fill('0');
   await page.locator('button[onclick="saveMonster()"]').click();
   await expect(page.locator('#monster-table')).toContainText('10002');
@@ -816,5 +822,6 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(envelope.schema).toBe('gbt-project');
   expect(envelope.data.project.scenarios.length).toBeGreaterThan(0);
   expect(envelope.data.monsters?.[0]?.id).toBe('10001');
+  expect(envelope.data.monsters?.[0]?.attrs?.[0]?.attrId).toBe('a1');
   expect(pageErrors).toEqual([]);
 });

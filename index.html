@@ -350,8 +350,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.30</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">怪物配置基础版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.31</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">怪物属性结构化版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -1153,7 +1153,11 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="form-group"><label>怪物名</label><input class="fc" id="mm-name" placeholder="例如：测试怪"></div>
     </div>
     <div class="form-group"><label>怪物类型</label><select class="fc" id="mm-type"><option value="1">普通小怪</option><option value="2">精简怪</option><option value="3">首领</option></select></div>
-    <div class="form-group"><label>怪物属性</label><input class="fc" id="mm-attrs" placeholder="攻击+50；防御+20；生命+1000"></div>
+    <div class="form-group">
+      <label>怪物属性</label>
+      <div id="mm-attr-rows" style="display:flex;flex-direction:column;gap:6px"></div>
+      <button class="btn btn-ghost btn-xs" style="margin-top:6px" onclick="addMonsterAttrRow()">+ 添加属性</button>
+    </div>
     <div class="form-group"><label>怪物技能</label><input class="fc" id="mm-skills" value="0"></div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-monster')">取消</button><button class="btn btn-primary" onclick="saveMonster()">保存</button></div></div>
 </div></div>
@@ -1206,7 +1210,7 @@ let S={
     {id:'p2',name:'每日精炼特惠物资',price:12,tag:'每日特惠',items:{'r2':8}}
   ],
   monsters:[
-    {id:'10001',name:'测试怪',type:'1',attrs:'攻击+50；防御+20；生命+1000',skills:'0'}
+    {id:'10001',name:'测试怪',type:'1',attrs:[{attrId:'a1',val:50},{attrId:'a2',val:20},{attrId:'a3',val:1000}],skills:'0'}
   ]
 ,
   ecoConfig:{
@@ -1515,7 +1519,7 @@ function addSlotAttrRow(attrId, val){
     + '<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button></div></div>';
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')['m-attr','m-combat-role','m-res','m-curve','m-line','m-branch','m-pack','m-realm-edit','m-level-edit','m-slot'].forEach(cm);
+  if(e.key==='Escape')['m-attr','m-combat-role','m-res','m-curve','m-line','m-branch','m-pack','m-monster','m-realm-edit','m-level-edit','m-slot'].forEach(cm);
 });
 
 // 页签切换控制逻辑
@@ -2097,9 +2101,81 @@ function delPack(id){S.packs=S.packs.filter(x=>x.id!==id);rPacks();save();render
 
 function monsterEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
 function getMonsterTypeName(type){return {'1':'普通小怪','2':'精简怪','3':'首领'}[String(type)]||'普通小怪';}
+function findMonsterAttrId(label){
+  var clean=String(label||'').replace(/\s/g,'').replace(/[：:]/g,'');
+  var attrs=S.attrs||[];
+  var exact=attrs.find(function(a){return a.name===clean;});
+  if(exact)return exact.id;
+  var normalized=clean.replace(/力$|值$/,'');
+  var fuzzy=attrs.find(function(a){return a.name.indexOf(normalized)===0||normalized.indexOf(a.name.replace(/力$|值$/,''))===0;});
+  return fuzzy ? fuzzy.id : ((attrs[0]&&attrs[0].id)||'');
+}
+function parseMonsterAttrText(text){
+  if(Array.isArray(text))return text.map(function(a){return {attrId:a.attrId||a.id||'',val:Number(a.val||a.value||0)};}).filter(function(a){return a.attrId;});
+  return String(text||'').split(/[；;]/).map(function(part){
+    var raw=part.trim();
+    if(!raw)return null;
+    var m=raw.match(/^(.+?)([+-]\d+(?:\.\d+)?)$/);
+    if(!m)return null;
+    return {attrId:findMonsterAttrId(m[1]),val:Number(m[2])};
+  }).filter(function(a){return a&&a.attrId;});
+}
+function getDefaultMonsterAttrs(){
+  var atk=findMonsterAttrId('攻击'), def=findMonsterAttrId('防御'), hp=findMonsterAttrId('生命');
+  var rows=[
+    {attrId:atk,val:50},
+    {attrId:def,val:20},
+    {attrId:hp,val:1000}
+  ].filter(function(row,idx,arr){return row.attrId&&arr.findIndex(function(x){return x.attrId===row.attrId;})===idx;});
+  return rows.length ? rows : ((S.attrs&&S.attrs[0]) ? [{attrId:S.attrs[0].id,val:0}] : []);
+}
+function normalizeMonsterAttrs(monster){
+  if(!monster)return;
+  if(!Array.isArray(monster.attrs))monster.attrs=parseMonsterAttrText(monster.attrs);
+  monster.attrs=(monster.attrs||[]).map(function(a){return {attrId:a.attrId||a.id||'',val:Number(a.val||a.value||0)};}).filter(function(a){return a.attrId;});
+}
+function formatMonsterAttrs(attrs){
+  var list=parseMonsterAttrText(attrs);
+  return list.map(function(a){
+    var attr=(S.attrs||[]).find(function(x){return x.id===a.attrId;});
+    var val=Number(a.val||0);
+    return (attr?attr.name:a.attrId)+(val>=0?'+':'')+val;
+  }).join('；');
+}
+function monsterAttrOptions(selectedId){
+  return (S.attrs||[]).map(function(a){return '<option value="'+monsterEsc(a.id)+'" '+(a.id===selectedId?'selected':'')+'>'+monsterEsc(a.name)+'</option>';}).join('');
+}
+function renderMonsterAttrRows(rows){
+  var box=$('mm-attr-rows');
+  if(!box)return;
+  var list=parseMonsterAttrText(rows);
+  if(!list.length)list=getDefaultMonsterAttrs();
+  box.innerHTML='';
+  list.forEach(function(row){appendMonsterAttrRow(row);});
+}
+function appendMonsterAttrRow(row){
+  var box=$('mm-attr-rows');
+  if(!box)return;
+  var item=document.createElement('div');
+  item.className='monster-attr-row';
+  item.style='display:grid;grid-template-columns:1fr 120px auto;gap:6px;align-items:center';
+  item.innerHTML='<select class="fc monster-attr-id">'+monsterAttrOptions(row&&row.attrId)+'</select>'
+    +'<input type="number" class="fc monster-attr-val" value="'+Number((row&&row.val)||0)+'">'
+    +'<button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">删除</button>';
+  box.appendChild(item);
+}
+function addMonsterAttrRow(){
+  appendMonsterAttrRow({attrId:(S.attrs&&S.attrs[0]&&S.attrs[0].id)||'',val:0});
+}
+function collectMonsterAttrs(){
+  return Array.from(document.querySelectorAll('#mm-attr-rows .monster-attr-row')).map(function(row){
+    return {attrId:row.querySelector('.monster-attr-id').value,val:Number(row.querySelector('.monster-attr-val').value||0)};
+  }).filter(function(row){return row.attrId;});
+}
 function ensureMonsterDefaults(){
   if(!Array.isArray(S.monsters))S.monsters=[];
-  if(!S.monsters.length)S.monsters.push({id:'10001',name:'测试怪',type:'1',attrs:'攻击+50；防御+20；生命+1000',skills:'0'});
+  if(!S.monsters.length)S.monsters.push({id:'10001',name:'测试怪',type:'1',attrs:getDefaultMonsterAttrs(),skills:'0'});
+  S.monsters.forEach(normalizeMonsterAttrs);
 }
 function renderMonsterPanel(){
   ensureMonsterDefaults();
@@ -2111,7 +2187,7 @@ function renderMonsterPanel(){
       +'<td>'+id+'</td>'
       +'<td>'+monsterEsc(m.name)+'</td>'
       +'<td>'+getMonsterTypeName(m.type)+'</td>'
-      +'<td>'+monsterEsc(m.attrs)+'</td>'
+      +'<td>'+monsterEsc(formatMonsterAttrs(m.attrs))+'</td>'
       +'<td>'+monsterEsc(m.skills||'0')+'</td>'
       +'<td><button class="btn btn-ghost btn-xs" onclick="openMonsterModal(\''+id+'\')">编辑</button> <button class="btn btn-danger btn-xs" onclick="deleteMonster(\''+id+'\')">删除</button></td>'
       +'</tr>';
@@ -2119,14 +2195,15 @@ function renderMonsterPanel(){
 }
 function openMonsterModal(id){
   ensureMonsterDefaults();
-  var m=id?S.monsters.find(function(x){return String(x.id)===String(id);}):{id:'',name:'',type:'1',attrs:'',skills:'0'};
+  var m=id?S.monsters.find(function(x){return String(x.id)===String(id);}):{id:'',name:'',type:'1',attrs:getDefaultMonsterAttrs(),skills:'0'};
   if(!m)return;
+  normalizeMonsterAttrs(m);
   $('mm-title').textContent=id?'编辑怪物':'新增怪物';
   $('mm-edit-id').value=id||'';
   $('mm-id').value=m.id||'';
   $('mm-name').value=m.name||'';
   $('mm-type').value=String(m.type||'1');
-  $('mm-attrs').value=m.attrs||'';
+  renderMonsterAttrRows(m.attrs);
   $('mm-skills').value=m.skills||'0';
   $('m-monster').style.display='flex';
 }
@@ -2136,11 +2213,11 @@ function saveMonster(){
   var id=$('mm-id').value.trim();
   var name=$('mm-name').value.trim();
   var type=$('mm-type').value;
-  var attrs=$('mm-attrs').value.trim();
+  var attrs=collectMonsterAttrs();
   var skills=$('mm-skills').value.trim()||'0';
   if(!id)return toast('怪物编号不能为空','e');
   if(!name)return toast('怪物名不能为空','e');
-  if(!attrs)return toast('怪物属性不能为空','e');
+  if(!attrs.length)return toast('怪物属性不能为空','e');
   var duplicate=S.monsters.find(function(x){return String(x.id)===id&&String(x.id)!==String(editId);});
   if(duplicate)return toast('怪物编号已存在','e');
   if(editId){
@@ -3665,6 +3742,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.30"></script>
+<script type="module" src="src/index-loader.js?v=3.10.31"></script>
 </body>
 </html>
