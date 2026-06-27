@@ -150,7 +150,7 @@ function renderSlotEditor() {
         }).join('')}
       </div>
       <div class="slot-attrs">
-        ${attrEntries.map(([k, v]) => `<span>${attrLabel(k)}: ${v}</span>`).join(' ')}
+        ${attrEntries.map(([k, v]) => `<span>${attrLabel(k)}: ${v}</span>`).join('')}
       </div>
       <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:2px;border-top:1px solid var(--border);padding-top:4px">
         <button class="btn btn-ghost btn-xs" data-action="slot-edit" data-slot-id="${slot.id}">编辑</button>

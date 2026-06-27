@@ -254,13 +254,14 @@ textarea.fc{resize:vertical;min-height:70px}
 .realm-toolbar button{padding:2px 6px;font-size:10px;border-radius:4px}
 
 /* ── v3.0 装备面板 ── */
-.slot-card{border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg2)}
-.slot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slot-card{border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg2);min-width:250px}
+.slot-header{display:flex;justify-content:flex-start;align-items:center;gap:8px;margin-bottom:4px}
 .slot-name{font-size:13px;font-weight:700}
 .slot-type{font-size:10px;padding:1px 6px}
 .slot-qualities{display:flex;gap:3px;margin-bottom:4px}
 .quality-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid var(--border)}
-.slot-attrs{font-size:11px;color:var(--text2)}
+.slot-attrs{display:grid;grid-template-columns:repeat(3,minmax(68px,1fr));gap:4px 8px;font-size:11px;color:var(--text2);line-height:1.35}
+.slot-attrs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Combat sandbox animation */
 .battle-stage{position:relative;min-height:250px;background:radial-gradient(circle at 50% 20%,rgba(108,99,255,.16),transparent 38%),linear-gradient(180deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:14px;margin-top:10px}
@@ -341,8 +342,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.27</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成图表显示修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.28</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">装备槽位卡片修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -558,7 +559,7 @@ textarea.fc{resize:vertical;min-height:70px}
             <!-- 槽位编辑器: 水平5列 -->
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:8px">槽位列表</div>
-              <div id="slot-editor" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+              <div id="slot-editor" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px"></div>
             </div>
             <!-- 品质体系: 横排可编辑卡片 -->
             <div>
@@ -3571,6 +3572,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.27"></script>
+<script type="module" src="src/index-loader.js?v=3.10.28"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.27 envelopes', () => {
+test('project versioning restores current v3.10.28 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.27 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.27');
+  expect(restored.to).toBe('3.10.28');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.27');
-  await expect(page.locator('#app-release-name')).toHaveText('养成图表显示修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.28');
+  await expect(page.locator('#app-release-name')).toHaveText('装备槽位卡片修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -542,6 +542,28 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#slot-editor')).toContainText('头盔');
   await expect(page.locator('#slot-editor')).toContainText('编辑');
   await expect(page.locator('#slot-editor')).toContainText('删除');
+  const slotLayout = await page.locator('#slot-editor').evaluate(editor => {
+    const card = editor.querySelector('.slot-card');
+    const header = card.querySelector('.slot-header');
+    const name = header.querySelector('.slot-name').getBoundingClientRect();
+    const type = header.querySelector('.slot-type').getBoundingClientRect();
+    const attrs = card.querySelector('.slot-attrs');
+    const attrItems = Array.from(attrs.querySelectorAll('span')).map(item => item.getBoundingClientRect());
+    return {
+      cardWidth: Math.round(card.getBoundingClientRect().width),
+      headerSameRow: Math.abs((name.top + name.height / 2) - (type.top + type.height / 2)) < 3,
+      typeAfterName: type.left > name.right,
+      attrColumns: getComputedStyle(attrs).gridTemplateColumns.split(' ').length,
+      firstThreeShareRow: attrItems.length < 3 || attrItems.slice(0, 3).every(item => Math.round(item.top) === Math.round(attrItems[0].top)),
+      fourthNextRow: attrItems.length < 4 || Math.round(attrItems[3].top) > Math.round(attrItems[0].top),
+    };
+  });
+  expect(slotLayout.cardWidth).toBeGreaterThanOrEqual(250);
+  expect(slotLayout.headerSameRow).toBe(true);
+  expect(slotLayout.typeAfterName).toBe(true);
+  expect(slotLayout.attrColumns).toBe(3);
+  expect(slotLayout.firstThreeShareRow).toBe(true);
+  expect(slotLayout.fourthNextRow).toBe(true);
   await expect(page.locator('#quality-editor')).toContainText('倍率');
   await expect(page.locator('#quality-editor')).toContainText('槽位');
   const equipmentText = await page.locator('#slot-editor, #quality-editor').evaluateAll(nodes => nodes.map(node => node.textContent).join(' '));
