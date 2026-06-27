@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.6 envelopes', () => {
+test('project versioning restores current v3.10.7 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.6 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.6');
+  expect(restored.to).toBe('3.10.7');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.6');
-  await expect(page.locator('#app-release-name')).toHaveText('职业卡片排版修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.7');
+  await expect(page.locator('#app-release-name')).toHaveText('击杀矩阵工具条修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -278,6 +278,26 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#kill-matrix')).toContainText('模拟场次');
   await expect(page.locator('#kill-matrix')).toContainText('重新模拟');
   await expect(page.locator('#kill-matrix')).toContainText('回合');
+  const killMatrixToolbarLayout = await page.locator('#kill-matrix').evaluate(matrix => {
+    const toolbar = matrix.querySelector('.kill-matrix-toolbar');
+    const label = toolbar.querySelector('label').getBoundingClientRect();
+    const input = toolbar.querySelector('input').getBoundingClientRect();
+    const hint = toolbar.querySelector('.hint').getBoundingClientRect();
+    const button = toolbar.querySelector('button').getBoundingClientRect();
+    const toolbarBox = toolbar.getBoundingClientRect();
+    return {
+      leftPadding: Math.round(label.left - toolbarBox.left),
+      topPadding: Math.round(label.top - toolbarBox.top),
+      inputHeight: Math.round(input.height),
+      sameCenterLine: [input, hint, button].every(rect => Math.abs((label.top + label.height / 2) - (rect.top + rect.height / 2)) < 3),
+      toolbarHeight: Math.round(toolbarBox.height),
+    };
+  });
+  expect(killMatrixToolbarLayout.leftPadding).toBeGreaterThanOrEqual(14);
+  expect(killMatrixToolbarLayout.topPadding).toBeGreaterThanOrEqual(10);
+  expect(killMatrixToolbarLayout.inputHeight).toBe(32);
+  expect(killMatrixToolbarLayout.sameCenterLine).toBe(true);
+  expect(killMatrixToolbarLayout.toolbarHeight).toBeGreaterThanOrEqual(54);
   await expect(page.locator('#kill-matrix')).not.toContainText(/妯℃嫙|鍦烘|鑼冨洿|閲嶆柊|鍥炲悎|缂栬緫|鍒犻櫎/);
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#slot-editor')).toContainText('速度');

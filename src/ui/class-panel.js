@@ -206,11 +206,11 @@ function renderKillMatrix() {
 
   // 妯℃嫙鍦烘杈撳叆
   let html = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <span style="font-size:12px;color:var(--text2)">模拟场次：</span>
+    <div class="kill-matrix-toolbar">
+      <label>模拟场次：</label>
       <input type="number" class="fc" value="${simCount}" min="100" max="100000" step="100"
-        onchange="setSimCount(this.value)" class="fc" style="width:120px">
-      <span style="font-size:10px;color:var(--text3)">（范围100~100000）</span>
+        onchange="setSimCount(this.value)">
+      <span class="hint">（范围100~100000）</span>
       <button class="btn btn-primary btn-xs" onclick="setSimCount(document.querySelector('#kill-matrix input').value)">重新模拟</button>
     </div>
   `;
