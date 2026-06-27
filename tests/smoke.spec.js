@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.8.0 envelopes', () => {
+test('project versioning restores current v3.8.1 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.8.0 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.8.0');
+  expect(restored.to).toBe('3.8.1');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.8.0');
-  await expect(page.locator('#app-release-name')).toHaveText('战斗沙盘编辑版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.8.1');
+  await expect(page.locator('#app-release-name')).toHaveText('付费布局修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
 
   await page.locator('.tab[data-p="panel-curve"]').click();
@@ -262,6 +262,20 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(paymentToolbarLayout.labelIsLeft).toBe(true);
   await expect(page.locator('#payment-tier-table tbody tr').first()).toBeVisible();
   await expect(page.locator('#payment-risk-list')).not.toBeEmpty();
+  const paymentDetailLayout = await page.locator('.payment-detail-stack').evaluate(stack => {
+    const cards = Array.from(stack.querySelectorAll(':scope > .card')).map(card => card.getBoundingClientRect());
+    const stackBox = stack.getBoundingClientRect();
+    return {
+      stackWidth: stackBox.width,
+      firstWidth: cards[0]?.width || 0,
+      secondWidth: cards[1]?.width || 0,
+      firstBottom: cards[0]?.bottom || 0,
+      secondTop: cards[1]?.top || 0,
+    };
+  });
+  expect(paymentDetailLayout.firstWidth).toBeGreaterThan(paymentDetailLayout.stackWidth * 0.95);
+  expect(paymentDetailLayout.secondWidth).toBeGreaterThan(paymentDetailLayout.stackWidth * 0.95);
+  expect(paymentDetailLayout.secondTop).toBeGreaterThan(paymentDetailLayout.firstBottom);
 
   const forbiddenVisibleText = /ATK|DEF|HP|SPD|CRIT|CDMG|ROI|DPS|VIP|Project|Lv\./;
   for (const panel of ['panel-attr', 'panel-matrix', 'panel-class', 'panel-cult', 'panel-res', 'panel-eco', 'panel-pack', 'panel-combat2', 'panel-payment', 'panel-roi2', 'panel-curve']) {
