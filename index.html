@@ -350,8 +350,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.29</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成线卡片布局回退版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.30</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">怪物配置基础版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -1042,10 +1042,14 @@ textarea.fc{resize:vertical;min-height:70px}
     <div class="panel" id="panel-monster">
       <div class="section">
         <div class="section-header">
-          <span class="section-title">怪物模块占位</span>
+          <span class="section-title">怪物相关配置</span>
+          <button class="btn btn-primary btn-xs" onclick="openMonsterModal()">+ 新增怪物</button>
         </div>
         <div class="section-body">
-          <div class="help-block">怪物模块占位页，后续用于配置怪物模板、属性、技能、掉落与刷新规则。</div>
+          <table class="tbl" id="monster-table">
+            <thead><tr><th>编号</th><th>怪物名</th><th>怪物类型</th><th>怪物属性</th><th>怪物技能</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1127,6 +1131,7 @@ textarea.fc{resize:vertical;min-height:70px}
       <div id="branch-attr-rows"></div>
     </div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="previewBranch()">预览每级数据</button><button class="btn btn-ghost" onclick="cm('m-branch')">取消</button><button class="btn btn-primary" onclick="saveBranch()">保存</button></div></div>
+</div></div>
 
 <div id="m-pack" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-pack')">
   <div class="modal"><div class="modal-header"><span class="modal-title" id="mp-title">商业化礼包内容定制</span></div><div class="modal-body">
@@ -1138,6 +1143,19 @@ textarea.fc{resize:vertical;min-height:70px}
       <div id="p-res-list" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-pack')">取消</button><button class="btn btn-primary" onclick="savePack()">保存</button></div></div>
+</div></div>
+
+<div id="m-monster" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-monster')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="mm-title">怪物配置</span></div><div class="modal-body">
+    <input type="hidden" id="mm-edit-id">
+    <div class="grid-2">
+      <div class="form-group"><label>编号</label><input class="fc" id="mm-id" placeholder="例如：10001"></div>
+      <div class="form-group"><label>怪物名</label><input class="fc" id="mm-name" placeholder="例如：测试怪"></div>
+    </div>
+    <div class="form-group"><label>怪物类型</label><select class="fc" id="mm-type"><option value="1">普通小怪</option><option value="2">精简怪</option><option value="3">首领</option></select></div>
+    <div class="form-group"><label>怪物属性</label><input class="fc" id="mm-attrs" placeholder="攻击+50；防御+20；生命+1000"></div>
+    <div class="form-group"><label>怪物技能</label><input class="fc" id="mm-skills" value="0"></div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-monster')">取消</button><button class="btn btn-primary" onclick="saveMonster()">保存</button></div></div>
 </div></div>
 
 <!-- 槽位编辑弹窗 -->
@@ -1186,6 +1204,9 @@ let S={
   packs:[
     {id:'p1',name:'破冰极品首充礼包',price:6,tag:'首充礼包',items:{'r1':500,'r2':5}},
     {id:'p2',name:'每日精炼特惠物资',price:12,tag:'每日特惠',items:{'r2':8}}
+  ],
+  monsters:[
+    {id:'10001',name:'测试怪',type:'1',attrs:'攻击+50；防御+20；生命+1000',skills:'0'}
   ]
 ,
   ecoConfig:{
@@ -1556,6 +1577,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   t.classList.add('active');$(t.dataset.p).classList.add('active');
   if(t.dataset.p==='panel-matrix')renderMatrixInputs();
   if(t.dataset.p==='panel-curve')prevCurve();
+  if(t.dataset.p==='panel-monster')renderMonsterPanel();
   initCollapsibleSections($(t.dataset.p));
 }));
 
@@ -2073,6 +2095,68 @@ function savePack(){
 }
 function delPack(id){S.packs=S.packs.filter(x=>x.id!==id);rPacks();save();renderShopAnalysis();}
 
+function monsterEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+function getMonsterTypeName(type){return {'1':'普通小怪','2':'精简怪','3':'首领'}[String(type)]||'普通小怪';}
+function ensureMonsterDefaults(){
+  if(!Array.isArray(S.monsters))S.monsters=[];
+  if(!S.monsters.length)S.monsters.push({id:'10001',name:'测试怪',type:'1',attrs:'攻击+50；防御+20；生命+1000',skills:'0'});
+}
+function renderMonsterPanel(){
+  ensureMonsterDefaults();
+  var tbody=document.querySelector('#monster-table tbody');
+  if(!tbody)return;
+  tbody.innerHTML=S.monsters.map(function(m){
+    var id=monsterEsc(m.id);
+    return '<tr>'
+      +'<td>'+id+'</td>'
+      +'<td>'+monsterEsc(m.name)+'</td>'
+      +'<td>'+getMonsterTypeName(m.type)+'</td>'
+      +'<td>'+monsterEsc(m.attrs)+'</td>'
+      +'<td>'+monsterEsc(m.skills||'0')+'</td>'
+      +'<td><button class="btn btn-ghost btn-xs" onclick="openMonsterModal(\''+id+'\')">编辑</button> <button class="btn btn-danger btn-xs" onclick="deleteMonster(\''+id+'\')">删除</button></td>'
+      +'</tr>';
+  }).join('');
+}
+function openMonsterModal(id){
+  ensureMonsterDefaults();
+  var m=id?S.monsters.find(function(x){return String(x.id)===String(id);}):{id:'',name:'',type:'1',attrs:'',skills:'0'};
+  if(!m)return;
+  $('mm-title').textContent=id?'编辑怪物':'新增怪物';
+  $('mm-edit-id').value=id||'';
+  $('mm-id').value=m.id||'';
+  $('mm-name').value=m.name||'';
+  $('mm-type').value=String(m.type||'1');
+  $('mm-attrs').value=m.attrs||'';
+  $('mm-skills').value=m.skills||'0';
+  $('m-monster').style.display='flex';
+}
+function saveMonster(){
+  ensureMonsterDefaults();
+  var editId=$('mm-edit-id').value;
+  var id=$('mm-id').value.trim();
+  var name=$('mm-name').value.trim();
+  var type=$('mm-type').value;
+  var attrs=$('mm-attrs').value.trim();
+  var skills=$('mm-skills').value.trim()||'0';
+  if(!id)return toast('怪物编号不能为空','e');
+  if(!name)return toast('怪物名不能为空','e');
+  if(!attrs)return toast('怪物属性不能为空','e');
+  var duplicate=S.monsters.find(function(x){return String(x.id)===id&&String(x.id)!==String(editId);});
+  if(duplicate)return toast('怪物编号已存在','e');
+  if(editId){
+    var old=S.monsters.find(function(x){return String(x.id)===String(editId);});
+    if(old){old.id=id;old.name=name;old.type=type;old.attrs=attrs;old.skills=skills;}
+  }else{
+    S.monsters.push({id:id,name:name,type:type,attrs:attrs,skills:skills});
+  }
+  cm('m-monster');renderMonsterPanel();save();
+}
+function deleteMonster(id){
+  ensureMonsterDefaults();
+  S.monsters=S.monsters.filter(function(x){return String(x.id)!==String(id);});
+  renderMonsterPanel();save();
+}
+
 // 原功能6：综合全线建模生命周期演变仿真模拟器
 function runSimulation(){
   const budget=parseFloat($('sim-budget').value)||0, days=parseInt($('sim-days').value)||1, ratio=parseFloat($('sim-daily-ratio').value)||1, strategy=$('sim-strategy').value;
@@ -2178,7 +2262,7 @@ function importData(){
   };input.click();
 }
 
-function rAll(){rAttrs();rRes();rCurves();rCult();rPacks();renderShopAnalysis();}
+function rAll(){rAttrs();rRes();rCurves();rCult();rPacks();renderShopAnalysis();renderMonsterPanel();}
 
 // ── 全自动化入口初始化 ──────────────────────────────────────────────────
 var cbChart;
@@ -3259,6 +3343,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(p==='panel-combat2')runCombatSim2();
       if(p==='panel-roi2')renderROIPanel2();
       if(p==='panel-cult'){_initRealmModals();setTimeout(renderRealms,50);setTimeout(rCult,50);}
+      if(p==='panel-monster')renderMonsterPanel();
       setTimeout(function(){initCollapsibleSections(document.getElementById(p));},80);
     });
   });
@@ -3580,6 +3665,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.29"></script>
+<script type="module" src="src/index-loader.js?v=3.10.30"></script>
 </body>
 </html>
