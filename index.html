@@ -140,6 +140,13 @@ textarea.fc{resize:vertical;min-height:70px}
 .roi-bar-item .val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
 .roi-bar-item input{font-size:15px;font-weight:700;width:120px;padding:6px 10px}
 .roi-bar .btn{margin-left:auto}
+.roi-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.roi-actions .btn{margin-left:0}
+#panel-roi2 .roi-bar{gap:14px}
+#panel-roi2 .roi-bar-item input{text-align:center}
+#roi-budget{width:12ch!important}
+#roi-day-limit{width:7ch!important}
+#roi-day{min-width:52px;text-align:center}
 
 .roi-sys-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
 .roi-sys-card{flex:1 1 calc(20% - 12px);min-width:0;background:var(--bg2);border-radius:8px;padding:14px;border:1px solid var(--border);position:relative;overflow:hidden}
@@ -319,8 +326,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.9</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投资按钮可读性修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.10</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投入回报工具条修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -859,14 +866,16 @@ textarea.fc{resize:vertical;min-height:70px}
     <div class="panel" id="panel-roi2">
       <!-- 预算/战力/天数条 -->
       <div class="roi-bar">
-        <div class="roi-bar-item"><label>总预算</label><input type="number" class="fc" id="roi-budget" value="10000" onchange="roiResetAll()" style="font-size:15px;font-weight:700;width:120px;padding:6px 10px"></div>
+        <div class="roi-bar-item"><label>总预算</label><input type="number" class="fc" id="roi-budget" value="10000" onchange="roiResetAll()" style="font-size:15px;font-weight:700;padding:6px 10px"></div>
         <div class="roi-bar-item"><label>可用预算</label><div class="val" id="roi-budget-left" style="color:var(--warning)">¥10,000</div></div>
         <div class="roi-bar-item"><label>总战力</label><div class="val" id="roi-total-power" style="color:var(--accent2)">0</div></div>
-        <div class="roi-bar-item"><label>天数</label><div class="val" id="roi-day" style="color:var(--text);font-size:14px">第1天</div></div>
-        <div class="roi-bar-item"><label>天数上限</label><input type="number" class="fc" id="roi-day-limit" value="7" style="font-size:14px;font-weight:700;width:60px;padding:6px 8px"></div>
-        <button class="btn btn-primary" onclick="roiAdvanceDay()">下一天</button>
-        <button class="btn btn-success" onclick="roiAutoInvest()" style="background:linear-gradient(135deg,#4ecca3,#00e676);border:none">智能分配</button>
-        <button class="btn btn-ghost" onclick="roiResetAll()">重置</button>
+        <div class="roi-bar-item"><div class="val" id="roi-day" style="color:var(--text);font-size:14px">第1/7天</div></div>
+        <div class="roi-bar-item"><label>天数上限</label><input type="number" class="fc" id="roi-day-limit" value="7" style="font-size:14px;font-weight:700;padding:6px 8px"></div>
+        <div class="roi-actions">
+          <button class="btn btn-primary" onclick="roiAdvanceDay()">下一天</button>
+          <button class="btn btn-success" onclick="roiAutoInvest()" style="background:linear-gradient(135deg,#4ecca3,#00e676);border:none">智能分配</button>
+          <button class="btn btn-ghost" onclick="roiResetAll()">重置</button>
+        </div>
       </div>
 
       <!-- 系统卡片网格 -->

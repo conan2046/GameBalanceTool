@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.9 envelopes', () => {
+test('project versioning restores current v3.10.10 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.9 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.9');
+  expect(restored.to).toBe('3.10.10');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.9');
-  await expect(page.locator('#app-release-name')).toHaveText('投资按钮可读性修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.10');
+  await expect(page.locator('#app-release-name')).toHaveText('投入回报工具条修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -354,6 +354,36 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
 
   await page.locator('.tab[data-p="panel-roi2"]').click();
   await expect(page.locator('#roi-sys-grid .roi-sys-card').first()).toBeVisible();
+  const roiToolbarLayout = await page.locator('#panel-roi2 > .roi-bar').evaluate(toolbar => {
+    const budget = toolbar.querySelector('#roi-budget');
+    const day = toolbar.querySelector('#roi-day');
+    const dayLimit = toolbar.querySelector('#roi-day-limit');
+    const actions = toolbar.querySelector('.roi-actions');
+    const actionButtons = Array.from(actions.querySelectorAll('.btn')).map(button => button.getBoundingClientRect());
+    const budgetStyle = getComputedStyle(budget);
+    const dayLimitStyle = getComputedStyle(dayLimit);
+    const budgetBox = budget.getBoundingClientRect();
+    const dayLimitBox = dayLimit.getBoundingClientRect();
+    const dayGroup = day.closest('.roi-bar-item');
+    return {
+      budgetTextAlign: budgetStyle.textAlign,
+      budgetWidth: Math.round(budgetBox.width),
+      dayLimitTextAlign: dayLimitStyle.textAlign,
+      dayLimitWidth: Math.round(dayLimitBox.width),
+      dayText: day.textContent.trim(),
+      dayLabelCount: dayGroup.querySelectorAll('label').length,
+      actionGap1: Math.round(actionButtons[1].left - actionButtons[0].right),
+      actionGap2: Math.round(actionButtons[2].left - actionButtons[1].right),
+    };
+  });
+  expect(roiToolbarLayout.budgetTextAlign).toBe('center');
+  expect(roiToolbarLayout.budgetWidth).toBeGreaterThanOrEqual(100);
+  expect(roiToolbarLayout.dayText).toMatch(/^第\d+\/\d+天$/);
+  expect(roiToolbarLayout.dayLabelCount).toBe(0);
+  expect(roiToolbarLayout.dayLimitTextAlign).toBe('center');
+  expect(roiToolbarLayout.dayLimitWidth).toBeGreaterThanOrEqual(55);
+  expect(roiToolbarLayout.actionGap1).toBeLessThanOrEqual(10);
+  expect(roiToolbarLayout.actionGap2).toBeLessThanOrEqual(10);
   const investButtonStyles = await page.locator('#roi-sys-grid').evaluate(grid => {
     return Array.from(grid.querySelectorAll('.roi-sys-btn')).map(button => {
       const style = getComputedStyle(button);
