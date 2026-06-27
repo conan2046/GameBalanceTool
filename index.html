@@ -180,7 +180,13 @@ textarea.fc{resize:vertical;min-height:70px}
 .class-card:hover{border-color:var(--accent);background:rgba(108,99,255,.04)}
 .class-card.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .class-name{font-size:15px;font-weight:700;margin-bottom:6px}
-.class-stats{font-size:11px;color:var(--text2);line-height:1.5}
+.class-level-row{width:100%;display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;min-height:42px}
+.class-level-row label{font-size:12px;color:var(--text2);line-height:32px;margin:0;white-space:nowrap}
+.class-level-row .fc{width:120px;height:32px;line-height:32px;padding:0 12px;margin:0}
+.class-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px;font-size:11px;color:var(--text2);line-height:1.35;text-align:left;max-width:190px;margin:0 auto}
+.class-stat-item{display:flex;justify-content:space-between;gap:6px;min-width:0}
+.class-stat-item .label{white-space:nowrap}
+.class-stat-item .value{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
 .damage-type-card{display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px}
 .damage-type-card .dt-name{font-size:14px;font-weight:700;min-width:60px}
 .damage-type-card .dt-desc{font-size:12px;color:var(--text2);flex:1}
@@ -308,8 +314,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.5</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投入回报页折叠修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.6</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">职业卡片排版修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>

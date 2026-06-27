@@ -6,10 +6,10 @@
  */
 
 export const PROJECT_SCHEMA = 'gbt-project';
-export const PROJECT_VERSION = '3.10.5';
+export const PROJECT_VERSION = '3.10.6';
 export const APP_VERSION_LABEL = `v${PROJECT_VERSION}`;
-export const APP_RELEASE_NAME = '投入回报页折叠修订版';
-export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0', '3.7.1', '3.8.0', '3.8.1', '3.8.2', '3.9.0', '3.10.0', '3.10.1', '3.10.2', '3.10.3', '3.10.4', '3.10.5'];
+export const APP_RELEASE_NAME = '职业卡片排版修订版';
+export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0', '3.8.0', '3.8.1', '3.8.2', '3.9.0', '3.10.0', '3.10.1', '3.10.2', '3.10.3', '3.10.4', '3.10.5', '3.10.6'];
 
 function clone(data) { return JSON.parse(JSON.stringify(data || {})); }
 function nowISO() { return new Date().toISOString(); }

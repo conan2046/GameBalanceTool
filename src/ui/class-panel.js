@@ -53,18 +53,18 @@ function renderClassSelector() {
   if (!grid) return;
 
   let html = `
-    <div style="width:100%;display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <span style="font-size:12px;color:var(--text2)">参考等级</span>
+    <div class="class-level-row">
+      <label>参考等级</label>
       <input type="number" min="1" max="130" value="${currentLevel}"
-        onchange="setClassLevel(this.value)" class="fc" style="width:120px">
+        onchange="setClassLevel(this.value)" class="fc">
     </div>`;
 
   html += CLASS_DATA.classes.map(cls => {
     const stats = computeStatsFromPrimaries(cls.primaries, currentLevel);
     var attrs = typeof S !== 'undefined' && S.attrs ? S.attrs : [];
     var statsHtml = attrs.map(function(a) {
-      return a.name + ': ' + (stats[a.id] || 0);
-    }).join('<br>') + '<br>等级：第' + currentLevel + '级';
+      return '<div class="class-stat-item"><span class="label">' + a.name + '：</span><span class="value">' + (stats[a.id] || 0) + '</span></div>';
+    }).join('') + '<div class="class-stat-item"><span class="label">等级：</span><span class="value">第' + currentLevel + '级</span></div>';
     return `
     <div class="class-card ${currentClass === cls.id ? 'active' : ''}" data-class-id="${cls.id}" onclick="selectClass('${cls.id}')">
       <div class="class-name">${cls.name}</div>
