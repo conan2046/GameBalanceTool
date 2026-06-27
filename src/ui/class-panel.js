@@ -5,7 +5,7 @@
 
 import { CLASS_DATA, simulate1v1, computeStatsFromPrimaries } from '../data/classes.js';
 
-const PRIMARY_LABELS = { power: '鍔涢噺', spirit: '鐏靛姏', agility: '鏁忔嵎', endurance: '鑰愬姏', physique: '浣撹川' };
+const PRIMARY_LABELS = { power: '力量', spirit: '灵力', agility: '敏捷', endurance: '耐力', physique: '体质' };
 const PRIMARY_KEYS = ['power', 'spirit', 'agility', 'endurance', 'physique'];
 
 /** 鍔ㄦ€佹瀯寤轰簩绾у睘鎬ч瑙圚TML锛宎ttr鍚嶁啋棰滆壊鎸夐搧寰?10鏄犲皠 */
@@ -20,7 +20,7 @@ function _buildStatsPreview(stats) {
 /** 璇诲彇 ATTR_MATRIX锛屾樉绀轰竴绾р啋浜岀骇灞炴€ф槧灏勬彁绀?*/
 function _buildMatrixMappingHint() {
   var m = typeof ATTR_MATRIX !== 'undefined' ? ATTR_MATRIX : null;
-  if (!m) return '锛堟棤灞炴€ф垚闀跨煩闃垫暟鎹級';
+  if (!m) return '（无属性成长矩阵数据）';
   var lines = [];
   PRIMARY_KEYS.forEach(function(k) {
     var row = m[k];
@@ -54,7 +54,7 @@ function renderClassSelector() {
 
   let html = `
     <div style="width:100%;display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <span style="font-size:12px;color:var(--text2)">鍙傝€冪瓑绾?</span>
+      <span style="font-size:12px;color:var(--text2)">参考等级</span>
       <input type="number" min="1" max="130" value="${currentLevel}"
         onchange="setClassLevel(this.value)" class="fc" style="width:120px">
     </div>`;
@@ -70,8 +70,8 @@ function renderClassSelector() {
       <div class="class-name">${cls.name}</div>
       <div class="class-stats">${statsHtml}</div>
       <div style="display:flex;gap:4px;margin-top:8px;justify-content:center">
-        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editClass('${cls.id}')">缂栬緫</button>
-        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteClass('${cls.id}')" ${CLASS_DATA.classes.length <= 1 ? 'disabled' : ''}>鍒犻櫎</button>
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editClass('${cls.id}')">编辑</button>
+        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteClass('${cls.id}')" ${CLASS_DATA.classes.length <= 1 ? 'disabled' : ''}>删除</button>
       </div>
     </div>`;
   }).join('');
@@ -100,34 +100,34 @@ export function editClass(classId) {
     `<div class="form-group"><label>${PRIMARY_LABELS[k]}</label><input type="number" class="fc" id="ec-${k}" value="${cls.primaries[k] || 0}" min="0" step="1"></div>`
   ).join('');
 
-  // 棰勮褰撳墠绛夌骇涓嬬殑浜岀骇灞炴€?  const stats = computeStatsFromPrimaries(cls.primaries, currentLevel);
+  const stats = computeStatsFromPrimaries(cls.primaries, currentLevel);
 
   overlay.innerHTML = `
     <div class="modal" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);width:100%;max-width:480px;display:flex;flex-direction:column;max-height:90%">
       <div class="modal-header" style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span class="modal-title">缂栬緫鑱屼笟 - ${cls.name}</span>
-        <button class="btn btn-ghost btn-xs" onclick="this.closest('.modal-overlay').remove()">鍏抽棴</button>
+        <span class="modal-title">编辑职业 - ${cls.name}</span>
+        <button class="btn btn-ghost btn-xs" onclick="this.closest('.modal-overlay').remove()">关闭</button>
       </div>
       <div class="modal-body" style="padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto">
-        <div class="form-group"><label>鍚嶇О</label><input class="fc" id="ec-name" value="${cls.name}"></div>
+        <div class="form-group"><label>名称</label><input class="fc" id="ec-name" value="${cls.name}"></div>
         <div style="border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg2)">
-          <div style="font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px">涓€绾у睘鎬э紙鍩虹鏁板€煎垎閰嶏級</div>
+          <div style="font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px">一级属性（基础数值分配）</div>
           <div class="grid-3">${primaryInputs}</div>
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">
             ${ _buildMatrixMappingHint() }
           </div>
         </div>
         <div style="border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3)">
-          <div style="font-size:12px;font-weight:600;color:var(--warning);margin-bottom:6px">浜岀骇灞炴€ч瑙堬紙绗?{currentLevel}绾э級</div>
+          <div style="font-size:12px;font-weight:600;color:var(--warning);margin-bottom:6px">二级属性预览（第${currentLevel}级）</div>
           <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap">
             ${ _buildStatsPreview(stats) }
           </div>
         </div>
-        <div class="form-group"><label>鎻忚堪</label><input class="fc" id="ec-desc" value="${cls.description}"></div>
+        <div class="form-group"><label>描述</label><input class="fc" id="ec-desc" value="${cls.description}"></div>
       </div>
       <div class="modal-footer" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:end;gap:10px">
-        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">鍙栨秷</button>
-        <button class="btn btn-primary" onclick="saveClass('${classId}')">淇濆瓨</button>
+        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveClass('${classId}')">保存</button>
       </div>
     </div>
   `;
@@ -140,7 +140,7 @@ export function saveClass(classId) {
   if (!cls) return;
 
   const name = document.getElementById('ec-name').value.trim();
-  if (!name) { alert('鍚嶇О涓嶈兘涓虹┖'); return; }
+  if (!name) { alert('名称不能为空'); return; }
   cls.name = name;
 
   PRIMARY_KEYS.forEach(k => {
@@ -173,9 +173,9 @@ function renderDamageTypes() {
       <div class="dt-desc">${dt.description}</div>
       <label>
         <input type="checkbox" ${dt.bypassDefense ? 'checked' : ''} onchange="toggleDamageType('${dt.id}')">
-        鏃犺闃插尽
+        忽略防御
       </label>
-      <button class="btn btn-danger btn-xs" onclick="deleteDamageType('${dt.id}')">鍒犻櫎</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteDamageType('${dt.id}')">删除</button>
     </div>
   `).join('');
 }
@@ -207,11 +207,11 @@ function renderKillMatrix() {
   // 妯℃嫙鍦烘杈撳叆
   let html = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <span style="font-size:12px;color:var(--text2)">妯℃嫙鍦烘:</span>
+      <span style="font-size:12px;color:var(--text2)">模拟场次：</span>
       <input type="number" class="fc" value="${simCount}" min="100" max="100000" step="100"
         onchange="setSimCount(this.value)" class="fc" style="width:120px">
-      <span style="font-size:10px;color:var(--text3)">(鑼冨洿100~100000)</span>
-      <button class="btn btn-primary btn-xs" onclick="setSimCount(document.querySelector('#kill-matrix input').value)">閲嶆柊妯℃嫙</button>
+      <span style="font-size:10px;color:var(--text3)">（范围100~100000）</span>
+      <button class="btn btn-primary btn-xs" onclick="setSimCount(document.querySelector('#kill-matrix input').value)">重新模拟</button>
     </div>
   `;
 
@@ -232,7 +232,7 @@ function renderKillMatrix() {
         html += `<td style="color:${color};text-align:center;font-size:12px">
           <b>${winRate >= 0.5 ? '胜' : '负'}</b>
           <span style="font-size:18px;font-weight:700">${(winRate * 100).toFixed(1)}%</span>
-          <span style="display:block;font-size:10px;color:var(--text3)">${result.avgRounds}鍥炲悎</span>
+          <span style="display:block;font-size:10px;color:var(--text3)">${result.avgRounds}回合</span>
         </td>`;
       }
     });
