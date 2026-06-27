@@ -47,6 +47,32 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(combatConfigLayout.leftWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
   expect(combatConfigLayout.rightWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
 
+  const combatFormLayout = await page.locator('#cb-formula-type').evaluate(select => {
+    const group = select.closest('.form-group');
+    const label = group.querySelector('label').getBoundingClientRect();
+    const control = select.getBoundingClientRect();
+    return {
+      labelText: group.querySelector('label').textContent.trim(),
+      sameRow: Math.abs((label.top + label.height / 2) - (control.top + control.height / 2)) < 3,
+      labelIsLeft: label.right <= control.left,
+    };
+  });
+  expect(combatFormLayout.labelText).toBe('公式类型');
+  expect(combatFormLayout.sameRow).toBe(true);
+  expect(combatFormLayout.labelIsLeft).toBe(true);
+
+  const combatParamLayout = await page.locator('#cb-pc').evaluate(input => {
+    const group = input.closest('.field');
+    const label = group.querySelector('label').getBoundingClientRect();
+    const control = input.getBoundingClientRect();
+    return {
+      sameRow: Math.abs((label.top + label.height / 2) - (control.top + control.height / 2)) < 3,
+      labelIsLeft: label.right <= control.left,
+    };
+  });
+  expect(combatParamLayout.sameRow).toBe(true);
+  expect(combatParamLayout.labelIsLeft).toBe(true);
+
   const combatAttrLabels = await page.locator('#combat-attr-inputs label').allTextContents();
   const defenderCombatAttrLabels = await page.locator('#combat-defender-attr-inputs label').allTextContents();
   expect(combatAttrLabels.length).toBeGreaterThanOrEqual(3);
@@ -171,6 +197,17 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#project-scenario-panel')).not.toBeEmpty();
 
   await page.locator('.tab[data-p="panel-payment"]').click();
+  const paymentToolbarLayout = await page.locator('#payment-tier').evaluate(select => {
+    const group = select.closest('.roi-bar-item');
+    const label = group.querySelector('label').getBoundingClientRect();
+    const control = select.getBoundingClientRect();
+    return {
+      sameRow: Math.abs((label.top + label.height / 2) - (control.top + control.height / 2)) < 4,
+      labelIsLeft: label.right <= control.left,
+    };
+  });
+  expect(paymentToolbarLayout.sameRow).toBe(true);
+  expect(paymentToolbarLayout.labelIsLeft).toBe(true);
   await expect(page.locator('#payment-tier-table tbody tr').first()).toBeVisible();
   await expect(page.locator('#payment-risk-list')).not.toBeEmpty();
 

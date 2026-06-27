@@ -62,8 +62,15 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
 .badge-d{background:rgba(255,71,87,.2);color:var(--danger)}
 .badge-t{background:rgba(0,201,167,.2);color:var(--accent2)}
 .form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
-.form-group label{font-size:12px;color:var(--text2)}
+.form-group{display:grid;grid-template-columns:minmax(88px,120px) minmax(0,1fr);align-items:center;column-gap:10px;row-gap:5px;flex:1;min-width:180px}
+.form-group label{font-size:12px;color:var(--text2);font-weight:600;text-align:right;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.form-group .fc,.form-group select,.form-group textarea,.form-group .help-block{min-width:0;grid-column:2}
+.form-group:has(textarea),.form-group:has(.help-block){align-items:start}
+.form-group:has(textarea) label,.form-group:has(.help-block) label{padding-top:9px}
+@media(max-width:600px){
+  .form-group{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0}
+  .form-group label{text-align:left;white-space:normal}
+}
 .fc{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:13px;font-family:inherit;width:100%;transition:border-color .2s}
 .fc:focus{outline:none;border-color:var(--accent)}
 select.fc option{background:var(--bg3)}
@@ -103,8 +110,13 @@ textarea.fc{resize:vertical;min-height:70px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;box-shadow:var(--sh);width:100%;clear:both}
 .card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px}
 .card-title::before{content:'';width:4px;height:14px;background:var(--accent);border-radius:2px}
-.field{flex:1;min-width:180px}
-.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.field{display:grid;grid-template-columns:minmax(72px,96px) minmax(0,1fr);align-items:center;column-gap:8px;row-gap:5px;flex:1;min-width:220px}
+.field label{font-size:12px;color:var(--text2);font-weight:600;text-align:right;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field .fc{min-width:0}
+@media(max-width:600px){
+  .field{display:flex;flex-direction:column;align-items:stretch;min-width:0}
+  .field label{text-align:left;white-space:normal}
+}
 .tbl-wrap{overflow-x:auto;width:100%;background:var(--bg2);border-radius:4px;border:1px solid var(--border);margin-top:10px}
 .chart-container{position:relative;height:300px;width:100%;margin-top:15px}
 .roi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
@@ -118,8 +130,8 @@ textarea.fc{resize:vertical;min-height:70px}
 
 /* 投入回报模拟器 - 养成系统投入回报对比 */
 .roi-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--bg2);border-radius:8px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border)}
-.roi-bar-item{font-size:13px}
-.roi-bar-item label{color:var(--text2);font-size:11px;display:block;margin-bottom:2px}
+.roi-bar-item{font-size:13px;display:flex;align-items:center;gap:8px}
+.roi-bar-item label{color:var(--text2);font-size:11px;font-weight:600;white-space:nowrap}
 .roi-bar-item .val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
 .roi-bar-item input{font-size:15px;font-weight:700;width:120px;padding:6px 10px}
 .roi-bar .btn{margin-left:auto}
@@ -572,8 +584,8 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="sim-grid">
         <div class="sim-left">
           <span style="font-size:13px;font-weight:600">玩家生命周期模拟仿真配置</span>
-          <div class="form-group"><label>玩家整体付费总预算 (元)</label><input type="number" class="fc" id="sim-budget" value="1000"></div>
-          <div class="form-group"><label>模拟持续体验天数 (天)</label><input type="number" class="fc" id="sim-days" value="30"></div>
+          <div class="form-group"><label>付费预算</label><input type="number" class="fc" id="sim-budget" value="1000"></div>
+          <div class="form-group"><label>模拟天数</label><input type="number" class="fc" id="sim-days" value="30"></div>
           <div class="form-group"><label>每日活跃可得免费资源收益系数</label><input type="number" class="fc" id="sim-daily-ratio" value="1" step="0.1"></div>
           <div class="form-group">
             <label>商业化付费购买策略偏好</label>
@@ -648,7 +660,7 @@ textarea.fc{resize:vertical;min-height:70px}
           <div class="combat-config-pane">
             <div class="grid-2" style="margin-bottom:12px">
               <div class="form-group">
-                <label>境界系数乘区 (0=无加成)</label>
+                <label>境界系数</label>
                 <select class="fc" id="cb-realm-mult" onchange="runCombatSim2()">
                   <option value="1.0">无 (1.0x)</option>
                   <option value="1.3">炼气 (1.0x)</option>
@@ -672,7 +684,7 @@ textarea.fc{resize:vertical;min-height:70px}
               </div>
             </div>
             <div class="form-group">
-              <label>公式类型（参考game-numerical-designer六种经典模型）</label>
+              <label>公式类型</label>
               <select class="fc" id="cb-formula-type" onchange="switchCombatFormula()">
                 <option value="sub">减法模型 — 伤害 = 攻击×c + (攻击×a - 防御×b)</option>
                 <option value="div">除法模型 — 伤害 = 攻击×a × (1 - 防御/(防御+f(lv)×b))</option>
@@ -907,7 +919,7 @@ textarea.fc{resize:vertical;min-height:70px}
 <div id="m-res" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-res')">
   <div class="modal"><div class="modal-header"><span class="modal-title" id="mr-title">资源配置</span></div><div class="modal-body">
     <input type="hidden" id="r-id"><div class="form-group"><label>资源名称</label><input class="fc" id="r-name" placeholder="例如：强化石、元宝"></div>
-    <div class="form-group"><label>资源基准单价 (元 / 个)</label><input type="number" class="fc" id="r-price" value="0.1" step="0.001" min="0"></div>
+    <div class="form-group"><label>资源单价</label><input type="number" class="fc" id="r-price" value="0.1" step="0.001" min="0"></div>
     <div class="form-group"><label>备注</label><input class="fc" id="r-note" placeholder="说明…"></div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-res')">取消</button><button class="btn btn-primary" onclick="saveRes()">保存</button></div></div>
 </div></div>
@@ -933,7 +945,7 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="form-group" id="cv-pk-grp" style="display:none"><label>速率 k</label><input type="number" class="fc" id="cv-pk" value="0.05" step="0.005" oninput="prevCurve()"></div>
       <div class="form-group" id="cv-px0-grp" style="display:none"><label>中心 x0</label><input type="number" class="fc" id="cv-px0" value="8" step="0.5" oninput="prevCurve()"></div>
     </div>
-    <div class="form-group" id="cv-p-stair" style="display:none"><label>阶梯映射配置 (JSON格式: [[等级,数值],...])</label><textarea class="fc" id="cv-psteps" oninput="prevCurve()">[[5,100],[10,300],[20,1000]]</textarea></div>
+    <div class="form-group" id="cv-p-stair" style="display:none"><label>阶梯映射</label><textarea class="fc" id="cv-psteps" oninput="prevCurve()">[[5,100],[10,300],[20,1000]]</textarea></div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-curve')">取消</button><button class="btn btn-primary" onclick="saveCurve()">保存</button></div></div>
 </div></div>
 
@@ -960,7 +972,7 @@ textarea.fc{resize:vertical;min-height:70px}
 <div id="m-pack" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-pack')">
   <div class="modal"><div class="modal-header"><span class="modal-title" id="mp-title">商业化礼包内容定制</span></div><div class="modal-body">
     <input type="hidden" id="p-id">
-    <div class="grid-2"><div class="form-group"><label>礼包/商品名称</label><input class="fc" id="p-name" placeholder="例如：新手畅玩首充礼包"></div><div class="form-group"><label>真实法币售价 (元)</label><input type="number" class="fc" id="p-price" value="6"></div></div>
+    <div class="grid-2"><div class="form-group"><label>商品名称</label><input class="fc" id="p-name" placeholder="例如：新手畅玩首充礼包"></div><div class="form-group"><label>售价</label><input type="number" class="fc" id="p-price" value="6"></div></div>
     <div class="form-group"><label>商品定位标签分类</label><select class="fc" id="p-tag"><option value="首充礼包">首充礼包 (极其关键的付费破冰点)</option><option value="每日特惠">每日特惠 (拉动持续DAU/付费深度)</option><option value="周期限时">周期限时 (拉动节点活动ARPU爆发)</option><option value="版本特惠">版本特惠 (新内容消费承接)</option></select></div>
     <div style="background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border)">
       <span style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">礼包包含道具物料清单明细</span>
@@ -976,7 +988,7 @@ textarea.fc{resize:vertical;min-height:70px}
     <div class="form-group"><label>槽位名称</label><input class="fc" id="ms-name" placeholder="例如：武器、头盔"></div>
     <div class="form-group"><label>槽位类型</label><select class="fc" id="ms-type"><option value="attack">攻击</option><option value="defense">防御</option><option value="sub">辅助</option></select></div>
     <div class="form-group"><label>可用品质</label><div id="ms-qualities" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
-    <div class="form-group"><label>基础属性（格式：属性名:数值; 多组分号隔开）</label><input class="fc" id="ms-attrs" placeholder="攻击力:50; 防御力:30"></div>
+    <div class="form-group"><label>基础属性</label><input class="fc" id="ms-attrs" placeholder="攻击力:50; 防御力:30"></div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="window.cm('m-slot')">取消</button><button class="btn btn-primary" onclick="window.saveSlotModal()">保存</button></div></div>
 </div></div>
 
@@ -3220,7 +3232,7 @@ function _initRealmModals(){
   _mkModal('m-realm-edit',
     '<div class="modal" style="max-width:700px"><div class="modal-header"><span class="modal-title" id="realm-edit-title">编辑大境界</span><button class="btn btn-ghost btn-xs" onclick="cm(\'m-realm-edit\')">✕</button></div>'
     +'<div class="modal-body">'
-    +'<div class="grid-2"><div class="form-group"><label>境界名称</label><input class="fc" id="realm-edit-name" placeholder="如: 炼气境"></div><div class="form-group"><label>描述(简短)</label><input class="fc" id="realm-edit-desc" placeholder="如: 修仙之始"></div></div>'
+    +'<div class="grid-2"><div class="form-group"><label>境界名称</label><input class="fc" id="realm-edit-name" placeholder="如: 炼气境"></div><div class="form-group"><label>描述</label><input class="fc" id="realm-edit-desc" placeholder="如: 修仙之始"></div></div>'
     +'<div class="form-group"><label>小境界层数</label><input type="number" class="fc" id="realm-edit-levels" value="1" min="1" max="20" oninput="generateLevelRows(parseInt(this.value)||1)"></div>'
     +'<div style="border:1px dashed var(--border);padding:10px;border-radius:6px;max-height:320px;overflow:auto">'
     +'<div style="font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px">小境界明细（第1层为入门，逐层递增）</div>'

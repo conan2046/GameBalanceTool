@@ -101,20 +101,20 @@ function renderRealmDetail() {
         <input type="number" class="fc" id="rd-xp" value="${realm.xpReq}" onchange="updateRealmField('xpReq', parseInt(this.value))">
       </div>
       <div class="form-group">
-        <label>突破成功率(%)</label>
+        <label>突破率</label>
         <input type="number" class="fc" id="rd-rate" value="${realm.successRate}" onchange="updateRealmField('successRate', parseInt(this.value))">
       </div>
       <div class="form-group">
-        <label>修为倒退%(失败惩罚)</label>
+        <label>修为倒退</label>
         <input type="number" class="fc" id="rd-loss" value="${realm.failPenalty.xpLoss}" onchange="updateRealmField('failPenalty.xpLoss', parseInt(this.value))">
       </div>
       <div class="form-group">
-        <label>冷却(小时)</label>
+        <label>冷却</label>
         <input type="number" class="fc" id="rd-cooldown" value="${realm.failPenalty.cooldown}" onchange="updateRealmField('failPenalty.cooldown', parseInt(this.value))">
       </div>
     </div>
     <div class="form-group" style="margin-top:12px">
-      <label>解锁系统 (逗号分隔)</label>
+      <label>解锁系统</label>
       <input class="fc" id="rd-unlock" value="${realm.unlockSys.join(',')}" onchange="updateRealmField('unlockSys', this.value.split(',').map(s=>s.trim()))">
     </div>
   `;
