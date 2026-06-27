@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.7.1 envelopes', () => {
+test('project versioning restores current v3.8.0 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.7.1 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.7.1');
+  expect(restored.to).toBe('3.8.0');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.7.1');
-  await expect(page.locator('#app-release-name')).toHaveText('界面维护版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.8.0');
+  await expect(page.locator('#app-release-name')).toHaveText('战斗沙盘编辑版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
 
   await page.locator('.tab[data-p="panel-curve"]').click();
@@ -111,13 +111,23 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   const defenderCombatAttrLabels = await page.locator('#combat-defender-attr-inputs label').allTextContents();
   expect(combatAttrLabels.length).toBeGreaterThanOrEqual(3);
   expect(defenderCombatAttrLabels).toEqual(combatAttrLabels);
+  await expect(page.locator('#combat-target-parser')).not.toContainText('进攻方属性');
+  await expect(page.locator('#combat-target-parser')).not.toContainText('守方目标属性');
+  await expect(page.locator('#cb-battle-stage .fighter-header button', { hasText: '编辑' })).toHaveCount(2);
 
   const defaultMaxDamage = await page.locator('#cb-dmg-max').textContent();
-  await page.locator('#cb-def-attr-a2').fill('9999');
+  await page.locator('#cb-battle-stage .fighter-header button', { hasText: '编辑' }).nth(1).click();
+  await expect(page.locator('#combat-role-title')).toBeVisible();
+  await expect(page.locator('#combat-role-title')).toHaveText('守方目标属性编辑');
+  await expect(page.locator('#combat-role-edit-a2')).toBeVisible();
+  await page.locator('#combat-role-edit-a2').fill('9999');
+  await page.locator('#m-combat-role .modal-footer .btn-primary').click();
   const reducedMaxDamage = await page.locator('#cb-dmg-max').textContent();
   expect(Number((reducedMaxDamage || '0').replace(/,/g, ''))).toBeLessThan(Number((defaultMaxDamage || '0').replace(/,/g, '')));
   await expect(page.locator('#cb-defender-stats')).toContainText('9,999');
-  await page.locator('button', { hasText: '按推荐生成' }).click();
+  await page.locator('#cb-battle-stage .fighter-header button', { hasText: '编辑' }).nth(1).click();
+  await page.locator('#combat-role-recommend').click();
+  await page.locator('#m-combat-role .modal-footer .btn-primary').click();
   await expect(page.locator('#cb-defender-stats')).not.toContainText('9,999');
 
   await expect(page.locator('#cb-battle-stage')).toBeVisible();

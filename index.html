@@ -258,6 +258,7 @@ textarea.fc{resize:vertical;min-height:70px}
 .fighter-card.attacking .fighter-weapon{animation:weaponSlash .28s ease}
 .fighter-card.defender.attacking .fighter-weapon{animation:weaponSlashLeft .28s ease}
 .fighter-card.hit .fighter-sprite{filter:brightness(1.7)}
+.fighter-header{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px}
 .fighter-name{font-size:12px;color:var(--text2);font-weight:700;text-align:center}
 .role-stats{width:100%;max-width:360px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-self:center}
 .role-stat{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 5px;text-align:center}
@@ -284,8 +285,10 @@ textarea.fc{resize:vertical;min-height:70px}
 .combat-config-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 .combat-config-pane{min-width:0}
 .combat-attr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.combat-attr-input-store{display:none}
+.combat-role-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media(max-width:900px){.battle-row{grid-template-columns:1fr;gap:16px}.battle-mid{order:2}.fighter{max-width:none}.fighter-card{width:132px;height:140px}.role-stats,.hp-wrap{max-width:360px}}
-@media(max-width:900px){.combat-config-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.combat-config-grid{grid-template-columns:1fr}.combat-role-editor-grid{grid-template-columns:1fr}}
 @keyframes battleHit{0%,100%{filter:none}35%{filter:brightness(1.8);transform:translateX(4px)}70%{transform:translateX(-4px)}}
 @keyframes damagePop{0%{opacity:0;transform:translateY(8px) scale(.9)}35%{opacity:1;transform:translateY(-6px) scale(1.08)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fighterIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
@@ -298,8 +301,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.7.1</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">界面维护版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.8.0</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战斗沙盘编辑版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -714,15 +717,7 @@ textarea.fc{resize:vertical;min-height:70px}
           </div>
           <div class="combat-config-pane" id="combat-target-parser">
             <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单体系目标战力解析器</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-              <span style="font-size:12px;font-weight:700;color:var(--accent2)">进攻方属性</span>
-            </div>
-            <div class="combat-attr-grid" id="combat-attr-inputs"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 6px">
-              <span style="font-size:12px;font-weight:700;color:var(--danger)">守方目标属性</span>
-              <button class="btn btn-ghost btn-xs" onclick="syncDefenderCombatAttrsFromAttacker()">按推荐生成</button>
-            </div>
-            <div class="combat-attr-grid" id="combat-defender-attr-inputs"></div>
+            <div class="help-block" style="margin-bottom:10px">敌我双方属性在下方沙盘角色卡内编辑，属性项自动读取“属性与权重”。</div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
               <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
                 <div style="font-size:11px;color:var(--text3)">单次最大伤害</div>
@@ -736,6 +731,10 @@ textarea.fc{resize:vertical;min-height:70px}
                 <div style="font-size:11px;color:var(--text3)">通关回合数</div>
                 <div style="font-size:18px;font-weight:bold;color:var(--accent2);font-variant-numeric:tabular-nums" id="cb-rounds">0</div>
               </div>
+            </div>
+            <div class="combat-attr-input-store" aria-hidden="true">
+              <div id="combat-attr-inputs"></div>
+              <div id="combat-defender-attr-inputs"></div>
             </div>
           </div>
         </div>
@@ -754,7 +753,10 @@ textarea.fc{resize:vertical;min-height:70px}
           <div class="battle-stage" id="cb-battle-stage" data-state="idle">
             <div class="battle-row">
               <div class="fighter">
-                <div class="fighter-name">进攻方</div>
+                <div class="fighter-header">
+                  <div class="fighter-name">进攻方</div>
+                  <button class="btn btn-ghost btn-xs" onclick="openCombatRoleEditor('attacker')">编辑</button>
+                </div>
                 <div class="fighter-card attacker" id="cb-attacker-card">
                   <div class="fighter-sprite" aria-label="attacker character">
                     <div class="fighter-hair"></div><div class="fighter-head"></div><div class="fighter-face"></div>
@@ -775,7 +777,10 @@ textarea.fc{resize:vertical;min-height:70px}
                 <div class="battle-result" id="cb-battle-result">点击发动</div>
               </div>
               <div class="fighter">
-                <div class="fighter-name">守方目标</div>
+                <div class="fighter-header">
+                  <div class="fighter-name">守方目标</div>
+                  <button class="btn btn-ghost btn-xs" onclick="openCombatRoleEditor('defender')">编辑</button>
+                </div>
                 <div class="fighter-card defender" id="cb-defender-card">
                   <div class="fighter-sprite" aria-label="defender character">
                     <div class="fighter-hair"></div><div class="fighter-head"></div><div class="fighter-face"></div>
@@ -920,6 +925,21 @@ textarea.fc{resize:vertical;min-height:70px}
     <input type="hidden" id="a-id"><div class="form-group"><label>属性名称</label><input class="fc" id="a-name" placeholder="例如：攻击力、生命值"></div>
     <div class="grid-2"><div class="form-group"><label>基础初始值</label><input type="number" class="fc" id="a-base" value="100"></div><div class="form-group"><label>每点战力权重</label><input type="number" class="fc" id="a-weight" value="1" step="0.1"></div></div>
   </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-attr')">取消</button><button class="btn btn-primary" onclick="saveAttr()">保存</button></div></div>
+</div></div>
+
+<div id="m-combat-role" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-combat-role')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="combat-role-title">战斗属性编辑</span></div>
+    <div class="modal-body">
+      <div class="combat-role-editor-grid" id="combat-role-editor-body"></div>
+      <div class="help-block" style="margin-top:10px">属性项来自“属性与权重”，新增或删除基础二级属性后这里会同步刷新。</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="combat-role-recommend" onclick="fillCombatRoleEditorFromRecommendation()" style="display:none">按推荐生成</button>
+      <button class="btn btn-ghost" onclick="cm('m-combat-role')">取消</button>
+      <button class="btn btn-primary" onclick="saveCombatRoleEditor()">保存</button>
+    </div>
+  </div>
 </div></div>
 
 <div id="m-res" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-res')">
@@ -1341,7 +1361,7 @@ function addSlotAttrRow(attrId, val){
     + '<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button></div></div>';
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')['m-attr','m-res','m-curve','m-line','m-branch','m-pack','m-realm-edit','m-level-edit','m-slot'].forEach(cm);
+  if(e.key==='Escape')['m-attr','m-combat-role','m-res','m-curve','m-line','m-branch','m-pack','m-realm-edit','m-level-edit','m-slot'].forEach(cm);
 });
 
 // 页签切换控制逻辑
@@ -2468,6 +2488,55 @@ function renderCombatAttrInputs(forceDefenderDefaults){
 
 function syncDefenderCombatAttrsFromAttacker(){
   renderCombatAttrInputs(true);
+  runCombatSim2();
+}
+
+function openCombatRoleEditor(side){
+  renderCombatAttrInputs();
+  var targetSide=side==='defender'?'defender':'attacker';
+  var modal=document.getElementById('m-combat-role');
+  var body=document.getElementById('combat-role-editor-body');
+  var title=document.getElementById('combat-role-title');
+  var recommend=document.getElementById('combat-role-recommend');
+  if(!modal||!body)return;
+  modal.dataset.side=targetSide;
+  if(title)title.textContent=(targetSide==='defender'?'守方目标':'进攻方')+'属性编辑';
+  if(recommend)recommend.style.display=targetSide==='defender'?'inline-flex':'none';
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  body.innerHTML=attrs.length?attrs.map(function(attr){
+    var source=document.getElementById(getCombatAttrInputId(attr.id,targetSide));
+    var current=source?source.value:(attr.base ?? 0);
+    var editorId='combat-role-edit-'+String(attr.id||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+    return '<div class="field"><label>'+attr.name+'</label><input type="number" class="fc" id="'+editorId+'" data-combat-role-attr="'+attr.id+'" value="'+current+'"></div>';
+  }).join(''):'<div class="help-block">请先在“属性与权重”页配置基础二级属性。</div>';
+  modal.style.display='flex';
+}
+
+function fillCombatRoleEditorFromRecommendation(){
+  var modal=document.getElementById('m-combat-role');
+  if(!modal||modal.dataset.side!=='defender')return;
+  renderCombatAttrInputs();
+  var attackerValues=readCombatAttrs('attacker').attrs;
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  attrs.forEach(function(attr){
+    var editorId='combat-role-edit-'+String(attr.id||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+    var input=document.getElementById(editorId);
+    if(input)input.value=getDefaultDefenderCombatAttr(attr,attackerValues);
+  });
+}
+
+function saveCombatRoleEditor(){
+  var modal=document.getElementById('m-combat-role');
+  if(!modal)return;
+  var targetSide=modal.dataset.side==='defender'?'defender':'attacker';
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  var editors=Array.from(document.querySelectorAll('#combat-role-editor-body [data-combat-role-attr]'));
+  attrs.forEach(function(attr){
+    var editor=editors.find(function(input){return input.dataset.combatRoleAttr===String(attr.id);});
+    var target=document.getElementById(getCombatAttrInputId(attr.id,targetSide));
+    if(editor&&target)target.value=editor.value;
+  });
+  cm('m-combat-role');
   runCombatSim2();
 }
 
