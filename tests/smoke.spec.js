@@ -1,0 +1,178 @@
+import { test, expect } from '@playwright/test';
+import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
+
+test('project versioning restores current v3.6 envelopes', () => {
+  const envelope = createProjectEnvelope({
+    attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
+    resources: [{ id: 'gold', name: 'gold', price: 1 }],
+    curves: [{ id: 'c1', name: 'linear', type: 'linear', params: { a: 10 } }],
+    cultivations: [],
+  });
+
+  const restored = normalizeImportedProject(envelope);
+  expect(restored.to).toBe('3.6.0');
+  expect(restored.data.project.schema).toBe('gbt-project');
+  expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
+});
+
+test('main UI boots and renders v3 modules', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+
+  await page.goto('/');
+  await expect(page).toHaveTitle(/游戏数值模拟平台/);
+  await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
+
+  await page.locator('.tab[data-p="panel-curve"]').click();
+  await expect(page.locator('#t-curve tbody tr').first()).toBeVisible();
+  await expect(page.locator('#t-curve tbody tr').first()).not.toBeEmpty();
+
+  await page.locator('.tab[data-p="panel-cult"]').click();
+  await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();
+  await expect(page.locator('#realm-metrics')).not.toBeEmpty();
+  await expect(page.locator('#cult-tree')).not.toBeEmpty();
+
+  await page.locator('.tab[data-p="panel-combat2"]').click();
+  const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));
+  expect(combatTierColors.every(color => /^#[0-9a-fA-F]{6}$/.test(color))).toBe(true);
+  const combatConfigLayout = await page.locator('.combat-config-grid').evaluate(grid => {
+    const gridBox = grid.getBoundingClientRect();
+    const panes = Array.from(grid.querySelectorAll('.combat-config-pane')).map(pane => pane.getBoundingClientRect());
+    return {
+      gridWidth: gridBox.width,
+      leftWidth: panes[0]?.width || 0,
+      rightWidth: panes[1]?.width || 0,
+    };
+  });
+  expect(combatConfigLayout.leftWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
+  expect(combatConfigLayout.leftWidth / combatConfigLayout.gridWidth).toBeLessThan(0.5);
+  expect(combatConfigLayout.rightWidth / combatConfigLayout.gridWidth).toBeGreaterThan(0.47);
+  expect(combatConfigLayout.rightWidth / combatConfigLayout.gridWidth).toBeLessThan(0.5);
+  const combatAttrLabels = await page.locator('#combat-attr-inputs label').allTextContents();
+  expect(combatAttrLabels).toEqual(['攻击力', '防御力', '生命值']);
+  await expect(page.locator('#combat-target-parser')).not.toContainText(/速度|暴击率|暴击伤害/);
+  await expect(page.locator('#cb-battle-stage')).toBeVisible();
+  const combatSandboxLayout = await page.locator('.combat-sandbox-card').evaluate(el => {
+    const parent = el.getBoundingClientRect();
+    const sections = Array.from(el.querySelectorAll('.combat-sandbox-section')).map(section => section.getBoundingClientRect());
+    return {
+      parentWidth: parent.width,
+      firstWidth: sections[0]?.width || 0,
+      secondWidth: sections[1]?.width || 0,
+      firstBottom: sections[0]?.bottom || 0,
+      secondTop: sections[1]?.top || 0,
+    };
+  });
+  expect(combatSandboxLayout.firstWidth).toBeGreaterThan(combatSandboxLayout.parentWidth * 0.95);
+  expect(combatSandboxLayout.secondWidth).toBeGreaterThan(combatSandboxLayout.parentWidth * 0.95);
+  expect(combatSandboxLayout.secondTop).toBeGreaterThan(combatSandboxLayout.firstBottom);
+  const combatStageLayout = await page.locator('#cb-battle-stage').evaluate(stage => {
+    const stageBox = stage.getBoundingClientRect();
+    const rowBox = stage.querySelector('.battle-row').getBoundingClientRect();
+    const attacker = stage.querySelector('#cb-attacker-card').getBoundingClientRect();
+    const defender = stage.querySelector('#cb-defender-card').getBoundingClientRect();
+    const chart = document.querySelector('#cbChart').getBoundingClientRect();
+    const logSection = document.querySelectorAll('.combat-sandbox-section')[1].getBoundingClientRect();
+    const logTable = document.querySelector('#tbl-cb-log').getBoundingClientRect();
+    const chartCanvas = document.querySelector('#cbChart');
+    const pixelRatio = window.devicePixelRatio || 1;
+    return {
+      stageWidth: stageBox.width,
+      rowWidth: rowBox.width,
+      attackerCenter: attacker.left + attacker.width / 2 - stageBox.left,
+      defenderCenter: defender.left + defender.width / 2 - stageBox.left,
+      chartWidth: chart.width,
+      chartHeight: chart.height,
+      chartBackingWidth: chartCanvas.width,
+      chartBackingHeight: chartCanvas.height,
+      pixelRatio,
+      chartBottom: chart.bottom,
+      logTop: logSection.top,
+      logTableTop: logTable.top,
+    };
+  });
+  expect(combatStageLayout.rowWidth).toBeGreaterThan(combatStageLayout.stageWidth * 0.95);
+  expect(combatStageLayout.attackerCenter).toBeLessThan(combatStageLayout.stageWidth * 0.35);
+  expect(combatStageLayout.defenderCenter).toBeGreaterThan(combatStageLayout.stageWidth * 0.65);
+  expect(combatStageLayout.chartWidth).toBeGreaterThan(combatStageLayout.stageWidth * 0.9);
+  expect(combatStageLayout.chartBackingWidth).toBeGreaterThanOrEqual(Math.floor(combatStageLayout.chartWidth * combatStageLayout.pixelRatio * 0.95));
+  expect(combatStageLayout.chartBackingHeight).toBeGreaterThanOrEqual(Math.floor(combatStageLayout.chartHeight * combatStageLayout.pixelRatio * 0.95));
+  expect(combatStageLayout.chartBottom).toBeLessThan(combatStageLayout.logTop);
+  expect(combatStageLayout.chartBottom).toBeLessThan(combatStageLayout.logTableTop);
+  const combatChartPixels = await page.locator('#cbChart').evaluate(canvas => {
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let redPixels = 0;
+    let greenPixels = 0;
+    let visiblePixels = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      if (a > 0 && r + g + b > 60) visiblePixels += 1;
+      if (a > 0 && r > 140 && g < 120 && b < 140) redPixels += 1;
+      if (a > 0 && g > 120 && r < 120) greenPixels += 1;
+    }
+    return { redPixels, greenPixels, visiblePixels };
+  });
+  expect(combatChartPixels.visiblePixels).toBeGreaterThan(1000);
+  expect(combatChartPixels.redPixels).toBeGreaterThan(50);
+  expect(combatChartPixels.greenPixels).toBeGreaterThan(50);
+  await expect(page.locator('#cb-attacker-card .fighter-sprite')).toBeVisible();
+  await expect(page.locator('#cb-defender-card .fighter-sprite')).toBeVisible();
+  await expect(page.locator('#cb-attacker-card .fighter-weapon')).toBeVisible();
+  await expect(page.locator('#cb-defender-card .fighter-weapon')).toBeVisible();
+  await expect(page.locator('#cb-attacker-stats')).toContainText('攻击');
+  await expect(page.locator('#cb-attacker-stats')).toContainText('生命');
+  await expect(page.locator('#cb-defender-stats')).toContainText('攻击');
+  await expect(page.locator('#cb-defender-stats')).toContainText('生命');
+  await expect(page.locator('#cb-attacker-stats')).not.toContainText(/ATK|DEF|HP|SPD|CRIT|CDMG/);
+  await expect(page.locator('#cb-attacker-stats')).not.toContainText(/速度|暴击率|暴击伤害/);
+  await page.evaluate(() => {
+    window.S.attrs.push({ id: 'a_speed_test', name: '速度', base: 77, weight: 0.3 });
+    window.EQUIPMENT_DATA.slots[0].baseAttrs.a_speed_test = 12;
+    window.rAttrs();
+  });
+  await expect(page.locator('#combat-attr-inputs')).toContainText('速度');
+  await expect(page.locator('#cb-attacker-stats')).toContainText('速度');
+  await page.locator('.tab[data-p="panel-class"]').click();
+  await expect(page.locator('#class-selector')).toContainText('速度');
+  await page.locator('.tab[data-p="panel-cult"]').click();
+  await expect(page.locator('#slot-editor')).toContainText('速度');
+  await page.evaluate(() => {
+    window.S.attrs = window.S.attrs.filter(attr => attr.id !== 'a_speed_test');
+    window.rAttrs();
+  });
+  await page.locator('.tab[data-p="panel-combat2"]').click();
+  await expect(page.locator('#combat-attr-inputs')).not.toContainText('速度');
+  const idleAnimation = await page.locator('#cb-attacker-card .fighter-sprite').evaluate(el => getComputedStyle(el).animationName);
+  expect(idleAnimation).toContain('fighterIdle');
+  await page.locator('#cb-play-battle').click();
+  await expect(page.locator('#cb-battle-stage[data-state="playing"]')).toBeVisible();
+  await expect(page.locator('#cb-float-damage')).not.toBeEmpty();
+  const combatFrameSides = await page.evaluate(() => (window.cbBattleFrames || []).map(f => f.side));
+  expect(combatFrameSides).toContain('attacker');
+  expect(combatFrameSides).toContain('defender');
+  await expect(page.locator('#tbl-cb-log tbody tr').first()).toContainText('攻');
+  await expect(page.locator('#tbl-cb-log tbody tr').first()).toContainText('守');
+
+  await page.locator('.tab[data-p="panel-roi2"]').click();
+  await expect(page.locator('#roi-sys-grid .roi-sys-card').first()).toBeVisible();
+  await expect(page.locator('#project-scenario-panel')).toContainText('工程多方案管理');
+
+  await page.locator('.tab[data-p="panel-payment"]').click();
+  await expect(page.locator('#payment-tier-table tbody tr').first()).toBeVisible();
+  await expect(page.locator('#payment-risk-list')).not.toBeEmpty();
+
+  const forbiddenVisibleText = /ATK|DEF|HP|SPD|CRIT|CDMG|ROI|DPS|VIP|Project|Lv\.|非R|小R|中R|大R|超R/;
+  for (const panel of ['panel-attr', 'panel-matrix', 'panel-class', 'panel-cult', 'panel-res', 'panel-eco', 'panel-pack', 'panel-combat2', 'panel-payment', 'panel-roi2', 'panel-curve']) {
+    await page.locator(`.tab[data-p="${panel}"]`).click();
+    await expect(page.locator(`#${panel}`)).not.toContainText(forbiddenVisibleText);
+  }
+
+  const envelope = await page.evaluate(() => window.ProjectState.snapshot({ from: 'smoke-test' }));
+  expect(envelope.schema).toBe('gbt-project');
+  expect(envelope.data.project.scenarios.length).toBeGreaterThan(0);
+  expect(pageErrors).toEqual([]);
+});

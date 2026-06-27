@@ -1,0 +1,3224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<script src="./libs/chart-lite.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>游戏数值模拟平台</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2d3148;
+  --accent:#6c63ff;--accent2:#00c9a7;--danger:#ff4757;--warning:#ffa502;--success:#2ed573;
+  --text:#e8eaf6;--text2:;--text3:;--card:#1e2136;--r:8px;--sh:0 4px 24px rgba(0,0,0,.4)
+}
+html,body{height:100%;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* 隐藏数字输入框的上下微调按钮 */
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* WebKit browsers (Chrome, Safari) */
+    margin: 0;
+}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:52px;flex-shrink:0}
+.logo{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:1px;white-space:nowrap}
+.logo span{color:var(--accent2)}
+#project-title{font-size:13px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header-btns{display:flex;gap:8px;flex-shrink:0}
+.tabs{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;overflow-x:auto}
+.tab{padding:13px 18px;cursor:pointer;color:var(--text2);font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text);background:rgba(108,99,255,.05)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(108,99,255,.08)}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.panel{display:none;flex:1;overflow-y:auto;padding:20px;flex-direction:column;gap:16px}
+.panel.active{display:flex}
+.section{background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+.section-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.section-title{font-size:14px;font-weight:600}
+.section-body{padding:16px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-family:inherit;transition:all .2s;line-height:1.3}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#7c75ff}
+.btn-success{background:var(--success);color:#0f1117}.btn-success:hover{opacity:.85}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-warning{background:var(--warning);color:#0f1117}.btn-warning:hover{opacity:.85}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:12px}.btn-xs{padding:2px 8px;font-size:14px}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 12px;text-align:left;color:var(--text2);font-weight:500;font-size:14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(108,99,255,.04)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:14px;font-weight:600}
+.badge-a{background:rgba(108,99,255,.2);color:var(--accent)}
+.badge-s{background:rgba(46,213,115,.2);color:var(--success)}
+.badge-w{background:rgba(255,165,2,.2);color:var(--warning)}
+.badge-d{background:rgba(255,71,87,.2);color:var(--danger)}
+.badge-t{background:rgba(0,201,167,.2);color:var(--accent2)}
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
+.form-group label{font-size:12px;color:var(--text2)}
+.fc{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:13px;font-family:inherit;width:100%;transition:border-color .2s}
+.fc:focus{outline:none;border-color:var(--accent)}
+select.fc option{background:var(--bg3)}
+textarea.fc{resize:vertical;min-height:70px}
+.help-block{font-size:12px;color:var(--text3);line-height:1.4}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:15px}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r);width:100%;max-width:540px;box-shadow:var(--sh);display:flex;flex-direction:column;max-height:90%}
+.modal-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:14px;font-weight:600}
+.modal-body{padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:end;gap:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.grid-2{grid-template-columns:1fr}}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:600px){.grid-3{grid-template-columns:1fr}}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:6px;color:#fff;font-size:13px;z-index:2000;box-shadow:var(--sh);animation:fadeIn .2s}
+.toast.s{background:var(--success);color:#0f1117}.toast.e{background:var(--danger)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.cult-row{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);margin-bottom:8px}
+.cult-hd{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cult-lb{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.cult-lb.open{display:block}
+.rule-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px}
+.sim-grid{display:grid;grid-template-columns:280px 1fr;gap:16px;height:100%;overflow:hidden}
+@media(max-width:900px){.sim-grid{grid-template-columns:1fr;overflow-y:auto}}
+.sim-left{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.sim-right{display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center}
+.stat-v{font-size:18px;font-weight:700;color:var(--accent2);margin-top:2px}
+.stat-l{font-size:12px;color:var(--text2)}
+.slider-group{background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border)}
+.slider-header{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.matrix-input{width:65px;text-align:center;padding:4px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:4px}
+
+/* --- New card layout --- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;box-shadow:var(--sh);width:100%;clear:both}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.card-title::before{content:'';width:4px;height:14px;background:var(--accent);border-radius:2px}
+.field{flex:1;min-width:180px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.tbl-wrap{overflow-x:auto;width:100%;background:var(--bg2);border-radius:4px;border:1px solid var(--border);margin-top:10px}
+.chart-container{position:relative;height:300px;width:100%;margin-top:15px}
+.roi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.roi-grid{grid-template-columns:1fr}}
+.roi-card{background:var(--bg2);border:2px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:.2s}
+.roi-card:hover{border-color:var(--text3)}
+.roi-card.active{border-color:var(--accent);background:rgba(108,99,255,0.04)}
+.roi-card .name{font-weight:700;font-size:13px}
+.roi-card .desc{font-size:11px;color:var(--text2);margin-top:4px}
+.btn-group{display:flex;gap:10px;margin-top:12px}
+
+/* 投入回报模拟器 - 养成系统投入回报对比 */
+.roi-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--bg2);border-radius:8px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border)}
+.roi-bar-item{font-size:13px}
+.roi-bar-item label{color:var(--text2);font-size:11px;display:block;margin-bottom:2px}
+.roi-bar-item .val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.roi-bar-item input{font-size:15px;font-weight:700;width:120px;padding:6px 10px}
+.roi-bar .btn{margin-left:auto}
+
+.roi-sys-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.roi-sys-card{flex:1 1 calc(20% - 12px);min-width:0;background:var(--bg2);border-radius:8px;padding:14px;border:1px solid var(--border);position:relative;overflow:hidden}
+.roi-sys-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.roi-sys-card.cs1::before{background:var(--accent)}
+.roi-sys-card.cs2::before{background:#4fc3f7}
+.roi-sys-card.cs3::before{background:#4ecca3}
+.roi-sys-card.cs4::before{background:#ba68c8}
+.roi-sys-card.cs5::before{background:#ff8a65}
+.roi-sys-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.roi-sys-name{font-size:14px;font-weight:700}
+.roi-sys-power{font-size:12px;color:var(--accent2)}
+.roi-sys-sub{font-size:11px;color:var(--text3);margin-bottom:6px}
+.roi-bar-track{width:100%;height:6px;background:var(--bg3);border-radius:3px;margin-bottom:8px;overflow:hidden}
+.roi-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.roi-bar-fill.cs1{background:linear-gradient(90deg,var(--accent),#ff6b81)}
+.roi-bar-fill.cs2{background:linear-gradient(90deg,#4fc3f7,#00bcd4)}
+.roi-bar-fill.cs3{background:linear-gradient(90deg,#4ecca3,#00e676)}
+.roi-bar-fill.cs4{background:linear-gradient(90deg,#ba68c8,#e040fb)}
+.roi-bar-fill.cs5{background:linear-gradient(90deg,#ff8a65,#ff5722)}
+.roi-sys-graph{display:flex;align-items:flex-end;gap:2px;height:30px;margin-bottom:8px}
+.roi-sys-graph .bar{width:14px;border-radius:2px 2px 0 0;min-height:2px;transition:height .3s}
+.roi-sys-btn{display:block;width:100%;padding:8px;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:6px;transition:opacity .2s}
+.roi-sys-btn:disabled{opacity:.35;cursor:not-allowed}
+.roi-sys-btn:hover:not(:disabled){opacity:.85}
+.roi-sys-info{font-size:10px;color:var(--text3);line-height:1.4}
+.roi-comp-area{margin-top:12px}
+.roi-comp-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.roi-comp-label{width:130px;font-size:12px;font-weight:600;flex-shrink:0}
+.roi-comp-bar{flex:1;height:26px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.roi-comp-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;color:#fff;transition:width .4s;white-space:nowrap;min-width:40px}
+.roi-comp-val{width:100px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0}
+.roi-stars{font-size:20px;letter-spacing:3px;margin-top:8px}
+
+/* ── v3.0 职业面板 ── */
+.class-card{flex:1 1 200px;min-width:0;border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:.2s;background:var(--bg2);text-align:center}
+.class-card:hover{border-color:var(--accent);background:rgba(108,99,255,.04)}
+.class-card.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.class-name{font-size:15px;font-weight:700;margin-bottom:6px}
+.class-stats{font-size:11px;color:var(--text2);line-height:1.5}
+.damage-type-card{display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px}
+.damage-type-card .dt-name{font-size:14px;font-weight:700;min-width:60px}
+.damage-type-card .dt-desc{font-size:12px;color:var(--text2);flex:1}
+.damage-type-card label{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer}
+
+/* ── v3.0 境界面板 ── */
+/* realm-item → 已迁移至 .realm-card 系列 (上方) */
+
+/* ── 境界系统: 8列网格+可编辑层 ── */
+.realm-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:10px}
+.realm-card{border:1px solid var(--border);border-radius:6px;padding:6px 4px;cursor:pointer;text-align:center;background:var(--bg2);transition:all .15s;font-size:11px;position:relative}
+.realm-card:hover{border-color:var(--accent);background:rgba(108,99,255,.04)}
+.realm-card.active{border-color:var(--accent);background:rgba(108,99,255,.08)}
+.realm-card .rn{font-size:13px;font-weight:700}
+.realm-card .rl{font-size:10px;color:var(--text3)}
+.realm-card .rm{font-size:10px;color:var(--accent2)}
+.realm-card .rc-ops{display:flex;gap:2px;justify-content:center;margin-top:2px}
+.rc-ops button{padding:0 3px;font-size:9px;border-radius:3px;border:0.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;line-height:1.5}
+.rc-ops button:hover{color:var(--text);background:var(--bg3)}
+.level-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:30px}
+.level-dot{min-width:72px;padding:6px 8px;text-align:center;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:.12s;background:var(--bg2);color:var(--text2);white-space:nowrap;line-height:1.5}
+.level-dot:hover{border-color:var(--accent)}
+.level-dot.active{background:rgba(108,99,255,.08);color:var(--text);border-color:var(--accent);font-weight:600}
+.level-dot .lv-line1{font-size:11px;font-weight:500}
+.level-dot .lv-line2{font-size:10px;margin-top:2px;display:flex;gap:3px;justify-content:center}
+.level-ops{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.level-ops .btn-xs{padding:3px 8px;font-size:10px;border-radius:4px}
+.level-ops span{font-size:11px;color:var(--text2)}
+.realm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.metric-c{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;text-align:center}
+.metric-c .ml{font-size:11px;color:var(--text2);margin-bottom:4px}
+.metric-c .mv{font-size:18px;font-weight:700}
+.chart-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chart-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px}
+.chart-box .ct{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;text-align:center}
+.chart-box svg{display:block;width:100%}
+.realm-type-btn{margin-bottom:8px;display:flex;gap:6px}
+.realm-toolbar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.realm-toolbar button{padding:2px 6px;font-size:10px;border-radius:4px}
+
+/* ── v3.0 装备面板 ── */
+.slot-card{border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg2)}
+.slot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slot-name{font-size:13px;font-weight:700}
+.slot-type{font-size:10px;padding:1px 6px}
+.slot-qualities{display:flex;gap:3px;margin-bottom:4px}
+.quality-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid var(--border)}
+.slot-attrs{font-size:11px;color:var(--text2)}
+
+/* Combat sandbox animation */
+.battle-stage{position:relative;min-height:250px;background:radial-gradient(circle at 50% 20%,rgba(108,99,255,.16),transparent 38%),linear-gradient(180deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:14px;margin-top:10px}
+.battle-stage::after{content:'';position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.22));pointer-events:none}
+.battle-row{position:relative;z-index:1;display:grid;grid-template-columns:minmax(280px,1fr) minmax(190px,240px) minmax(280px,1fr);align-items:center;gap:clamp(22px,4vw,64px);min-height:186px;width:100%}
+.fighter{display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:0}
+.fighter-card{width:clamp(132px,13vw,176px);height:clamp(140px,14vw,188px);border-radius:8px;border:1px solid var(--border);background:linear-gradient(145deg,#22263a,#141722);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 10px 24px rgba(0,0,0,.28);transition:transform .18s;overflow:hidden;align-self:center}
+.fighter-card.attacking{transform:translateX(18px) scale(1.04)}
+.fighter-card.defender.attacking{transform:translateX(-18px) scale(1.04)}
+.fighter-card.hit{animation:battleHit .22s ease}
+.fighter-card::before{content:'';position:absolute;left:12px;right:12px;bottom:10px;height:14px;border-radius:50%;background:rgba(0,0,0,.32);filter:blur(2px)}
+.fighter-sprite{position:relative;width:86px;height:112px;animation:fighterIdle 1.25s ease-in-out infinite;transform-origin:50% 100%}
+.fighter-head{position:absolute;left:28px;top:8px;width:31px;height:34px;border-radius:50% 50% 46% 46%;background:linear-gradient(180deg,#ffd7a8,#e8a96d);border:1px solid rgba(0,0,0,.22);z-index:4}
+.fighter-hair{position:absolute;left:22px;top:1px;width:43px;height:25px;border-radius:22px 22px 8px 8px;background:linear-gradient(180deg,#28334f,#101626);z-index:5}
+.fighter-hair::after{content:'';position:absolute;right:4px;bottom:-7px;width:12px;height:20px;border-radius:8px;background:#101626;transform:rotate(-18deg)}
+.fighter-face{position:absolute;left:36px;top:22px;width:16px;height:5px;border-radius:8px;border-left:3px solid #1d2435;border-right:3px solid #1d2435;z-index:6}
+.fighter-body{position:absolute;left:23px;top:40px;width:40px;height:47px;border-radius:13px 13px 9px 9px;background:linear-gradient(180deg,#6c63ff,#34308a);border:1px solid rgba(255,255,255,.2);z-index:3}
+.fighter-card.defender .fighter-body{background:linear-gradient(180deg,#ff6b81,#8e1b2a)}
+.fighter-sash{position:absolute;left:21px;top:65px;width:44px;height:8px;border-radius:8px;background:linear-gradient(90deg,#ffe082,#ff8a65);z-index:6}
+.fighter-arm{position:absolute;top:47px;width:13px;height:38px;border-radius:8px;background:#e8a96d;z-index:2;transform-origin:50% 8px}
+.fighter-arm.left{left:14px;transform:rotate(18deg)}
+.fighter-arm.right{right:12px;transform:rotate(-35deg)}
+.fighter-leg{position:absolute;top:84px;width:14px;height:25px;border-radius:4px;background:#1d2540;z-index:1}
+.fighter-leg.left{left:28px}.fighter-leg.right{right:27px}
+.fighter-weapon{position:absolute;right:1px;top:35px;width:8px;height:64px;border-radius:5px;background:linear-gradient(180deg,#e9f4ff,#8aa4bf 55%,#5d4037 56%,#3e2723);transform:rotate(-35deg);transform-origin:50% 82%;z-index:7;box-shadow:0 0 14px rgba(233,244,255,.25)}
+.fighter-card.defender .fighter-weapon{left:1px;right:auto;transform:rotate(35deg)}
+.fighter-card.attacking .fighter-sprite{animation:fighterAttack .28s ease}
+.fighter-card.attacking .fighter-weapon{animation:weaponSlash .28s ease}
+.fighter-card.defender.attacking .fighter-weapon{animation:weaponSlashLeft .28s ease}
+.fighter-card.hit .fighter-sprite{filter:brightness(1.7)}
+.fighter-name{font-size:12px;color:var(--text2);font-weight:700;text-align:center}
+.role-stats{width:100%;max-width:360px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-self:center}
+.role-stat{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 5px;text-align:center}
+.role-stat b{display:block;font-size:10px;color:var(--text3);font-weight:600}
+.role-stat span{display:block;font-size:11px;color:var(--text);font-variant-numeric:tabular-nums;font-weight:700}
+.hp-wrap{width:100%;max-width:360px;align-self:center}
+.hp-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px}
+.hp-track{height:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.hp-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--accent2));width:100%;transition:width .22s ease}
+.hp-fill.danger{background:linear-gradient(90deg,var(--danger),var(--warning))}
+.battle-mid{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.battle-round{font-size:13px;color:var(--text2)}
+.battle-result{font-size:18px;font-weight:800;color:var(--accent2)}
+.float-damage{min-height:28px;font-size:24px;font-weight:900;color:var(--danger);text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.float-damage.pop{animation:damagePop .32s ease}
+.battle-controls{position:relative;z-index:1;display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.battle-timeline{position:relative;z-index:1;margin-top:10px;height:6px;background:var(--bg);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.battle-timeline-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--danger));transition:width .2s ease}
+.combat-sandbox-card{display:flex;flex-direction:column;gap:28px}
+.combat-sandbox-section{width:100%;min-width:0;display:flex;flex-direction:column}
+.combat-sandbox-section .chart-container{position:relative;display:block;flex:0 0 auto;height:280px;width:100%;max-width:none;margin:18px 0 0;overflow:hidden;clear:both}
+.combat-sandbox-section .chart-container canvas{display:block;position:static!important}
+.combat-log-wrap{max-height:340px;overflow:auto;width:100%}
+.combat-config-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.combat-config-pane{min-width:0}
+.combat-attr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:900px){.battle-row{grid-template-columns:1fr;gap:16px}.battle-mid{order:2}.fighter{max-width:none}.fighter-card{width:132px;height:140px}.role-stats,.hp-wrap{max-width:360px}}
+@media(max-width:900px){.combat-config-grid{grid-template-columns:1fr}}
+@keyframes battleHit{0%,100%{filter:none}35%{filter:brightness(1.8);transform:translateX(4px)}70%{transform:translateX(-4px)}}
+@keyframes damagePop{0%{opacity:0;transform:translateY(8px) scale(.9)}35%{opacity:1;transform:translateY(-6px) scale(1.08)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes fighterIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fighterAttack{0%{transform:translateY(0) translateX(0)}45%{transform:translateY(-2px) translateX(12px) rotate(2deg)}100%{transform:translateY(0) translateX(0)}}
+@keyframes weaponSlash{0%{transform:rotate(-35deg)}50%{transform:rotate(-82deg) translate(4px,-8px)}100%{transform:rotate(-35deg)}}
+@keyframes weaponSlashLeft{0%{transform:rotate(35deg)}50%{transform:rotate(82deg) translate(-4px,-8px)}100%{transform:rotate(35deg)}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">数值工具 <span>三点二版</span></div>
+    <div id="project-title">项目：未命名游戏数值模型</div>
+    <div class="header-btns">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
+      <button class="btn btn-ghost btn-sm" onclick="importData()">导入</button>
+    </div>
+  </header>
+  
+  <div class="tabs">
+    <div class="tab active" data-p="panel-attr">属性与权重</div>
+    <div class="tab" data-p="panel-matrix">属性成长矩阵</div>
+    <div class="tab" data-p="panel-class">职业设定</div>
+    <div class="tab" data-p="panel-cult">养成系统</div>
+    <div class="tab" data-p="panel-res">资源管理</div>
+    <div class="tab" data-p="panel-eco">经济产出</div>
+    <div class="tab" data-p="panel-pack">礼包/商店</div>
+    <div class="tab" data-p="panel-combat2">战斗演算</div>
+    <div class="tab" data-p="panel-payment">付费模拟</div>
+    <div class="tab" data-p="panel-roi2">投入回报对比</div>
+    <div class="tab" data-p="panel-curve">曲线库</div>
+  </div>
+  
+  <div class="content">
+    <div class="panel active" id="panel-attr">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">基础二级属性定义与战力权重评估</span>
+          <button class="btn btn-primary btn-sm" onclick="openAttrModal()">+ 添加属性</button>
+        </div>
+        <div class="section-body">
+          <table class="tbl" id="t-attr">
+            <thead><tr><th>属性编号</th><th>属性名称</th><th>基础初始值</th><th>战力权重</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="help-block" style="margin-top:10px;">提示：此处的二级属性将作为养成线产出、礼包价值核算及模拟器统计的核心依据。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-matrix">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">一级属性对二级属性影响系数阵列 (多职业特性配置)</span>
+          <button class="btn btn-ghost btn-sm" onclick="resetMatrix()">恢复默认矩阵</button>
+        </div>
+        <div class="section-body" style="overflow-x:auto;">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>一级属性类型</th>
+                <th>影响属性数量</th>
+                <th>关联二级属性</th>
+                <th>战士系数</th>
+                <th>法师系数</th>
+                <th>刺客系数</th>
+                <th>基倍率</th>
+                <th>映射描述关系</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-tbody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">矩阵属性成长实时动态预览</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="font-size:12px;color:var(--text2)">预览等级:</label>
+            <span id="lbl-matrix-lvl" style="color:var(--accent2);font-weight:bold;font-size:14px;">50</span>
+            <input type="range" id="input-matrix-lvl" min="1" max="130" value="50" style="width:150px" oninput="onMatrixSliderChange(this.value)">
+          </div>
+        </div>
+        <div class="section-body">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>二级核心属性</th>
+                <th>战士预览值</th>
+                <th>法师预览值</th>
+                <th>刺客预览值</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-preview-tbody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-res">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">游戏核心资源 / 代币定义</span>
+          <button class="btn btn-primary btn-sm" onclick="openResModal()">+ 添加资源</button>
+        </div>
+        <div class="section-body">
+          <table class="tbl" id="t-res">
+            <thead><tr><th>资源编号</th><th>资源名称</th><th>单价 (元/个)</th><th>备注说明</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-curve">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Curve Library｜消耗与成长曲线配置库</span>
+          <button class="btn btn-primary btn-sm" onclick="openCurveModal()">+ 创建新曲线</button>
+        </div>
+        <div class="section-body grid-2">
+          <div><table class="tbl" id="t-curve"><thead><tr><th>曲线编号</th><th>曲线名称</th><th>类型</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+          <div style="background:var(--bg2);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:12px;color:var(--text2)">⚙ 选中曲线1-15级离散变化趋势可视化</span>
+            <svg id="cv-svg" style="width:100%;height:150px;background:var(--bg3);border-radius:4px"></svg>
+            <span style="font-size:12px;color:var(--accent2);margin-top:8px">📊 全曲线对比（第1级到第20级）</span>
+            <canvas id="cv-compare" style="width:100%;height:180px"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-class">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">职业预设</span>
+          <button class="btn btn-primary btn-sm" onclick="addClass()">+ 新增职业</button>
+        </div>
+        <div class="section-body">
+          <div class="roi-sys-grid" id="class-selector"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">伤害类型</span>
+          <button class="btn btn-primary btn-sm" onclick="addDamageType()">+ 新增类型</button>
+        </div>
+        <div class="section-body">
+          <div id="damage-types"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">1v1击杀矩阵</span>
+        </div>
+        <div class="section-body">
+          <div class="tbl-wrap" id="kill-matrix"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="panel-cult">
+      <!-- ========== 境界修炼系统 (可编辑版) ========== -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">境界修炼系统</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:10px;color:var(--text3)" id="realm-type-label">修为</span>
+            <button class="btn btn-ghost btn-xs" onclick="switchRealmType('cultivation')">修为</button>
+            <button class="btn btn-ghost btn-xs" onclick="switchRealmType('body')">炼体</button>
+            <button class="btn btn-primary btn-xs" onclick="addRealm()">+大境界</button>
+            <button class="btn btn-ghost btn-xs" onclick="resetRealms()">恢复默认</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <!-- 大境界网格: 10列，每卡附编辑/删除 -->
+          <div id="realm-grid" class="realm-grid"></div>
+          
+          <!-- 小境界编辑器 -->
+          <div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text2)">
+            <span>大境界: <span id="cr-name" style="color:var(--accent);font-weight:600">炼气境</span>
+            <span id="cr-sub" style="margin-left:6px;color:var(--text3);font-size:11px">修仙之始</span>
+            <span style="margin-left:12px;color:var(--text3);font-size:11px">当前: 第 <span id="cr-lvl" style="color:var(--warning);font-weight:600">1</span> 层</span></span>
+            <span id="cr-level-count" style="font-size:11px;color:var(--text3)">0 层</span>
+          </div>
+          <div id="level-bar" class="level-bar"></div>
+          <div id="level-bar" class="level-bar"></div>
+          
+          <!-- 属性数据4卡片 -->
+          <div id="realm-metrics" class="realm-metrics"></div>
+          
+          <!-- 3条曲线(N个层级曲线) -->
+          <div class="chart-row">
+            <div class="chart-box">
+              <div class="ct" style="color:#ff8a65">战力成长曲线</div>
+              <svg id="chart-power" style="height:80px"></svg>
+            </div>
+            <div class="chart-box">
+              <div class="ct" style="color:#4fc3f7">修炼速度曲线</div>
+              <svg id="chart-speed" style="height:80px"></svg>
+            </div>
+            <div class="chart-box">
+              <div class="ct" style="color:#4ecca3">突破成功率曲线</div>
+              <svg id="chart-break" style="height:80px"></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ========== v3.0新增: 装备系统 ========== -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">装备系统配置</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-xs" onclick="addSlot()">+ 新增槽位</button>
+            <button class="btn btn-ghost btn-xs" onclick="resetEquipment()">恢复默认</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <!-- 两栏: 槽位(水平5列) + 品质(横排可编辑) -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <!-- 槽位编辑器: 水平5列 -->
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px">槽位列表</div>
+              <div id="slot-editor" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+            </div>
+            <!-- 品质体系: 横排可编辑卡片 -->
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px">品质体系</div>
+              <div id="quality-editor" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ========== 精炼系统计算器 ========== -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">精炼增幅计算器</span>
+          <button class="btn btn-ghost btn-xs" onclick="openBranchModal('l1','b_refine')">编辑精炼规则</button>
+        </div>
+        <div class="section-body" id="refine-panel"></div>
+      </div>
+      
+      <!-- ========== 保留原有: 三层养成线 ========== -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">三层养成线框架模型</span>
+          <button class="btn btn-primary btn-sm" onclick="openLineModal()">+ 新建主体养成线</button>
+        </div>
+        <div class="section-body" id="cult-tree"></div>
+      </div>
+      
+      <!-- ========== 分支成长曲线预览 ========== -->
+      <div class="section" id="cult-chart-section" style="display:none">
+        <div class="section-header">
+          <span class="section-title">📊 分支成长曲线 — <span id="cult-chart-title" style="color:var(--accent)"></span></span>
+          <button class="btn btn-ghost btn-xs" onclick="document.getElementById('cult-chart-section').style.display='none'">关闭</button>
+        </div>
+        <div class="section-body">
+          <canvas id="cult-chart-canvas" style="width:100%;height:220px"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-pack">
+      <div class="card" style="padding:16px">
+        <div class="section-header" style="margin-bottom:14px">
+          <span class="section-title">商业化礼包与商城商品性价比精算</span>
+          <button class="btn btn-primary btn-sm" onclick="openPackModal()">+ 添加商业化礼包</button>
+        </div>
+        <div class="tbl-wrap" style="margin-bottom:18px">
+          <table class="tbl" id="t-pack">
+            <thead><tr><th>礼包名称</th><th>售价 (元)</th><th>包含资源内容清单</th><th>实际理论价值</th><th>相对性价比</th><th>商品定位标签</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">倍率权重分析与星级推荐</div>
+        <div class="tbl-wrap" style="margin-bottom:18px">
+          <table class="tbl" id="tbl-shop-analysis">
+            <thead><tr><th>商品名称</th><th>倍率</th><th>倍率权重指数</th><th>推荐星级</th><th>评价</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">星级倍率阈值自定义配置</div>
+        <div class="help-block" style="margin-bottom:10px;color:var(--text2);font-size:12px">直接在下表中修改各档位的倍率区间、星级数和评价描述，修改后自动生效。</div>
+        <table class="tbl" id="tbl-star-config">
+          <thead><tr><th>档位</th><th>最低倍率</th><th>最高倍率</th><th>星级数</th><th>评价描述</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="star-legend" style="margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:6px;font-size:12px;color:var(--text2);display:flex;gap:16px;flex-wrap:wrap;flex:1"></div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-sim">
+      <div class="sim-grid">
+        <div class="sim-left">
+          <span style="font-size:13px;font-weight:600">玩家生命周期模拟仿真配置</span>
+          <div class="form-group"><label>玩家整体付费总预算 (元)</label><input type="number" class="fc" id="sim-budget" value="1000"></div>
+          <div class="form-group"><label>模拟持续体验天数 (天)</label><input type="number" class="fc" id="sim-days" value="30"></div>
+          <div class="form-group"><label>每日活跃可得免费资源收益系数</label><input type="number" class="fc" id="sim-daily-ratio" value="1" step="0.1"></div>
+          <div class="form-group">
+            <label>商业化付费购买策略偏好</label>
+            <select class="fc" id="sim-strategy">
+              <option value="roi">核心高性价比优先规则</option>
+              <option value="cheap">绝对低价礼包扫货规则 (便宜优先)</option>
+              <option value="expensive">顶层豪华礼包倾斜规则 (高价大礼包优先)</option>
+            </select>
+          </div>
+          <button class="btn btn-success" style="width:100%;justify-content:center;margin-top:10px" onclick="runSimulation()">启动全线建模仿真</button>
+        </div>
+        <div class="sim-right" id="sim-result" style="display:none"></div>
+      </div>
+    </div>
+    <div class="panel" id="panel-eco">
+      <!-- ========== v3.0新增: 7层货币体系 ========== -->
+      <div class="card">
+        <div class="card-title">7层货币体系</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="currency-table">
+            <thead><tr><th>货币</th><th>层级</th><th>用途</th><th>来源</th><th>兑换比率</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="btn-group" style="margin-top:8px">
+          <button class="btn btn-primary btn-xs" onclick="addCurrency()">+ 新增</button>
+          <button class="btn btn-ghost btn-xs" onclick="resetCurrencies()">恢复默认</button>
+        </div>
+      </div>
+      
+      <!-- ========== v3.0新增: 贵宾等级特权 ========== -->
+      <div class="card">
+        <div class="card-title">贵宾等级特权体系</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="vip-table">
+            <thead><tr><th>贵宾等级</th><th>累计充值(元)</th><th>特权描述</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="btn-group" style="margin-top:8px">
+          <button class="btn btn-primary btn-xs" onclick="addVip()">+ 新增</button>
+          <button class="btn btn-ghost btn-xs" onclick="resetVip()">恢复默认</button>
+        </div>
+      </div>
+      
+      <!-- ========== v3.0新增: 兑换比率 ========== -->
+      <div class="card">
+        <div class="card-title">货币兑换比率</div>
+        <div id="exchange-rates" class="stats-grid" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div class="help-block" style="margin-top:8px">点击数值可直接修改兑换比率</div>
+      </div>
+      
+      <!-- ========== 保留原有: 日常产出配置 ========== -->
+      <div class="card">
+        <div class="card-title">日常系统产出与副本活动产出模型配置</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="tbl-eco-config">
+            <thead><tr><th>代币/资源编号</th><th>资源名称</th><th>免费产出</th><th>小额付费加成</th><th>中额付费加成</th><th>大额付费加成</th><th>超高付费加成</th><th>单日获取上限</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="saveEconomyData()">锁定产出数据</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-combat2">
+      <div class="card">
+        <div class="card-title">战斗公式模型配置 + 公式预览 + 战力解析器</div>
+        <div class="combat-config-grid">
+          <div class="combat-config-pane">
+            <div class="grid-2" style="margin-bottom:12px">
+              <div class="form-group">
+                <label>境界系数乘区 (0=无加成)</label>
+                <select class="fc" id="cb-realm-mult" onchange="runCombatSim2()">
+                  <option value="1.0">无 (1.0x)</option>
+                  <option value="1.3">炼气 (1.0x)</option>
+                  <option value="1.5">筑基 (1.3x)</option>
+                  <option value="1.7">结丹 (1.7x)</option>
+                  <option value="2.0">元婴 (2.2x)</option>
+                  <option value="2.5">化神 (2.8x)</option>
+                  <option value="3.0">返虚 (3.5x)</option>
+                  <option value="4.0">合体 (4.5x)</option>
+                  <option value="5.0">大乘 (6.0x)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>职业权重预设</label>
+                <select class="fc" id="cb-class-preset" onchange="applyClassPreset()">
+                  <option value="universal">通用 (1.0/1.0/1.0)</option>
+                  <option value="warrior">战士 (0.9/1.1/1.1)</option>
+                  <option value="mage">法师 (1.1/0.9/0.9)</option>
+                  <option value="assassin">刺客 (1.0/1.0/1.0)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>公式类型（参考game-numerical-designer六种经典模型）</label>
+              <select class="fc" id="cb-formula-type" onchange="switchCombatFormula()">
+                <option value="sub">减法模型 — 伤害 = 攻击×c + (攻击×a - 防御×b)</option>
+                <option value="div">除法模型 — 伤害 = 攻击×a × (1 - 防御/(防御+f(lv)×b))</option>
+                <option value="mul">全乘法模型 — 伤害 = 攻击×a × (1-减伤%)×(1+暴伤%)×(1+其他增伤%)</option>
+                <option value="half">半除法模型 — (攻击-防御)×a + 攻击×b</option>
+                <option value="stair">分段减法 — 防御>攻击×90%时触发保底</option>
+                <option value="combo">除加乘混合：攻击减防御后，再乘增伤与暴击</option>
+              </select>
+            </div>
+            <div class="form-row" id="cb-params-row">
+              <div class="field" id="cb-pc-wrap"><label>基础层系数</label><input type="number" step="0.01" class="fc" id="cb-pc" value="0.5" oninput="runCombatSim2()"></div>
+              <div class="field" id="cb-pa-wrap"><label>攻击增益系数</label><input type="number" step="0.01" class="fc" id="cb-pa" value="1.0" oninput="runCombatSim2()"></div>
+              <div class="field" id="cb-pb-wrap"><label>防御免伤系数</label><input type="number" step="0.01" class="fc" id="cb-pb" value="0.8" oninput="runCombatSim2()"></div>
+            </div>
+            <div class="form-row" id="cb-params-row2" style="display:none;margin-top:8px">
+              <div class="field"><label>暴击伤害系数%</label><input type="number" class="fc" id="cb-crit-dmg" value="50" oninput="runCombatSim2()"></div>
+              <div class="field"><label>增伤%</label><input type="number" class="fc" id="cb-bonus" value="0" oninput="runCombatSim2()"></div>
+              <div class="field"><label>保底伤害比例%</label><input type="number" class="fc" id="cb-min-pct" value="10" oninput="runCombatSim2()"></div>
+            </div>
+            <div style="background:var(--bg2);border-left:3px solid var(--accent);padding:10px 12px;border-radius:6px;margin-top:10px;font-family:'Courier New',monospace;font-size:12px;color:var(--accent2)" id="cb-formula-preview">伤害 = 攻击 × 0.5 + (攻击 × 1.0 - 防御 × 0.8)</div>
+          </div>
+          <div class="combat-config-pane" id="combat-target-parser">
+            <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单体系目标战力解析器</div>
+            <div class="combat-attr-grid" id="combat-attr-inputs"></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text3)">单次最大伤害</div>
+                <div style="font-size:18px;font-weight:bold;color:var(--danger);font-variant-numeric:tabular-nums" id="cb-dmg-max">0</div>
+              </div>
+              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text3)">期望秒伤（带暴击）</div>
+                <div style="font-size:18px;font-weight:bold;color:var(--warning);font-variant-numeric:tabular-nums" id="cb-expected-dmg">0</div>
+              </div>
+              <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text3)">通关回合数</div>
+                <div style="font-size:18px;font-weight:bold;color:var(--accent2);font-variant-numeric:tabular-nums" id="cb-rounds">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:linear-gradient(90deg,rgba(85,239,196,0.08),rgba(116,185,255,0.05));border:1px solid var(--accent);border-radius:8px;padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:12px;color:var(--text2)">解析所得<strong style="color:var(--text1)">静态全权重战力</strong>：</span>
+          <span style="font-size:22px;font-weight:bold;color:var(--accent);font-variant-numeric:tabular-nums" id="cb-cp">0</span>
+          <span style="font-size:12px;color:var(--text2)">当前所处层级及评级：</span>
+          <span style="font-size:18px;font-weight:bold" id="cb-tier-name">-</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:auto">战力分层阈值可在右侧表内编辑</span>
+        </div>
+      </div>
+      <div class="card combat-sandbox-card">
+        <div class="combat-sandbox-section">
+          <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">沙盘对决模拟 — 单回合生命跌落</div>
+          <div class="btn-group"><button class="btn btn-primary" id="cb-play-battle" onclick="playCombatAnimation()">发动沙盘对决</button><button class="btn btn-ghost" onclick="resetCombatAnimation()">重置动画</button></div>
+          <div class="battle-stage" id="cb-battle-stage" data-state="idle">
+            <div class="battle-row">
+              <div class="fighter">
+                <div class="fighter-name">进攻方</div>
+                <div class="fighter-card attacker" id="cb-attacker-card">
+                  <div class="fighter-sprite" aria-label="attacker character">
+                    <div class="fighter-hair"></div><div class="fighter-head"></div><div class="fighter-face"></div>
+                    <div class="fighter-body"></div><div class="fighter-sash"></div>
+                    <div class="fighter-arm left"></div><div class="fighter-arm right"></div>
+                    <div class="fighter-leg left"></div><div class="fighter-leg right"></div><div class="fighter-weapon"></div>
+                  </div>
+                </div>
+                <div class="role-stats" id="cb-attacker-stats"></div>
+                <div class="hp-wrap">
+                  <div class="hp-label"><span>生命</span><span id="cb-attacker-hp-text">100%</span></div>
+                  <div class="hp-track"><div class="hp-fill" id="cb-attacker-hp" style="width:100%"></div></div>
+                </div>
+              </div>
+              <div class="battle-mid">
+                <div class="battle-round" id="cb-battle-round">待机</div>
+                <div class="float-damage" id="cb-float-damage"></div>
+                <div class="battle-result" id="cb-battle-result">点击发动</div>
+              </div>
+              <div class="fighter">
+                <div class="fighter-name">守方目标</div>
+                <div class="fighter-card defender" id="cb-defender-card">
+                  <div class="fighter-sprite" aria-label="defender character">
+                    <div class="fighter-hair"></div><div class="fighter-head"></div><div class="fighter-face"></div>
+                    <div class="fighter-body"></div><div class="fighter-sash"></div>
+                    <div class="fighter-arm left"></div><div class="fighter-arm right"></div>
+                    <div class="fighter-leg left"></div><div class="fighter-leg right"></div><div class="fighter-weapon"></div>
+                  </div>
+                </div>
+                <div class="role-stats" id="cb-defender-stats"></div>
+                <div class="hp-wrap">
+                  <div class="hp-label"><span>生命</span><span id="cb-defender-hp-text">100%</span></div>
+                  <div class="hp-track"><div class="hp-fill" id="cb-defender-hp" style="width:100%"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="battle-timeline"><div class="battle-timeline-fill" id="cb-battle-timeline"></div></div>
+          </div>
+          <div class="chart-container"><canvas id="cbChart"></canvas></div>
+        </div>
+        <div class="combat-sandbox-section">
+          <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单回合双边生命值跌落追踪水位表</div>
+          <div class="tbl-wrap combat-log-wrap">
+            <table class="tbl" id="tbl-cb-log">
+              <thead><tr><th>当前轮次</th><th>伤害结算扣减</th><th>蓝方剩余生命值水位</th><th>战场即时态势评估</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">战力层级划分分位参考表（战力分段阈值与对应评级）</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="tbl-cb-tier">
+            <thead><tr><th>战力分层</th><th>战力阈值</th><th>建议付费分层</th><th>评级颜色</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="btn-group" style="margin-top:10px">
+          <button class="btn btn-ghost btn-xs" onclick="addCombatTier()">新增层级</button>
+          <button class="btn btn-ghost btn-xs" onclick="resetCombatTier()">恢复默认7档</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-roi2">
+      <!-- 预算/战力/天数条 -->
+      <div class="roi-bar">
+        <div class="roi-bar-item"><label>总预算</label><input type="number" class="fc" id="roi-budget" value="10000" onchange="roiResetAll()" style="font-size:15px;font-weight:700;width:120px;padding:6px 10px"></div>
+        <div class="roi-bar-item"><label>可用预算</label><div class="val" id="roi-budget-left" style="color:var(--warning)">¥10,000</div></div>
+        <div class="roi-bar-item"><label>总战力</label><div class="val" id="roi-total-power" style="color:var(--accent2)">0</div></div>
+        <div class="roi-bar-item"><label>天数</label><div class="val" id="roi-day" style="color:var(--text);font-size:14px">第1天</div></div>
+        <div class="roi-bar-item"><label>天数上限</label><input type="number" class="fc" id="roi-day-limit" value="7" style="font-size:14px;font-weight:700;width:60px;padding:6px 8px"></div>
+        <button class="btn btn-primary" onclick="roiAdvanceDay()">下一天</button>
+        <button class="btn btn-success" onclick="roiAutoInvest()" style="background:linear-gradient(135deg,#4ecca3,#00e676);border:none">智能分配</button>
+        <button class="btn btn-ghost" onclick="roiResetAll()">重置</button>
+      </div>
+
+      <!-- 系统卡片网格 -->
+      <div class="roi-sys-grid" id="roi-sys-grid"></div>
+
+      <!-- 结果分析 -->
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:16px">
+        <div class="card" style="padding:14px">
+          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">各系统投入产出分析</div>
+          <div class="tbl-wrap" style="max-height:360px;overflow:auto">
+            <table class="tbl" id="roi-results-tbl">
+              <thead><tr><th>系统</th><th>总投入</th><th>战力</th><th>每元战力</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="roi-stars" id="roi-stars"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">策略对比 — 同预算不同分配</div>
+          <div class="roi-comp-area" id="roi-comp-area">
+            <div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">尚未投资 — 点击下方卡片上的"投资"按钮开始测试</div>
+          </div>
+          <div id="roi-scenario-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-payment">
+      <div class="roi-bar">
+        <div class="roi-bar-item">
+          <label>模拟档位</label>
+          <select class="fc" id="payment-tier" style="width:120px"></select>
+        </div>
+        <div class="roi-bar-item">
+          <label>档位预算</label>
+          <input type="number" class="fc" id="payment-budget" value="68">
+        </div>
+        <div class="roi-bar-item">
+          <label>购买策略</label>
+          <select class="fc" id="payment-strategy" style="width:150px">
+            <option value="roi">高性价比优先</option>
+            <option value="cheap">低价破冰优先</option>
+            <option value="expensive">高客单礼包优先</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="renderPaymentPanel()">重新模拟</button>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">玩家分层付费行为对比</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="payment-tier-table">
+            <thead><tr><th>玩家档位</th><th>预算</th><th>实际消费</th><th>礼包投入回报</th><th>付费后战力</th><th>对免费/小额付费优势</th><th>复购分</th><th>复购意愿</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px">
+        <div class="card" style="padding:14px">
+          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">选中档位礼包购买路径</div>
+          <div id="payment-purchase-list"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">功能模块投放占比校验</div>
+          <div class="tbl-wrap">
+            <table class="tbl" id="payment-module-table">
+              <thead><tr><th>功能模块</th><th>投放占比</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="help-block" style="margin-top:8px">当前合计：<b id="payment-module-total">0%</b></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">复购与付费优势风险诊断</div>
+        <div id="payment-risk-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="m-attr" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-attr')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="mat-title">属性配置</span></div><div class="modal-body">
+    <input type="hidden" id="a-id"><div class="form-group"><label>属性名称</label><input class="fc" id="a-name" placeholder="例如：攻击力、生命值"></div>
+    <div class="grid-2"><div class="form-group"><label>基础初始值</label><input type="number" class="fc" id="a-base" value="100"></div><div class="form-group"><label>每点战力权重</label><input type="number" class="fc" id="a-weight" value="1" step="0.1"></div></div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-attr')">取消</button><button class="btn btn-primary" onclick="saveAttr()">保存</button></div></div>
+</div></div>
+
+<div id="m-res" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-res')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="mr-title">资源配置</span></div><div class="modal-body">
+    <input type="hidden" id="r-id"><div class="form-group"><label>资源名称</label><input class="fc" id="r-name" placeholder="例如：强化石、元宝"></div>
+    <div class="form-group"><label>资源基准单价 (元 / 个)</label><input type="number" class="fc" id="r-price" value="0.1" step="0.001" min="0"></div>
+    <div class="form-group"><label>备注</label><input class="fc" id="r-note" placeholder="说明…"></div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-res')">取消</button><button class="btn btn-primary" onclick="saveRes()">保存</button></div></div>
+</div></div>
+
+<div id="m-curve" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-curve')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="mc-title">曲线配置</span></div><div class="modal-body">
+    <input type="hidden" id="cv-id"><div class="form-group"><label>曲线名称</label><input class="fc" id="cv-name" placeholder="例如：强化消耗指数曲线"></div>
+    <div class="form-group"><label>曲线数学公式类型</label><select class="fc" id="cv-type" onchange="switchCvType()">
+      <option value="linear">线性 (a * x)</option>
+      <option value="diminishing">边际递减 (a * c(level))</option>
+      <option value="logarithmic">对数 (a * ln(x+1))</option>
+      <option value="sqrt">平方根 (a * √x)</option>
+      <option value="power">幂函数 (a * x^b)</option>
+      <option value="expo">指数 (a * b^x)</option>
+      <option value="exponential">指数饱和 (a*(1-e⁻ᵏˣ))</option>
+      <option value="sigmoid">平滑过渡型</option>
+      <option value="stair">阶梯跳跃</option>
+      <option value="fix">恒定值</option>
+    </select></div>
+    <div class="grid-3" id="cv-p-common">
+      <div class="form-group" id="cv-pa-grp"><label>参数 a</label><input type="number" class="fc" id="cv-pa" value="10" step="0.1" oninput="prevCurve()"></div>
+      <div class="form-group" id="cv-pb-grp" style="display:none"><label>参数 b</label><input type="number" class="fc" id="cv-pb" value="0.5" step="0.05" oninput="prevCurve()"></div>
+      <div class="form-group" id="cv-pk-grp" style="display:none"><label>速率 k</label><input type="number" class="fc" id="cv-pk" value="0.05" step="0.005" oninput="prevCurve()"></div>
+      <div class="form-group" id="cv-px0-grp" style="display:none"><label>中心 x0</label><input type="number" class="fc" id="cv-px0" value="8" step="0.5" oninput="prevCurve()"></div>
+    </div>
+    <div class="form-group" id="cv-p-stair" style="display:none"><label>阶梯映射配置 (JSON格式: [[等级,数值],...])</label><textarea class="fc" id="cv-psteps" oninput="prevCurve()">[[5,100],[10,300],[20,1000]]</textarea></div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-curve')">取消</button><button class="btn btn-primary" onclick="saveCurve()">保存</button></div></div>
+</div></div>
+
+<div id="m-line" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-line')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="ml-title">主体养成线</span></div><div class="modal-body"><input type="hidden" id="l-id"><div class="form-group"><label>养成系统大类名称</label><input class="fc" id="l-name" placeholder="例如：装备系统、坐骑养成"></div><div class="form-group"><label>描述备注</label><input class="fc" id="l-note"></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-line')">取消</button><button class="btn btn-primary" onclick="saveLine()">保存</button></div></div>
+</div></div>
+
+<div id="m-branch" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-branch')">
+  <div class="modal" style="max-width:620px"><div class="modal-header"><span class="modal-title" id="mb-title">系统养成分支与消耗机制设定</span></div><div class="modal-body">
+    <input type="hidden" id="b-lid"><input type="hidden" id="b-id">
+    <div class="grid-2"><div class="form-group"><label>分支细分名称</label><input class="fc" id="b-name" placeholder="例如：武器强化、护甲精炼"></div><div class="form-group"><label>成长等级上限</label><input type="number" class="fc" id="b-max" value="10"></div></div>
+    <!-- 多消耗配置 -->
+    <div style="border:1px dashed var(--border);padding:10px;border-radius:6px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600;color:var(--accent2)">消耗规则配置（可多条）</span><button class="btn btn-ghost btn-xs" onclick="addBranchCostRow()">+ 添加消耗</button></div>
+      <div id="branch-cost-rows"></div>
+    </div>
+    <!-- 多属性收益配置 -->
+    <div style="border:1px dashed var(--border);padding:10px;border-radius:6px;display:flex;flex-direction:column;gap:6px;margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600;color:var(--accent2)">属性收益配置（每升一级获得，可多条）</span><button class="btn btn-ghost btn-xs" onclick="addBranchAttrRow()">+ 添加属性</button></div>
+      <div id="branch-attr-rows"></div>
+    </div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="previewBranch()">预览每级数据</button><button class="btn btn-ghost" onclick="cm('m-branch')">取消</button><button class="btn btn-primary" onclick="saveBranch()">保存</button></div></div>
+
+<div id="m-pack" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-pack')">
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="mp-title">商业化礼包内容定制</span></div><div class="modal-body">
+    <input type="hidden" id="p-id">
+    <div class="grid-2"><div class="form-group"><label>礼包/商品名称</label><input class="fc" id="p-name" placeholder="例如：新手畅玩首充礼包"></div><div class="form-group"><label>真实法币售价 (元)</label><input type="number" class="fc" id="p-price" value="6"></div></div>
+    <div class="form-group"><label>商品定位标签分类</label><select class="fc" id="p-tag"><option value="首充礼包">首充礼包 (极其关键的付费破冰点)</option><option value="每日特惠">每日特惠 (拉动持续DAU/付费深度)</option><option value="周期限时">周期限时 (拉动节点活动ARPU爆发)</option><option value="版本特惠">版本特惠 (新内容消费承接)</option></select></div>
+    <div style="background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">礼包包含道具物料清单明细</span>
+      <div id="p-res-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm('m-pack')">取消</button><button class="btn btn-primary" onclick="savePack()">保存</button></div></div>
+</div></div>
+
+<!-- 槽位编辑弹窗 -->
+<div id="m-slot" style="display:none"><div class="modal-overlay" onclick="if(event.target===this)cm('m-slot')">
+  <div class="modal"><div class="modal-header"><span class="modal-title">槽位编辑</span></div><div class="modal-body">
+    <input type="hidden" id="ms-id">
+    <div class="form-group"><label>槽位名称</label><input class="fc" id="ms-name" placeholder="例如：武器、头盔"></div>
+    <div class="form-group"><label>槽位类型</label><select class="fc" id="ms-type"><option value="attack">攻击</option><option value="defense">防御</option><option value="sub">辅助</option></select></div>
+    <div class="form-group"><label>可用品质</label><div id="ms-qualities" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+    <div class="form-group"><label>基础属性（格式：属性名:数值; 多组分号隔开）</label><input class="fc" id="ms-attrs" placeholder="攻击力:50; 防御力:30"></div>
+  </div><div class="modal-footer"><button class="btn btn-ghost" onclick="window.cm('m-slot')">取消</button><button class="btn btn-primary" onclick="window.saveSlotModal()">保存</button></div></div>
+</div></div>
+
+<script>
+// ── 核心原始数据定义（结构完全不破坏原有逻辑） ──────────────────────────
+const $=id=>document.getElementById(id);
+let S={
+  attrs:[
+    {id:'a1',name:'攻击力',base:100,weight:1.5},
+    {id:'a2',name:'防御力',base:50,weight:1.0},
+    {id:'a3',name:'生命值',base:600,weight:0.2}
+  ],
+  resources:[
+    {id:'r1',name:'金币',price:0.01,note:'基础通用货币'},
+    {id:'r2',name:'精炼晶石',price:2.0,note:'中高级材料'}
+  ],
+  curves:[
+    {id:'c1',name:'边际递减',type:'diminishing',params:{a:10}},
+    {id:'c2',name:'线性',type:'linear',params:{a:10}},
+    {id:'c3',name:'对数',type:'logarithmic',params:{a:10}},
+    {id:'c4',name:'平方根',type:'sqrt',params:{a:10}},
+    {id:'c5',name:'幂函数',type:'power',params:{a:10,b:0.5}},
+    {id:'c6',name:'指数饱和',type:'exponential',params:{a:10,k:0.05}},
+    {id:'c7',name:'平滑过渡型',type:'sigmoid',params:{a:10,k:0.08,x0:8}}
+  ],
+  cultivations:[
+    {id:'l1',name:'绝世武器系统',note:'攻击成长核心',branches:[
+      {id:'b1',name:'武器淬火强化',maxLevel:15,resId:'r1',qty:20,cvId:'c1',attrId:'a1',attrVal:30},
+      {id:'b2',name:'武器神兵觉醒',maxLevel:5,resId:'r2',qty:2,cvId:'c2',attrId:'a1',attrVal:150},
+      {id:'b_refine',name:'精炼系统',maxLevel:10,consumes:[{resId:'r2',qty:100,cvId:'c4'}],gains:[{attrId:'dmgBonus',val:3},{attrId:'dmgRed',val:6}]}
+    ]},
+    {id:'l2',name:'不灭防具铠甲',note:'生存抗性来源',branches:[
+      {id:'b3',name:'防具精炼注灵',maxLevel:12,resId:'r1',qty:15,cvId:'c1',attrId:'a2',attrVal:20}
+    ]}
+  ],
+  packs:[
+    {id:'p1',name:'破冰极品首充礼包',price:6,tag:'首充礼包',items:{'r1':500,'r2':5}},
+    {id:'p2',name:'每日精炼特惠物资',price:12,tag:'每日特惠',items:{'r2':8}}
+  ]
+,
+  ecoConfig:{
+    "r1":{dayProd:2500,smallR:2.0,midR:3.5,bigR:5.0,superR:8.0,maxLimit:12000},
+    "r2":{dayProd:8,smallR:1.5,midR:2.5,bigR:4.0,superR:6.0,maxLimit:50}
+  },
+  shop:[
+    {id:"rs1",name:"暖冬开服新手首充礼包",price:6,rewards:"金币x1000,突破石x5",worth:60,multiplier:10.0},
+    {id:"rs2",name:"中档月度超值成长基金",price:68,rewards:"金币x15000,突破石x40",worth:480,multiplier:7.06},
+    {id:"rs3",name:"大额付费专属霸服豪华全家桶",price:648,rewards:"金币x200000,突破石x500",worth:5200,multiplier:8.02}
+  ],
+  roiStrategies:[
+    {id:"rs1",name:"纯免费活跃用户群",desc:"依靠免费节点日常维护",arpu:0,roi:"0%",retention:"生命周期长/付费零突破"},
+    {id:"rs2",name:"特惠破冰小额付费客组",desc:"首充礼包极速覆盖核心阶段",arpu:6,roi:"1000%",retention:"性价比极敏感/回本速度极快"},
+    {id:"rs3",name:"腰部支柱中额付费玩家",desc:"定制化购买全盘高权重计费点",arpu:168,roi:"450%",retention:"极稳固游戏生态中间层"},
+    {id:"rs4",name:"深海巨鲸大额付费神豪",desc:"无差别覆盖全架高客单价礼包",arpu:3280,roi:"162%",retention:"版本破坏者/高留存支撑"}
+  ],
+  selectedRoiIdx:1,
+  starConfig:[
+    {min:0,max:3,stars:1,desc:'基础偏低',color:'var(--text3)'},
+    {min:3,max:6,stars:2,desc:'正常准线',color:'var(--text2)'},
+    {min:6,max:10,stars:3,desc:'性价优良',color:'var(--accent2)'},
+    {min:10,max:15,stars:4,desc:'高度推荐',color:'var(--warning)'},
+    {min:15,max:9999,stars:5,desc:'极端超值',color:'var(--danger)'}
+  ]};
+
+// ── 属性成长矩阵独立逻辑（重构：支持影响数量 1~3 条） ──────────────────
+let ATTR_MATRIX = {
+  power: { 
+    label: '力量', 
+    count: 1,
+    baseMult: 10,
+    configs: [
+      { targetAttrId: 'a1', warrior: 3, mage: 1, assassin: 4 }
+    ]
+  },
+  spirit: { 
+    label: '灵力', 
+    count: 1,
+    baseMult: 10,
+    configs: [
+      { targetAttrId: 'a1', warrior: 0, mage: 5, assassin: 0 }
+    ]
+  },
+  agility: { 
+    label: '敏捷', 
+    count: 1,
+    baseMult: 8,
+    configs: [
+      { targetAttrId: 'a1', warrior: 1, mage: 1, assassin: 2 }
+    ]
+  },
+  endurance: { 
+    label: '耐力', 
+    count: 1,
+    baseMult: 8,
+    configs: [
+      { targetAttrId: 'a2', warrior: 2, mage: 1, assassin: 1 }
+    ]
+  },
+  physique: { 
+    label: '体质', 
+    count: 1,
+    baseMult: 50,
+    configs: [
+      { targetAttrId: 'a3', warrior: 4, mage: 2, assassin: 3 }
+    ]
+  }
+};
+
+function resetMatrix() {
+  ATTR_MATRIX = {
+    power: { label: '力量', count: 1, baseMult: 10, configs: [{ targetAttrId: S.attrs[0]?.id || '', warrior: 3, mage: 1, assassin: 4 }] },
+    spirit: { label: '灵力', count: 1, baseMult: 10, configs: [{ targetAttrId: S.attrs[0]?.id || '', warrior: 0, mage: 5, assassin: 0 }] },
+    agility: { label: '敏捷', count: 1, baseMult: 8, configs: [{ targetAttrId: S.attrs[0]?.id || '', warrior: 1, mage: 1, assassin: 2 }] },
+    endurance: { label: '耐力', count: 1, baseMult: 8, configs: [{ targetAttrId: S.attrs[1]?.id || '', warrior: 2, mage: 1, assassin: 1 }] },
+    physique: { label: '体质', count: 1, baseMult: 50, configs: [{ targetAttrId: S.attrs[2]?.id || '', warrior: 4, mage: 2, assassin: 3 }] }
+  };
+  renderMatrixInputs();
+  calculateMatrixPreview();
+  persistAttrMatrix('reset-matrix');
+  toast('已恢复默认的一级属性转换映射矩阵体系');
+}
+
+
+function persistAttrMatrix(reason) {
+  try {
+    S.attrMatrix = JSON.parse(JSON.stringify(ATTR_MATRIX));
+    if (window.ProjectState) window.ProjectState.bind(S);
+    save();
+  } catch(e) {
+    try { localStorage.setItem('gbt21_attr_matrix', JSON.stringify(ATTR_MATRIX)); } catch(_) {}
+  }
+}
+
+function restoreAttrMatrixFromProject() {
+  try {
+    if (S.attrMatrix && typeof S.attrMatrix === 'object') {
+      ATTR_MATRIX = S.attrMatrix;
+      return;
+    }
+    const raw = localStorage.getItem('gbt21_attr_matrix');
+    if (raw) {
+      ATTR_MATRIX = JSON.parse(raw);
+      S.attrMatrix = JSON.parse(JSON.stringify(ATTR_MATRIX));
+    }
+  } catch(e) {}
+}
+
+function renderMatrixInputs() {
+  const tbody = $('matrix-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  
+  for (let key in ATTR_MATRIX) {
+    const row = ATTR_MATRIX[key];
+    const rowCount = row.count;
+
+    for (let i = 0; i < rowCount; i++) {
+      const config = row.configs[i];
+      const tr = document.createElement('tr');
+      
+      let htmlStr = '';
+      // 只有当前一级属性的第一行需要合并生成属性名称列以及数量输入列
+      if (i === 0) {
+        htmlStr += `<td rowspan="${rowCount}" style="font-weight:600; color:var(--text)">${row.label}</td>`;
+        htmlStr += `<td rowspan="${rowCount}"><input type="number" min="1" max="3" class="matrix-input" style="width:50px" value="${rowCount}" onchange="updateMatrixCount('${key}', this.value)"></td>`;
+      }
+
+      // 生成二级属性下拉框
+      let selectHtml = `<select class="fc btn-xs" style="width:120px;" onchange="updateMatrixAttr('${key}', ${i}, this.value)">`;
+      S.attrs.forEach(attr => {
+        const selected = config.targetAttrId === attr.id ? 'selected' : '';
+        selectHtml += `<option value="${attr.id}" ${selected}>${attr.name}</option>`;
+      });
+      selectHtml += `</select>`;
+
+      // 动态生成对应的描述文字
+      const targetAttr = S.attrs.find(x => x.id === config.targetAttrId);
+      const attrName = targetAttr ? targetAttr.name : '未知属性';
+      const desc = `1点${row.label} = 战士${config.warrior}点/法师${config.mage}点/刺客${config.assassin}点 ${attrName}`;
+
+      htmlStr += `
+        <td>${selectHtml}</td>
+        <td><input type="number" step="0.1" class="matrix-input" value="${config.warrior}" oninput="updateMatrixValue('${key}', ${i}, 'warrior', this.value)"></td>
+        <td><input type="number" step="0.1" class="matrix-input" value="${config.mage}" oninput="updateMatrixValue('${key}', ${i}, 'mage', this.value)"></td>
+        <td><input type="number" step="0.1" class="matrix-input" value="${config.assassin}" oninput="updateMatrixValue('${key}', ${i}, 'assassin', this.value)"></td>
+        <td><input type="number" step="1" class="matrix-input" style="width:50px" value="${row.baseMult||8}" oninput="updateMatrixBaseMult('${key}', this.value)"></td>
+        <td style="color:var(--text2); font-size:12px;" id="desc-${key}-${i}">${desc}</td>
+      `;
+      
+      tr.innerHTML = htmlStr;
+      tbody.appendChild(tr);
+    }
+  }
+}
+
+function updateMatrixCount(key, value) {
+  let count = parseInt(value) || 1;
+  if (count < 1) count = 1;
+  if (count > 3) count = 3;
+  
+  const row = ATTR_MATRIX[key];
+  row.count = count;
+  
+  // 补齐或裁剪内部 configs 的数量
+  while (row.configs.length < count) {
+    row.configs.push({
+      targetAttrId: S.attrs[0]?.id || '',
+      warrior: 0,
+      mage: 0,
+      assassin: 0
+    });
+  }
+  if (row.configs.length > count) {
+    row.configs = row.configs.slice(0, count);
+  }
+  
+  renderMatrixInputs();
+  calculateMatrixPreview();
+  persistAttrMatrix('matrix-count');
+}
+
+function updateMatrixAttr(key, index, attrId) {
+  ATTR_MATRIX[key].configs[index].targetAttrId = attrId;
+  const config = ATTR_MATRIX[key].configs[index];
+  const targetAttr = S.attrs.find(x => x.id === attrId);
+  const attrName = targetAttr ? targetAttr.name : '未知属性';
+  $(`desc-${key}-${index}`).textContent = `1点${ATTR_MATRIX[key].label} = 战士${config.warrior}点/法师${config.mage}点/刺客${config.assassin}点 ${attrName}`;
+  calculateMatrixPreview();
+  persistAttrMatrix('matrix-attr');
+}
+
+function updateMatrixValue(key, index, job, value) {
+  const val = parseFloat(value) || 0;
+  ATTR_MATRIX[key].configs[index][job] = val;
+  
+  const config = ATTR_MATRIX[key].configs[index];
+  const targetAttr = S.attrs.find(x => x.id === config.targetAttrId);
+  const attrName = targetAttr ? targetAttr.name : '未知属性';
+  $(`desc-${key}-${index}`).textContent = `1点${ATTR_MATRIX[key].label} = 战士${config.warrior}点/法师${config.mage}点/刺客${config.assassin}点 ${attrName}`;
+  calculateMatrixPreview();
+  persistAttrMatrix('matrix-value');
+}
+
+function updateMatrixBaseMult(key, val) {
+  ATTR_MATRIX[key].baseMult = parseInt(val) || 8;
+  calculateMatrixPreview();
+  persistAttrMatrix('matrix-base-mult');
+}
+
+function onMatrixSliderChange(val) {
+  $('lbl-matrix-lvl').textContent = val;
+  calculateMatrixPreview();
+}
+
+function calculateMatrixPreview() {
+  const lvl = parseInt($('input-matrix-lvl').value) || 50;
+  const previewTbody = $('matrix-preview-tbody');
+  if(!previewTbody) return;
+
+  previewTbody.innerHTML = '';
+  
+  S.attrs.forEach(attr => {
+    let w_total = 0, m_total = 0, a_total = 0;
+    
+    for(let key in ATTR_MATRIX) {
+      const matrixRow = ATTR_MATRIX[key];
+      matrixRow.configs.forEach(config => {
+        if(config.targetAttrId === attr.id) {
+          let multiplier = matrixRow.baseMult || 8; // 从矩阵读取基倍率
+          if (key === 'power' || key === 'spirit') multiplier = matrixRow.baseMult || 10;
+          else if (key === 'physique') multiplier = matrixRow.baseMult || 50;
+          
+          w_total += lvl * multiplier * config.warrior;
+          m_total += lvl * multiplier * config.mage;
+          a_total += lvl * multiplier * config.assassin;
+        }
+      });
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;">联动预览：${attr.name}</td>
+      <td style="color:var(--warning)">${Math.round(w_total)}</td>
+      <td style="color:var(--accent2)">${Math.round(m_total)}</td>
+      <td style="color:var(--danger)">${Math.round(a_total)}</td>
+    `;
+    previewTbody.appendChild(tr);
+  });
+}
+
+// ── 以下为原有模块的核心逻辑与业务流，未做任何删改 ───────────────────────
+let OL=new Set(['l1']);
+const toast=(msg,type='s')=>{
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
+};
+function cm(id){$(id).style.display='none';}
+// v3.0 装备槽位弹窗 — 统一 _mkModal 动态创建模式
+function _showSlotModal(id){
+  var EQ = window.EQUIPMENT_DATA, s = EQ.slots.find(function(x){return x.id===id;});
+  if(!s) return;
+  window._slotEditingId = id;
+
+  // 移除旧弹窗（如果存在）
+  var old = document.getElementById('m-slot');
+  if(old) old.remove();
+
+  var m = document.createElement('div');
+  m.id = 'm-slot';
+  m.style.display = 'flex';
+  m.innerHTML = '<div class="modal-overlay" onclick="if(event.target===this)cm(\'m-slot\')">'
+    + '<div class="modal"><div class="modal-header"><span class="modal-title">槽位编辑</span></div><div class="modal-body">'
+    + '<input type="hidden" id="ms-id" value="' + id + '">'
+    + '<div class="form-group"><label>槽位名称</label><input class="fc" id="ms-name" placeholder="例如：武器、头盔" value="' + s.name + '"></div>'
+    + '<div class="form-group"><label>槽位类型</label><select class="fc" id="ms-type"><option value="attack"' + (s.type === 'attack' ? ' selected' : '') + '>攻击</option><option value="defense"' + (s.type === 'defense' ? ' selected' : '') + '>防御</option><option value="sub"' + (s.type === 'sub' ? ' selected' : '') + '>辅助</option></select></div>'
+    + '<div class="form-group"><label>可用品质</label><div id="ms-qualities" style="display:flex;gap:6px;flex-wrap:wrap">' + EQ.qualities.map(function(q){
+        return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg3)">'
+          + '<input type="checkbox" value="' + q.id + '"' + (s.qualities.indexOf(q.id) >= 0 ? ' checked' : '') + '>'
+          + '<span style="display:inline-block;width:10px;height:10px;background:' + q.color + ';border-radius:50%"></span>'
+          + q.name + '</label>';
+      }).join('') + '</div></div>'
+    + '<div style="border:1px dashed var(--border);padding:10px;border-radius:6px;display:flex;flex-direction:column;gap:6px;margin-top:10px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600;color:var(--accent2)">基础属性配置（可多条）</span><button class="btn btn-ghost btn-xs" onclick="addSlotAttrRow()">+ 添加属性</button></div>'
+    + '<div id="ms-attr-rows"></div></div>'
+    + '</div><div class="modal-footer"><button class="btn btn-ghost" onclick="window.cm(\'m-slot\')">取消</button><button class="btn btn-primary" onclick="window.saveSlotModal()">保存</button></div></div>'
+    + '</div>';
+  document.body.appendChild(m);
+  // 渲染已有属性行 — key是 S.attrs ID (a1/a2/a3)
+  Object.entries(s.baseAttrs).forEach(function(_){
+    addSlotAttrRow(_[0], _[1]);
+  });
+}
+// 槽位属性行 — 属性来源：S.attrs（属性与权重）
+function addSlotAttrRow(attrId, val){
+  var c = document.getElementById('ms-attr-rows');
+  if(!c) return;
+  var opts = '';
+  S.attrs.forEach(function(a){
+    opts += '<option value="' + a.id + '"' + (a.id === (attrId||'') ? ' selected' : '') + '>' + a.name + '</option>';
+  });
+  c.innerHTML += '<div class="grid-2" style="gap:6px;margin-bottom:4px">'
+    + '<select class="fc" data-ms-attr style="font-size:12px">' + opts + '</select>'
+    + '<div style="display:flex;gap:4px"><input type="number" class="fc" data-ms-val value="' + (val||0) + '" min="0" style="font-size:12px">'
+    + '<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button></div></div>';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')['m-attr','m-res','m-curve','m-line','m-branch','m-pack','m-realm-edit','m-level-edit','m-slot'].forEach(cm);
+});
+
+// 页签切换控制逻辑
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.p).classList.add('active');
+  if(t.dataset.p==='panel-matrix')renderMatrixInputs();
+  if(t.dataset.p==='panel-curve')prevCurve();
+}));
+
+// 原功能1：属性定义
+function getAttrIdSet(){
+  return new Set((S.attrs||[]).map(function(a){return a.id;}));
+}
+
+function sanitizeAttributeReferences(){
+  var valid=getAttrIdSet();
+  var fallback=(S.attrs&&S.attrs[0]&&S.attrs[0].id)||'';
+  for(let key in ATTR_MATRIX){
+    (ATTR_MATRIX[key].configs||[]).forEach(function(config){
+      if(config.targetAttrId&&!valid.has(config.targetAttrId))config.targetAttrId=fallback;
+    });
+  }
+  (S.cultivations||[]).forEach(function(line){
+    (line.branches||[]).forEach(function(branch){
+      if(Array.isArray(branch.gains)){
+        branch.gains=branch.gains.filter(function(g){return valid.has(g.attrId)||g.attrId==='dmgBonus'||g.attrId==='dmgRed';});
+        if(!branch.gains.length&&fallback)branch.gains.push({attrId:fallback,val:10});
+      }
+      if(branch.attrId&&!valid.has(branch.attrId))branch.attrId=fallback;
+    });
+  });
+  var equipment=window.EQUIPMENT_DATA;
+  if(equipment&&Array.isArray(equipment.slots)){
+    equipment.slots.forEach(function(slot){
+      if(!slot.baseAttrs)return;
+      Object.keys(slot.baseAttrs).forEach(function(attrId){
+        if(!valid.has(attrId))delete slot.baseAttrs[attrId];
+      });
+      if(!Object.keys(slot.baseAttrs).length&&fallback)slot.baseAttrs[fallback]=0;
+    });
+  }
+}
+
+function refreshAttributeConsumers(){
+  sanitizeAttributeReferences();
+  renderMatrixInputs();
+  calculateMatrixPreview();
+  if(typeof window.initClassPanel==='function')window.initClassPanel();
+  if(typeof window.initEquipmentPanel==='function')window.initEquipmentPanel();
+  if(typeof window.rCult==='function')window.rCult();
+  if(typeof window.renderPaymentPanel==='function')window.renderPaymentPanel();
+  renderCombatAttrInputs();
+  if(document.getElementById('panel-combat2')?.classList.contains('active'))runCombatSim2();
+  if(window.ProjectState&&typeof window.ProjectState.emit==='function')window.ProjectState.emit('attrs-change');
+}
+
+function rAttrs(){
+  const b=$('t-attr').querySelector('tbody');b.innerHTML='';
+  S.attrs.forEach(a=>{
+    const r=document.createElement('tr');
+    r.innerHTML=`<td><span class="badge badge-a">${a.id}</span></td><td><b>${a.name}</b></td><td>${a.base}</td><td>${a.weight}</td>
+    <td><button class="btn btn-ghost btn-xs" onclick="openAttrModal('${a.id}')">编辑</button> <button class="btn btn-danger btn-xs" onclick="delAttr('${a.id}')">删除</button></td>`;
+    b.appendChild(r);
+  });
+  // 当基础属性变更时，同步更新成长矩阵的选项和预览
+  renderMatrixInputs();
+  refreshAttributeConsumers();
+}
+function openAttrModal(id=''){
+  const a=id?S.attrs.find(x=>x.id===id):{id:'',name:'',base:100,weight:1};
+  $('mat-title').textContent=id?'编辑二级属性评估':'新增基础二级属性';
+  $('a-id').value=a.id;$('a-name').value=a.name;$('a-base').value=a.base;$('a-weight').value=a.weight;
+  $('m-attr').style.display='flex';
+}
+function saveAttr(){
+  const id=$('a-id').value, name=$('a-name').value.trim(), base=parseFloat($('a-base').value)||0, weight=parseFloat($('a-weight').value)||0;
+  if(!name)return toast('名称不能为空','e');
+  if(id){const a=S.attrs.find(x=>x.id===id);a.name=name;a.base=base;a.weight=weight;}
+  else{S.attrs.push({id:'a'+(S.attrs.length+1+Date.now()%100),name,base,weight});}
+  cm('m-attr');rAttrs();save();
+}
+function delAttr(id){
+  S.attrs=S.attrs.filter(x=>x.id!==id);
+  // 检查矩阵中失效的关联，将其安全重定向到剩余属性中
+  for(let key in ATTR_MATRIX){
+    ATTR_MATRIX[key].configs.forEach(config => {
+      if(config.targetAttrId === id){
+        config.targetAttrId = S.attrs[0]?.id || '';
+      }
+    });
+  }
+  rAttrs();persistAttrMatrix('attr-delete');save();
+}
+
+// 原功能2：资源管理
+function rRes(){
+  const b=$('t-res').querySelector('tbody');b.innerHTML='';
+  S.resources.forEach(r=>{
+    const row=document.createElement('tr');
+    row.innerHTML=`<td><span class="badge badge-t">${r.id}</span></td><td><b>${r.name}</b></td><td>￥${r.price}</td><td><span style="color:var(--text2);font-size:12px">${r.note||'-'}</span></td>
+    <td><button class="btn btn-ghost btn-xs" onclick="openResModal('${r.id}')">修改</button> <button class="btn btn-danger btn-xs" onclick="delRes('${r.id}')">删除</button></td>`;
+    b.appendChild(row);
+  });
+}
+function openResModal(id=''){
+  const r=id?S.resources.find(x=>x.id===id):{id:'',name:'',price:0.1,note:''};
+  $('mr-title').textContent=id?'调整核心道具产出单价':'注册全新核心道具/代币';
+  $('r-id').value=r.id;$('r-name').value=r.name;$('r-price').value=r.price;$('r-note').value=r.note||'';
+  $('m-res').style.display='flex';
+}
+function saveRes(){
+  const id=$('r-id').value, name=$('r-name').value.trim(), price=parseFloat($('r-price').value)||0, note=$('r-note').value.trim();
+  if(!name)return toast('道具物料名称必填','e');
+  if(id){const r=S.resources.find(x=>x.id===id);r.name=name;r.price=price;r.note=note;}
+  else{S.resources.push({id:'r'+(S.resources.length+1+Date.now()%100),name,price,note});}
+  cm('m-res');rRes();save();
+}
+function delRes(id){S.resources=S.resources.filter(x=>x.id!==id);rRes();save();}
+
+// 原功能3：曲线库
+function rCurves(){
+  const b=$('t-curve').querySelector('tbody');b.innerHTML='';
+  S.curves.forEach(c=>{
+    const map={linear:'线性',diminishing:'边际递减',logarithmic:'对数',sqrt:'平方根',power:'幂函数',expo:'指数',exponential:'指数饱和',sigmoid:'平滑过渡型',stair:'阶梯',fix:'恒定'};
+    const r=document.createElement('tr');
+    r.innerHTML=`<td><span class="badge badge-s">${c.id}</span></td><td><b>${c.name}</b></td><td><span class="badge badge-w">${map[c.type]}</span></td>
+    <td><button class="btn btn-ghost btn-xs" onclick="openCurveModal('${c.id}')">修正</button> <button class="btn btn-danger btn-xs" onclick="delCurve('${c.id}')">擦除</button></td>`;
+    r.addEventListener('click',()=>drawCurveGraph(c));
+    b.appendChild(r);
+  });
+}
+function switchCvType(){
+  var t=$('cv-type').value;
+  var stair=t==='stair';
+  $('cv-p-common').style.display=stair?'none':'grid';
+  $('cv-p-stair').style.display=stair?'block':'none';
+  var pa=document.getElementById('cv-pa-grp');
+  var pb=document.getElementById('cv-pb-grp');
+  var pk=document.getElementById('cv-pk-grp');
+  var px0=document.getElementById('cv-px0-grp');
+  if(pa)pa.style.display='none';
+  if(pb)pb.style.display='none';
+  if(pk)pk.style.display='none';
+  if(px0)px0.style.display='none';
+  if(t==='stair'||t==='fix'){if(pa)pa.style.display='block';}
+  else if(t==='power'||t==='expo'){if(pa)pa.style.display='block';if(pb)pb.style.display='block';}
+  else if(t==='exponential'){if(pa)pa.style.display='block';if(pk)pk.style.display='block';}
+  else if(t==='sigmoid'){if(pa)pa.style.display='block';if(pk)pk.style.display='block';if(px0)px0.style.display='block';}
+  else{if(pa)pa.style.display='block';}
+  prevCurve();
+}
+function getCvParams(){
+  if($('cv-type').value==='stair'){
+    try{return{stairs:JSON.parse($('cv-psteps').value)};}catch(e){return{stairs:[]};}
+  }
+  var t=$('cv-type').value;
+  var a=parseFloat($('cv-pa').value)||0;
+  if(t==='power'||t==='expo') return {a:a,b:parseFloat($('cv-pb').value)||0.5};
+  if(t==='exponential') return {a:a,k:parseFloat($('cv-pk').value)||0.05};
+  if(t==='sigmoid') return {a:a,k:parseFloat($('cv-pk').value)||0.08,x0:parseFloat($('cv-px0').value)||8};
+  return {a:a};
+}
+function cvVal(c,x){
+  if(c.type==='linear')return c.params.a*x;
+  if(c.type==='diminishing'){var coeffs=[1.0,0.75,0.5,0.35,0.25,0.18,0.13,0.10,0.08,0.06,0.05,0.04,0.03,0.03,0.02,0.02,0.015,0.015,0.01,0.01];return c.params.a*(coeffs[x-1]||0.01);}
+  if(c.type==='logarithmic')return c.params.a*Math.log(x+0.01);
+  if(c.type==='sqrt')return c.params.a*Math.sqrt(x);
+  if(c.type==='power')return c.params.a*Math.pow(x,c.params.b||0.5);
+  if(c.type==='expo')return c.params.a*Math.pow(c.params.b||1.2,x);
+  if(c.type==='exponential')return c.params.a*(1-Math.exp(-(c.params.k||0.05)*x));
+  if(c.type==='sigmoid')return c.params.a/(1+Math.exp(-(c.params.k||0.08)*(x-(c.params.x0||8))));
+  if(c.type==='fix')return c.params.a;
+  if(c.type==='stair'){let v=0;const arr=c.params.stairs||[];for(let i=0;i<arr.length;i++){if(x>=arr[i].u)v=arr[i].v;else break;}return v;}
+  return 0;
+}
+function prevCurve(){
+  const t=$('cv-type').value, p=getCvParams();
+  const vals=Array.from({length:15},(_,i)=>cvVal({type:t,params:p},i+1));
+  drawChart('cv-svg',vals);
+}
+function drawCurveGraph(c){
+  const vals=Array.from({length:15},(_,i)=>cvVal(c,i+1));
+  drawChart('cv-svg',vals);
+  toast(`切换趋势预览：${c.name}`);
+}
+function drawChart(svgId,vals){
+  const svg=$(svgId);if(!svg)return;
+  const W=svg.clientWidth||250, H=svg.clientHeight||150, px=28, py=20;
+  const max=Math.max(...vals,1), min=Math.min(...vals,0), rng=max-min||1;
+  const x=i=>px+(W-px*2)*i/(vals.length-1||1);
+  const y=v=>H-py-(H-py*2)*(v-min)/rng;
+  let pts=vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+  let txts=vals.map((v,i)=>i===0||i===7||i===14?`<text x="${x(i)}" y="${H-4}" fill="var(--text3)" font-size="9" text-anchor="middle">L${i+1}</text><text x="${x(i)}" y="${y(v)-4}" fill="var(--text2)" font-size="9" text-anchor="middle">${Math.round(v)}</text>`:'').join('');
+  svg.innerHTML=`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>`+txts;
+}
+function openCurveModal(id=''){
+  var c=id?S.curves.find(x=>x.id===id):{id:'',name:'',type:'linear',params:{a:10}};
+  $('mc-title').textContent=id?'再校准现有增长曲线':'录入全新算法增长模型';
+  $('cv-id').value=c.id;$('cv-name').value=c.name;$('cv-type').value=c.type;
+  if(c.type==='stair'){$('cv-psteps').value=JSON.stringify(c.params.stairs||[]);}
+  else{
+    $('cv-pa').value=c.params.a||10;
+    $('cv-pb').value=c.params.b!==undefined?c.params.b:0.5;
+    $('cv-pk').value=c.params.k!==undefined?c.params.k:0.05;
+    $('cv-px0').value=c.params.x0!==undefined?c.params.x0:8;
+  }
+  switchCvType();$('m-curve').style.display='flex';
+}
+function saveCurve(){
+  const id=$('cv-id').value, name=$('cv-name').value.trim(), type=$('cv-type').value, params=getCvParams();
+  if(!name)return toast('公式模型必须有命名','e');
+  if(id){const c=S.curves.find(x=>x.id===id);c.name=name;c.type=type;c.params=params;}
+  else{S.curves.push({id:'c'+(S.curves.length+1+Date.now()%100),name,type,params});}
+  cm('m-curve');rCurves();save();
+}
+function delCurve(id){S.curves=S.curves.filter(x=>x.id!==id);rCurves();save();}
+
+// 原功能4：三层架构体系养成系统配置
+function rCult(){
+  const container=$('cult-tree');container.innerHTML='';
+  S.cultivations.forEach(line=>{
+    const div=document.createElement('div');div.className='cult-row';
+    const bc=line.branches&&line.branches.length;
+    div.innerHTML=`<div class="cult-hd" onclick="toggleLine('${line.id}')">
+      <div><span style="font-size:14px;font-weight:600">${line.name}</span> <span style="font-size:12px;color:var(--text3);margin-left:10px">${line.note||''} (${bc||0}个分支)</span></div>
+      <span style="display:flex;gap:6px" onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-xs" onclick="openBranchModal('${line.id}')">+ 新增二级分支</button>
+        <button class="btn btn-ghost btn-xs" onclick="openLineModal('${line.id}')">编辑</button>
+        <button class="btn btn-danger btn-xs" onclick="delLine('${line.id}')">删除</button>
+      </span>
+    </div>
+    <div class="cult-lb ${OL.has(line.id)?'open':''}" id="clb-${line.id}">
+      ${!bc?'<div style="color:var(--text3);font-size:12px;padding:4px">暂无精细化模块分支，请点击上方创建。</div>':''}
+    </div>`;
+    
+    if(bc){
+      const lb=div.querySelector('#clb-'+line.id);
+      line.branches.forEach(function(b){
+        // 兼容旧格式
+        var costs=b.consumes||(b.resId?[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}]:[]);
+        var attrs=b.gains||(b.attrId?[{attrId:b.attrId,val:b.attrVal||10}]:[]);
+        var isRefine = (b.id === 'b_refine');
+        var item=document.createElement('div');item.className='rule-item';
+        var costHtml=costs.map(function(c){
+          var res=S.resources?S.resources.find(function(x){return x.id===c.resId;}):null;
+          var cv=S.curves?S.curves.find(function(x){return x.id===c.cvId;}):null;
+          return '<span style="color:var(--text)">'+(res?res.name:'未知')+' ×'+c.qty+'</span>'+'<span style="font-size:10px;color:var(--text3);margin-left:4px">['+(cv?cv.name:'固定')+']</span>';
+        }).join(' + ');
+        var attrHtml=attrs.map(function(a){
+          var attr=S.attrs?S.attrs.find(function(x){return x.id===a.attrId;}):null;
+          var cv=S.curves?S.curves.find(function(x){return x.id===a.cvId;}):null;
+          var label = attr ? attr.name : (a.attrId==='dmgBonus' ? '增伤' : a.attrId==='dmgRed' ? '减伤' : '未知');
+          var suffix = (a.attrId==='dmgBonus'||a.attrId==='dmgRed') ? '%' : '';
+          return '<span style="color:var(--success)">+'+a.val+suffix+'</span> <span class="badge badge-a">'+label+'</span><span style="font-size:10px;color:var(--text3);margin-left:2px">['+(cv?cv.name:'固定')+']</span>';
+        }).join(' ');
+        var badgeLabel = isRefine ? '精炼' : '分支';
+        var btnLabel = isRefine ? '编辑参数' : '编辑参数';
+        var delLabel = isRefine ? '删除' : '删除';
+        item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+          +'<div><span class="badge badge-w">'+badgeLabel+'</span> <b style="font-size:13px;color:var(--accent2)">'+b.name+'</b> <span style="color:var(--text2);font-size:12px;margin-left:8px">等级上限: '+b.maxLevel+'级</span></div>'
+          +'<div><button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">'+btnLabel+'</button> <button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">'+delLabel+'</button></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:16px;font-size:12px;color:var(--text2);flex-wrap:wrap">'
+          +'<div>每级消耗: '+costHtml+'</div>'
+          +'<div>属性增益: '+attrHtml+'</div></div>';
+        lb.appendChild(item);
+      });
+    }
+    container.appendChild(div);
+  });
+}
+function toggleLine(id){if(OL.has(id))OL.delete(id);else OL.add(id);rCult();}
+function openLineModal(id=''){
+  const l=id?S.cultivations.find(x=>x.id===id):{id:'',name:'',note:''};
+  $('ml-title').textContent=id?'变更系统主体架构名称':'规整定义全新主要养成系统';
+  $('l-id').value=l.id;$('l-name').value=l.name;$('l-note').value=l.note||'';
+  $('m-line').style.display='flex';
+}
+function saveLine(){
+  const id=$('l-id').value, name=$('l-name').value.trim(), note=$('l-note').value.trim();
+  if(!name)return toast('大类名称属于必填内容','e');
+  if(id){const l=S.cultivations.find(x=>x.id===id);l.name=name;l.note=note;}
+  else{const nid='l'+Date.now()%1000;S.cultivations.push({id:nid,name,note,branches:[]});OL.add(nid);}
+  cm('m-line');rCult();save();
+}
+function delLine(id){S.cultivations=S.cultivations.filter(x=>x.id!==id);rCult();save();}
+
+function openBranchModal(lid,bid=''){
+  var line=S.cultivations.find(function(x){return x.id===lid;});if(!line)return;
+  var b=bid?line.branches.find(function(x){return x.id===bid;}):{id:'',name:'',maxLevel:10,consumes:[{resId:'',qty:1,cvId:''}],gains:[{attrId:'',val:10}]};
+  // 兼容旧格式：单条 resId/qty/cvId → consumes[]
+  if(!b.consumes&&b.resId){b.consumes=[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}];}
+  if(!b.consumes||!b.consumes.length)b.consumes=[{resId:'',qty:1,cvId:''}];
+  // 兼容旧格式：单条 attrId/attrVal → gains[]
+  if(!b.gains&&b.attrId){b.gains=[{attrId:b.attrId,val:b.attrVal||10}];}
+  if(!b.gains||!b.gains.length)b.gains=[{attrId:'',val:10}];
+  $('b-lid').value=lid;$('b-id').value=b.id;$('b-name').value=b.name;$('b-max').value=b.maxLevel;
+  $('mb-title').textContent='隶属于 ['+line.name+'] 的二级进化规则设定';
+  renderBranchCostRows(b.consumes);
+  renderBranchAttrRows(b.gains);
+  $('m-branch').style.display='flex';
+}
+function renderBranchCostRows(arr){
+  var c=$('branch-cost-rows');c.innerHTML='';
+  var ropts='';S.resources.forEach(function(r){ropts+='<option value="'+r.id+'">'+r.name+'</option>';});
+  var cvopts='<option value="">-- 固定 --</option>';S.curves.forEach(function(cv){cvopts+='<option value="'+cv.id+'">'+cv.name+'</option>';});
+  for(var i=0;i<arr.length;i++){
+    var r=arr[i];
+    c.innerHTML+='<div class="grid-3" style="gap:6px;margin-bottom:4px">'
+      +'<select class="fc" data-bc-res style="font-size:12px">'+ropts.replace('value="'+r.resId+'"','value="'+r.resId+'" selected')+'</select>'
+      +'<input type="number" class="fc" data-bc-qty value="'+r.qty+'" min="1" style="font-size:12px">'
+      +'<div style="display:flex;gap:4px"><select class="fc" data-bc-cv style="font-size:11px;flex:1">'+cvopts.replace('value="'+r.cvId+'"','value="'+r.cvId+'" selected')+'</select>'
+      +(arr.length>1?'<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button>':'')+'</div></div>';
+  }
+}
+function renderBranchAttrRows(arr){
+  var c=$('branch-attr-rows');c.innerHTML='';
+  var aopts='';S.attrs.forEach(function(a){aopts+='<option value="'+a.id+'">'+a.name+'</option>';});
+  aopts+='<option value="dmgBonus">增伤</option><option value="dmgRed">减伤</option>';
+  var cvopts='<option value="">-- 固定 --</option>';S.curves.forEach(function(cv){cvopts+='<option value="'+cv.id+'">'+cv.name+'</option>';});
+  for(var i=0;i<arr.length;i++){
+    var a=arr[i];
+    c.innerHTML+='<div class="grid-3" style="gap:6px;margin-bottom:4px">'
+      +'<select class="fc" data-ba-attr style="font-size:12px">'+aopts.replace('value="'+a.attrId+'"','value="'+a.attrId+'" selected')+'</select>'
+      +'<input type="number" class="fc" data-ba-val value="'+a.val+'" min="0" style="font-size:12px">'
+      +'<div style="display:flex;gap:4px"><select class="fc" data-ba-cv style="font-size:11px;flex:1">'+cvopts.replace('value="'+a.cvId+'"','value="'+a.cvId+'" selected')+'</select>'
+      +(arr.length>1?'<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button>':'')+'</div></div>';
+  }
+}
+function addBranchCostRow(){
+  var c=$('branch-cost-rows');
+  var ropts='';S.resources.forEach(function(r){ropts+='<option value="'+r.id+'">'+r.name+'</option>';});
+  var cvopts='<option value="">-- 固定 --</option>';S.curves.forEach(function(cv){cvopts+='<option value="'+cv.id+'">'+cv.name+'</option>';});
+  c.innerHTML+='<div class="grid-3" style="gap:6px;margin-bottom:4px">'
+    +'<select class="fc" data-bc-res style="font-size:12px">'+ropts+'</select>'
+    +'<input type="number" class="fc" data-bc-qty value="1" min="1" style="font-size:12px">'
+    +'<div style="display:flex;gap:4px"><select class="fc" data-bc-cv style="font-size:11px;flex:1">'+cvopts+'</select>'
+    +'<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button></div></div>';
+}
+function addBranchAttrRow(){
+  var c=$('branch-attr-rows');
+  var aopts='';S.attrs.forEach(function(a){aopts+='<option value="'+a.id+'">'+a.name+'</option>';});
+  aopts+='<option value="dmgBonus">增伤</option><option value="dmgRed">减伤</option>';
+  var cvopts='<option value="">-- 固定 --</option>';S.curves.forEach(function(cv){cvopts+='<option value="'+cv.id+'">'+cv.name+'</option>';});
+  c.innerHTML+='<div class="grid-3" style="gap:6px;margin-bottom:4px">'
+    +'<select class="fc" data-ba-attr style="font-size:12px">'+aopts+'</select>'
+    +'<input type="number" class="fc" data-ba-val value="10" min="0" style="font-size:12px">'
+    +'<div style="display:flex;gap:4px"><select class="fc" data-ba-cv style="font-size:11px;flex:1">'+cvopts+'</select>'
+    +'<button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删</button></div></div>';
+}
+function previewBranch(){
+  var lid=$('b-lid').value, id=$('b-id').value, name=$('b-name').value.trim()||'未命名', maxLv=parseInt($('b-max').value)||10;
+  // 从未保存的弹窗中读取当前填写的消耗/属性
+  var costs=[];document.querySelectorAll('#branch-cost-rows > div').forEach(function(row){
+    var sel=row.querySelector('[data-bc-res]'),qty=row.querySelector('[data-bc-qty]'),cv=row.querySelector('[data-bc-cv]');
+    if(sel&&sel.value)costs.push({resId:sel.value,qty:parseInt(qty?qty.value:1)||1,cvId:cv?cv.value:''});
+  });
+  var gains=[];document.querySelectorAll('#branch-attr-rows > div').forEach(function(row){
+    var sel=row.querySelector('[data-ba-attr]'),val=row.querySelector('[data-ba-val]'),cv=row.querySelector('[data-ba-cv]');
+    if(sel&&sel.value)gains.push({attrId:sel.value,val:parseInt(val?val.value:10)||10,cvId:cv?cv.value:''});
+  });
+  // 若弹窗无数据，尝试从已保存数据读取
+  if(!costs.length&&id){var line=S.cultivations.find(function(x){return x.id===lid;});if(line){var b=line.branches.find(function(x){return x.id===id;});if(b){costs=b.consumes||(b.resId?[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}]:[]);gains=b.gains||(b.attrId?[{attrId:b.attrId,val:b.attrVal||10}]:[]);}}}
+  if(!costs.length||!gains.length)return toast('至少配置一条消耗和一条属性才能预览','e');
+  var html='<div style="max-height:400px;overflow:auto"><table class="tbl" style="min-width:500px"><thead><tr><th>等级</th>';
+  costs.forEach(function(c){
+    var res=S.resources?S.resources.find(function(x){return x.id===c.resId;}):null;
+    html+='<th>消耗 '+(res?res.name:'?')+'</th>';
+  });
+  gains.forEach(function(a){
+    var attr=S.attrs?S.attrs.find(function(x){return x.id===a.attrId;}):null;
+    html+='<th>获得 '+(attr?attr.name:'?')+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+  for(var lv=1;lv<=maxLv;lv++){
+    html+='<tr><td style="font-weight:bold;color:var(--accent2)">第'+lv+'级</td>';
+    costs.forEach(function(c){
+      var cv=S.curves?S.curves.find(function(x){return x.id===c.cvId;}):null;
+      var mult=cv?cvVal(cv,lv):1;
+      var qty=Math.round((c.qty||1)*mult);
+      html+='<td style="color:var(--danger);font-variant-numeric:tabular-nums">×'+qty.toLocaleString()+'</td>';
+    });
+    gains.forEach(function(a){
+      var cv=S.curves?S.curves.find(function(x){return x.id===a.cvId;}):null;
+      var mult=cv?cvVal(cv,lv):1;
+      var v=Math.round((a.val||0)*mult);
+      html+='<td style="color:var(--success);font-variant-numeric:tabular-nums">+'+v.toLocaleString()+'</td>';
+    });
+    html+='</tr>';
+  }
+  html+='</tbody></table></div>';
+  showToastModal('['+name+'] 每级详细数据',html);
+}
+function showToastModal(title,bodyHtml){
+  var overlay=document.createElement('div');overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:15px';
+  overlay.onclick=function(e){if(e.target===overlay)document.body.removeChild(overlay);};
+  var panel=document.createElement('div');panel.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:8px;width:100%;max-width:700px;max-height:90%;display:flex;flex-direction:column';
+  panel.innerHTML='<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">'+title+'</span><button class="btn btn-ghost btn-xs" onclick="var p=this;while(p&&p.tagName!==\'BODY\'){if(p.style&&p.style.zIndex==\'9999\'){p.remove();break;}p=p.parentNode;}">关闭</button></div><div style="padding:16px;overflow:auto">'+bodyHtml+'</div>';
+  overlay.appendChild(panel);document.body.appendChild(overlay);
+}
+
+function saveBranch(){
+  var lid=$('b-lid').value, id=$('b-id').value, line=S.cultivations.find(function(x){return x.id===lid;});if(!line)return;
+  var name=$('b-name').value.trim(), maxLevel=parseInt($('b-max').value)||10;
+  if(!name)return toast('明细分支必起名称','e');
+  // 收集多条消耗
+  var consumes=[];
+  document.querySelectorAll('#branch-cost-rows > div').forEach(function(row){
+    var sel=row.querySelector('[data-bc-res]'),qty=row.querySelector('[data-bc-qty]'),cv=row.querySelector('[data-bc-cv]');
+    if(sel&&sel.value){consumes.push({resId:sel.value,qty:parseInt(qty?qty.value:1)||1,cvId:cv?cv.value:''});}
+  });
+  // 收集多条属性
+  var gains=[];
+  document.querySelectorAll('#branch-attr-rows > div').forEach(function(row){
+    var sel=row.querySelector('[data-ba-attr]'),val=row.querySelector('[data-ba-val]');
+    if(sel&&sel.value){gains.push({attrId:sel.value,val:parseInt(val?val.value:10)||10});}
+  });
+  if(!consumes.length)return toast('至少配置一条消耗规则','e');
+  if(!gains.length)return toast('至少配置一条属性收益','e');
+  if(id){var b=line.branches.find(function(x){return x.id===id;});b.name=name;b.maxLevel=maxLevel;b.consumes=consumes;b.gains=gains;}
+  else{line.branches.push({id:'b'+Date.now()%1000,name,maxLevel,consumes:consumes,gains:gains});}
+  // 精炼分支同步到 EQUIPMENT_REFINE
+  if (id === 'b_refine' && window.EQUIPMENT_REFINE) {
+    var rf = window.EQUIPMENT_REFINE;
+    rf.maxLevel = maxLevel;
+    // 消耗 → stones
+    if (consumes.length) {
+      var res = (S.resources||[]).find(function(r){return r.id===consumes[0].resId;});
+      rf.stones.material = res ? res.name : '精炼晶石';
+      rf.stones.baseCost = consumes[0].qty || 100;
+      rf.stones.costMultiplier = consumes[0].cvId ? 1.5 : 1;
+    }
+    // 属性 → perLevel
+    rf.perLevel.damageBonus = 0;
+    rf.perLevel.damageReduction = 0;
+    gains.forEach(function(g){
+      if (g.attrId === 'dmgBonus') rf.perLevel.damageBonus = (g.val||0) / 100;
+      if (g.attrId === 'dmgRed') rf.perLevel.damageReduction = (g.val||0) / 100;
+    });
+  }
+  cm('m-branch');rCult();save();
+}
+function delBranch(lid,bid){
+  var l=S.cultivations.find(function(x){return x.id===lid;});if(l)l.branches=l.branches.filter(function(x){return x.id!==bid;});
+  // 精炼分支删除时重置 EQUIPMENT_REFINE
+  if (bid === 'b_refine' && window.EQUIPMENT_REFINE) {
+    var rf = window.EQUIPMENT_REFINE;
+    rf.maxLevel = 10;
+    rf.perLevel.damageBonus = 0.03;
+    rf.perLevel.damageReduction = 0.06;
+    rf.stones.material = '精炼晶石';
+    rf.stones.baseCost = 100;
+    rf.stones.costMultiplier = 1.5;
+  }
+  rCult();save();
+}
+
+// 原功能5：商业化模块
+function rPacks(){
+  const b=$('t-pack').querySelector('tbody');b.innerHTML='';
+  S.packs.forEach(p=>{
+    let val=0, list=[];
+    for(let rId in p.items){
+      const res=S.resources.find(x=>x.id===rId), num=p.items[rId];
+      if(res){val+=res.price*num;list.push(`${res.name}×${num}`);}
+    }
+    const roi=p.price>0?(val/p.price).toFixed(2):'∞';
+    const r=document.createElement('tr');
+    r.innerHTML=`<td><b>${p.name}</b></td><td>￥${p.price}</td><td style="font-size:12px;color:var(--text2)">${list.join(', ')||'空'}</td>
+    <td style="color:var(--accent2)">￥${val.toFixed(1)}</td><td><span class="badge ${roi>=2?'badge-s':roi>=1?'badge-w':'badge-d'}">${roi} x倍价值</span></td>
+    <td><span class="badge badge-a">${p.tag||'特惠'}</span></td>
+    <td><button class="btn btn-ghost btn-xs" onclick="openPackModal('${p.id}')">拆改</button> <button class="btn btn-danger btn-xs" onclick="delPack('${p.id}')">下架</button></td>`;
+    b.appendChild(r);
+  });
+}
+function rPackItemFields(){
+  const c=$('p-res-list');c.innerHTML='';
+  S.resources.forEach(r=>{
+    const pId=$('p-id').value;const pack=S.packs.find(x=>x.id===pId);const curQty=pack&&pack.items?pack.items[r.id]||0:0;
+    const d=document.createElement('div');d.style='display:flex;align-items:center;justify-content:between;gap:10px';
+    d.innerHTML=`<span style="font-size:12px;width:80px;overflow:hidden;text-overflow:ellipsis">${r.name}</span>
+    <input type="number" class="fc btn-xs res-qty-input" data-rid="${r.id}" value="${curQty}" min="0" style="flex:1;text-align:right">
+    <span style="font-size:11px;color:var(--text3);width:50px">单价:${r.price}</span>`;
+    c.appendChild(d);
+  });
+}
+function openPackModal(id=''){
+  const p=id?S.packs.find(x=>x.id===id):{id:'',name:'',price:6,tag:'每日特惠',items:{}};
+  $('mp-title').textContent=id?'重组既定商业化商品物料结构':'设定架设全新商品销售组合';
+  $('p-id').value=p.id;$('p-name').value=p.name;$('p-price').value=p.price;$('p-tag').value=p.tag||'每日特惠';
+  rPackItemFields();$('m-pack').style.display='flex';
+}
+function savePack(){
+  const id=$('p-id').value, name=$('p-name').value.trim(), price=parseFloat($('p-price').value)||0, tag=$('p-tag').value;
+  if(!name)return toast('商品包装销售必须拥有命名','e');
+  let items={};document.querySelectorAll('.res-qty-input').forEach(el=>{
+    const v=parseFloat(el.value)||0;if(v>0)items[el.dataset.rid]=v;
+  });
+  if(id){const p=S.packs.find(x=>x.id===id);p.name=name;p.price=price;p.tag=tag;p.items=items;}
+  else{S.packs.push({id:'p'+Date.now()%1000,name,price,tag,items});}
+  cm('m-pack');rPacks();save();renderShopAnalysis();
+}
+function delPack(id){S.packs=S.packs.filter(x=>x.id!==id);rPacks();save();renderShopAnalysis();}
+
+// 原功能6：综合全线建模生命周期演变仿真模拟器
+function runSimulation(){
+  const budget=parseFloat($('sim-budget').value)||0, days=parseInt($('sim-days').value)||1, ratio=parseFloat($('sim-daily-ratio').value)||1, strategy=$('sim-strategy').value;
+  let wallet={};S.resources.forEach(r=>wallet[r.id]=0);
+  // 30日基础活跃投放累计产出
+  S.resources.forEach(r=>{wallet[r.id]+=days*50*ratio;});
+  
+  // 付费采买决策流控制逻辑
+  let moneySpent=0, buyLog=[];
+  let availPacks=[...S.packs];
+  if(strategy==='roi')availPacks.sort((m,n)=>{
+    let vm=0,vn=0;for(let id in m.items){const r=S.resources.find(x=>x.id===id);vm+=(r?r.price:0)*m.items[id];}
+    for(let id in n.items){const r=S.resources.find(x=>x.id===id);vn+=(r?r.price:0)*n.items[id];}
+    return (vn/(n.price||1)) - (vm/(m.price||1));
+  });
+  else if(strategy==='cheap')availPacks.sort((m,n)=>m.price-n.price);
+  else if(strategy==='expensive')availPacks.sort((m,n)=>n.price-m.price);
+
+  availPacks.forEach(p=>{
+    while(moneySpent+p.price<=budget){
+      moneySpent+=p.price;buyLog.push(p.name);
+      for(let rId in p.items){if(wallet[rId]!==undefined)wallet[rId]+=p.items[rId];}
+      if(strategy==='roi'||strategy==='cheap'||strategy==='expensive') break; //防无限死循环
+    }
+  });
+
+  // 消化全部物料资源演进推进等级深度评估
+  let state={};S.cultivations.forEach(l=>{l.branches.forEach(b=>{state[b.id]=0;});});
+  let totalAttrGains={};S.attrs.forEach(a=>totalAttrGains[a.id]=0);
+  let advanced=true, loopCount=0;
+  while(advanced&&loopCount<500){
+    advanced=false;loopCount++;
+    S.cultivations.forEach(l=>{
+      l.branches.forEach(b=>{
+        if(state[b.id]<b.maxLevel){
+          var costs=b.consumes||(b.resId?[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}]:[]);
+          var attrs=b.gains||(b.attrId?[{attrId:b.attrId,val:b.attrVal||10}]:[]);
+          var canAffordAll=true;
+          costs.forEach(function(c){
+            var nxtLvl=state[b.id]+1;var cv=S.curves.find(function(x){return x.id===c.cvId;});var mult=cv?cvVal(cv,nxtLvl):1;var cost=c.qty*mult;
+            if((wallet[c.resId]||0)<cost)canAffordAll=false;
+          });
+          if(canAffordAll){
+            costs.forEach(function(c){
+              var nxtLvl=state[b.id]+1;var cv=S.curves.find(function(x){return x.id===c.cvId;});var mult=cv?cvVal(cv,nxtLvl):1;var cost=c.qty*mult;
+              wallet[c.resId]=(wallet[c.resId]||0)-Math.round(cost);
+            });
+            state[b.id]++;
+            attrs.forEach(function(a){
+              var cv=S.curves?S.curves.find(function(x){return x.id===a.cvId;}):null;
+              var mult=cv?cvVal(cv,state[b.id]+1):1;
+              totalAttrGains[a.attrId]=(totalAttrGains[a.attrId]||0)+Math.round((a.val||0)*mult);
+            });
+            advanced=true;
+          }
+        }
+      });
+    });
+  }
+
+  // 聚合收益报告看板动态产生
+  let totalCP=0;S.attrs.forEach(a=>{totalCP+=(totalAttrGains[a.id]||0)*a.weight;});
+  let resHTML=S.resources.map(r=>`<div class="stat-card"><div class="stat-l">${r.name}剩余结余</div><div class="stat-v" style="color:var(--text)">${Math.round(wallet[r.id])}</div></div>`).join('');
+  let attrHTML=S.attrs.map(a=>`<div class="stat-card"><div class="stat-l">累计${a.name}净增</div><div class="stat-v" style="color:var(--accent)">+${totalAttrGains[a.id]||0}</div></div>`).join('');
+  let cultHTML=S.cultivations.map(l=>{
+    let bProgress=l.branches.map(b=>`<span style="margin-right:12px;font-size:12px">${b.name}: <b style="color:var(--accent2)">第${state[b.id]}级/第${b.maxLevel}级</b></span>`).join('');
+    return `<div style="padding:8px;border-bottom:1px solid var(--border)"><b>${l.name}</b>: ${bProgress}</div>`;
+  }).join('');
+
+  $('sim-result').innerHTML=`
+    <div class="section"><div class="section-header"><span class="section-title">建模仿真推演成果报告</span></div>
+    <div class="section-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-l">实际资金总消费</div><div class="stat-v" style="color:var(--warning)">￥${moneySpent}</div></div>
+        <div class="stat-card"><div class="stat-l">综合评估战力总贡献</div><div class="stat-v" style="color:var(--success)">${Math.round(totalCP)}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">付费路线买入行为日志追踪 (${buyLog.length}次行为): ${buyLog.slice(0,8).join(' → ')}${buyLog.length>8?'…':''}</div>
+      <span style="font-size:12px;color:var(--text3);font-weight:600">核心代币存留结余表</span><div class="stats-grid">${resHTML}</div>
+      <span style="font-size:12px;color:var(--text3);font-weight:600">核心战斗二级属性净增加汇总表</span><div class="stats-grid">${attrHTML}</div>
+      <span style="font-size:12px;color:var(--text3);font-weight:600">各系统及分支最终进阶级别评估</span><div style="background:var(--bg3);border-radius:6px;padding:6px">${cultHTML}</div>
+    </div></div>`;
+  $('sim-result').style.display='flex';
+}
+
+// 存档体系及项目导入导出底层支持
+function save(){try{S.attrMatrix=JSON.parse(JSON.stringify(ATTR_MATRIX));if(window.ProjectState){window.ProjectState.bind(S);window.ProjectState.persist('v2-save');}else{localStorage.setItem('gbt21_data',JSON.stringify(S));}}catch(e){}}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gbt_v2.1_project.json';a.click();
+}
+function importData(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();reader.onload=evt=>{
+      try{
+        const parsed=JSON.parse(evt.target.result);
+        const data=parsed&&parsed.data?parsed.data:parsed;
+        if(data.attrs&&data.resources){S=data;restoreAttrMatrixFromProject();if(window.ProjectState)window.ProjectState.restore(S,'import-v2-json');rAll();save();toast('项目数据还原成功！');}
+        else{toast('JSON 格式与核心参数不匹配','e');}
+      }catch(err){toast('文件损毁或无法识别','e');}
+    };reader.readAsText(file);
+  };input.click();
+}
+
+function rAll(){rAttrs();rRes();rCurves();rCult();rPacks();renderShopAnalysis();}
+
+// ── 全自动化入口初始化 ──────────────────────────────────────────────────
+var cbChart;
+
+function syncCombatChartCanvasSize(canvas){
+  if(!canvas)return;
+  var wrap=canvas.parentElement;
+  if(!wrap)return;
+  var rect=wrap.getBoundingClientRect();
+  var dpr=window.devicePixelRatio||1;
+  var cssWidth=Math.max(1,Math.round(rect.width));
+  var cssHeight=Math.max(1,Math.round(rect.height));
+  canvas.style.width=cssWidth+'px';
+  canvas.style.height=cssHeight+'px';
+  canvas.width=Math.round(cssWidth*dpr);
+  canvas.height=Math.round(cssHeight*dpr);
+}
+
+function initCurves(){
+  var defaults=[
+    {id:'c1',name:'边际递减',type:'diminishing',params:{a:10}},
+    {id:'c2',name:'线性',type:'linear',params:{a:10}},
+    {id:'c3',name:'对数',type:'logarithmic',params:{a:10}},
+    {id:'c4',name:'平方根',type:'sqrt',params:{a:10}},
+    {id:'c5',name:'幂函数',type:'power',params:{a:10,b:0.5}},
+    {id:'c6',name:'指数饱和',type:'exponential',params:{a:10,k:0.05}},
+    {id:'c7',name:'平滑过渡型',type:'sigmoid',params:{a:10,k:0.08,x0:8}}
+  ];
+  if(!S.curves||!S.curves.length){S.curves=defaults;return;}
+  // 合并缺失的默认曲线（已有ID不覆盖）
+  for(var i=0;i<defaults.length;i++){
+    var d=defaults[i];
+    var exist=false;
+    for(var j=0;j<S.curves.length;j++){if(S.curves[j].id===d.id){exist=true;break;}}
+    if(!exist)S.curves.push(d);
+  }
+}
+
+(function init(){
+  try{const saved=window.ProjectState?window.ProjectState.loadLocalStorage():localStorage.getItem('gbt21_data');if(saved)S=(typeof saved==='string'?JSON.parse(saved):saved);restoreAttrMatrixFromProject();if(window.ProjectState)window.ProjectState.bind(S);}catch(e){}
+  // v3.0 迁移：确保精炼系统分支存在
+  var l1 = (S.cultivations||[]).find(function(x){return x.id==='l1';});
+  if (l1 && !l1.branches.find(function(x){return x.id==='b_refine';})) {
+    l1.branches.push({id:'b_refine',name:'精炼系统',maxLevel:10,consumes:[{resId:'r2',qty:100,cvId:'c4'}],gains:[{attrId:'dmgBonus',val:3},{attrId:'dmgRed',val:6}]});
+  }
+  // v3.1 迁移：ATTR_MATRIX 补齐 baseMult 字段
+  var defaultBaseMult = {power:10, spirit:10, agility:8, endurance:8, physique:50};
+  for (var mk in ATTR_MATRIX) {
+    if (ATTR_MATRIX[mk].baseMult === undefined) {
+      ATTR_MATRIX[mk].baseMult = defaultBaseMult[mk] || 8;
+    }
+  }
+  initCurves();
+  rAll();
+  initEconomyConfig();
+  initCombatTiers();
+  renderEconomyPanel();
+  renderShopAnalysis();
+  runCombatSim2();
+  renderROIPanel2();
+  
+  // 触发成长矩阵首次初始化
+  renderMatrixInputs();
+  calculateMatrixPreview();
+})();
+
+
+// ===== New panels from base.html =====
+
+
+function saveEcoCfg(el,field){
+  var rid=el.dataset.rid;
+  if(!S.ecoConfig||!S.ecoConfig[rid])return;
+  S.ecoConfig[rid][field]=isNaN(el.value)?el.value:parseFloat(el.value);
+}
+
+function initEconomyConfig(){
+  if(!S.ecoConfig)S.ecoConfig={};
+  var defaults=[{dayProd:0,smallR:1.0,midR:1.5,bigR:2.0,superR:3.0,maxLimit:0}];
+  if(S.resources&&S.resources.length){
+    for(var i=0;i<S.resources.length;i++){
+      var r=S.resources[i];
+      if(!S.ecoConfig[r.id]){
+        S.ecoConfig[r.id]={dayProd:100,smallR:1.5,midR:2.5,bigR:4.0,superR:6.0,maxLimit:500};
+      }
+    }
+  }
+}
+
+function renderEconomyPanel(){
+  var tbody=document.querySelector('#tbl-eco-config tbody');
+  if(!tbody){setTimeout(renderEconomyPanel,100);return;}
+  tbody.innerHTML='';
+  if(!S.resources||!S.resources.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:30px">请先在“资源管理” Tab 添加核心资源</td></tr>';
+    return;
+  }
+  initEconomyConfig();
+  for(var i=0;i<S.resources.length;i++){
+    var r=S.resources[i];
+    var cfg=S.ecoConfig[r.id];
+    if(!cfg)continue;
+    tbody.innerHTML+='<tr><td><span class="badge badge-t">'+r.id+'</span></td>'
+      +'<td><b style="color:var(--accent);font-size:13px">'+r.name+'</b></td>'
+      +'<td><input type="number" class="fc" value="'+cfg.dayProd+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'dayProd\')" style="font-size:12px;width:90px"></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+cfg.smallR+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'smallR\')" style="font-size:12px;width:65px"></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+cfg.midR+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'midR\')" style="font-size:12px;width:65px"></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+cfg.bigR+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'bigR\')" style="font-size:12px;width:65px"></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+cfg.superR+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'superR\')" style="font-size:12px;width:65px"></td>'
+      +'<td><input type="number" class="fc" value="'+cfg.maxLimit+'" data-rid="'+r.id+'" onchange="saveEcoCfg(this,\'maxLimit\')" style="font-size:12px;width:90px"></td></tr>';
+  }
+}
+
+function saveEconomyData(){if(typeof toast==='function')toast('产出数据已锁定');renderEconomyPanel();}
+
+function recalcWorth(i){
+  var p=S.shop[i];
+  if(!p)return;
+  p.worth=Math.round(p.price*p.multiplier);
+  renderShopNewPanel();
+}
+
+function renderShopNewPanel(){
+  var tbody=document.querySelector('#tbl-shop-config-new tbody');
+  if(!tbody){setTimeout(renderShopNewPanel,100);return;}
+  tbody.innerHTML='';
+  if(!S.shop) S.shop=[];
+  for(var i=0;i<S.shop.length;i++){
+    var p=S.shop[i];
+    if(p.multiplier===undefined)p.multiplier=p.price>0?+(p.worth/p.price).toFixed(2):1;
+    tbody.innerHTML+='<tr><td><input type="text" class="fc" value="'+p.name+'" onchange="S.shop['+i+'].name=this.value;renderShopAnalysis()" style="font-size:12px;width:140px"></td>'
+      +'<td><input type="number" class="fc" value="'+p.price+'" onchange="S.shop['+i+'].price=parseFloat(this.value);recalcWorth('+i+')" style="font-size:12px;width:80px"></td>'
+      +'<td><input type="text" class="fc" value="'+p.rewards+'" onchange="S.shop['+i+'].rewards=this.value" style="font-size:12px;width:160px"></td>'
+      +'<td><input type="number" step="0.01" class="fc" value="'+p.multiplier+'" onchange="S.shop['+i+'].multiplier=parseFloat(this.value);recalcWorth('+i+')" style="font-size:12px;width:80px;font-weight:bold;color:var(--warning)"></td>'
+      +'<td style="font-weight:bold;color:var(--accent2);font-size:13px">'+p.worth+'</td>'
+      +'<td><button class="btn btn-danger btn-xs" onclick="removeShopNewRow('+i+')">移除</button></td></tr>';
+  }
+  renderShopAnalysis();
+}
+
+function addShopNewRow(){
+  if(!S.shop) S.shop=[];
+  var base=1; // default multiplier
+  S.shop.push({id:'rs'+(S.shop.length+1),name:'新礼包',price:30,rewards:'描述',worth:Math.round(30*base),multiplier:base});
+  renderShopNewPanel();
+}
+
+function removeShopNewRow(idx){S.shop.splice(idx,1);renderShopNewPanel();}
+function saveShopNewData(){if(typeof toast==='function')toast('礼包性价比已重算');}
+
+function renderStarConfigTable(){
+  // 确保默认值
+  if(!S.starConfig||!S.starConfig.length)S.starConfig=[
+    {min:0,max:3,stars:1,desc:'基础偏低',color:''},
+    {min:3,max:6,stars:2,desc:'正常准线',color:'#74b9ff'},
+    {min:6,max:10,stars:3,desc:'性价优良',color:'#55efc4'},
+    {min:10,max:15,stars:4,desc:'高度推荐',color:'#ffeaa7'},
+    {min:15,max:9999,stars:5,desc:'极端超值',color:'#ff7675'}
+  ];
+  var tbody=document.querySelector('#tbl-star-config tbody');
+  if(!tbody)return;tbody.innerHTML='';
+  for(var i=0;i<S.starConfig.length;i++){
+    var c=S.starConfig[i];
+    tbody.innerHTML+='<tr><td><b>'+(i+1)+'</b></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+c.min+'" onchange="S.starConfig['+i+'].min=parseFloat(this.value);renderShopAnalysis()" style="width:80px"></td>'
+      +'<td><input type="number" step="0.1" class="fc" value="'+(c.max>=9999?9999:c.max)+'" onchange="S.starConfig['+i+'].max=parseFloat(this.value);renderShopAnalysis()" style="width:80px"></td>'
+      +'<td><input type="number" class="fc" value="'+c.stars+'" onchange="S.starConfig['+i+'].stars=parseFloat(this.value);renderShopAnalysis()" style="width:60px"></td>'
+      +'<td><input type="text" class="fc" value="'+c.desc+'" onchange="S.starConfig['+i+'].desc=this.value;renderShopAnalysis()" style="width:140px"></td></tr>';
+  }
+}
+function renderStarLegend(){
+  if(!S.starConfig||!S.starConfig.length)S.starConfig=[
+    {min:0,max:3,stars:1,desc:'基础偏低',color:''},
+    {min:3,max:6,stars:2,desc:'正常准线',color:'#74b9ff'},
+    {min:6,max:10,stars:3,desc:'性价优良',color:'#55efc4'},
+    {min:10,max:15,stars:4,desc:'高度推荐',color:'#ffeaa7'},
+    {min:15,max:9999,stars:5,desc:'极端超值',color:'#ff7675'}
+  ];
+  var el=document.getElementById('star-legend');
+  if(!el)return;el.innerHTML='';
+  for(var i=0;i<S.starConfig.length;i++){
+    var c=S.starConfig[i];
+    var range=c.max>=9999?c.min+'+x':c.min+'x~'+c.max+'x';
+    el.innerHTML+='<span style="color:'+c.color+'">'+(i==0?'☆':Array(i+1).fill('★').join(''))+' '+range+': '+starLabel(c.stars)+'</span>';
+  }
+}
+
+function starLabel(n){return Array(n+1).join('★')+'☆☆☆☆☆'.slice(0,5-n);}
+function getStarInfo(mult){
+  if(!S.starConfig||!S.starConfig.length)S.starConfig=[
+    {min:0,max:3,stars:1,desc:'基础偏低',color:'var(--text3)'},
+    {min:3,max:6,stars:2,desc:'正常准线',color:'var(--text2)'},
+    {min:6,max:10,stars:3,desc:'性价优良',color:'var(--accent2)'},
+    {min:10,max:15,stars:4,desc:'高度推荐',color:'var(--warning)'},
+    {min:15,max:9999,stars:5,desc:'极端超值',color:'var(--danger)'}
+  ];
+  for(var i=S.starConfig.length-1;i>=0;i--){
+    var c=S.starConfig[i];
+    if(mult>=c.min)return {stars:starLabel(c.stars),idx:c.stars,desc:c.desc,color:c.color};
+  }
+  return {stars:starLabel(S.starConfig[0].stars),idx:S.starConfig[0].stars,desc:S.starConfig[0].desc,color:S.starConfig[0].color};
+}
+
+function renderShopAnalysis(){
+  var tbody=document.querySelector('#tbl-shop-analysis tbody');
+  if(!tbody)return;tbody.innerHTML='';
+  if(!S.packs||!S.packs.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">暂无礼包数据，请先在「商业化礼包与商城商品性价比精算」中添加礼包</td></tr>';
+    renderStarConfigTable();
+    renderStarLegend();
+    return;
+  }
+  // 从S.packs计算倍率 = 理论价值 / 售价
+  for(var i=0;i<S.packs.length;i++){
+    var p=S.packs[i];
+    // 计算礼包总理论价值
+    var val=0;
+    if(p.items){
+      for(var rId in p.items){
+        var res=S.resources?S.resources.find(function(x){return x.id===rId;}):null;
+        if(res) val+=res.price*p.items[rId];
+      }
+    }
+    var mult=p.price>0?+(val/p.price).toFixed(2):0;
+    var si=getStarInfo(mult);
+    tbody.innerHTML+='<tr><td><b>'+p.name+'</b></td>'
+      +'<td style="font-weight:bold;color:var(--accent2)">'+mult.toFixed(2)+'x</td>'
+      +'<td style="font-weight:bold;color:var(--accent)">第'+si.idx+'级 ('+((si.idx/5)*100).toFixed(0)+'%)</td>'
+      +'<td style="color:'+si.color+';font-size:14px;letter-spacing:2px">'+si.stars+'</td>'
+      +'<td style="color:'+si.color+'"><b>'+si.desc+'</b></td></tr>';
+  }
+  renderStarConfigTable();
+  renderStarLegend();
+}
+
+function initCombatTiers(){
+  if(!S.combatTiers||!S.combatTiers.length)S.combatTiers=[
+    {min:0,max:4999,name:'初出茅庐',color:'#b2bec3',tier:'免费玩家'},
+    {min:5000,max:19999,name:'普通大众',color:'#74b9ff',tier:'微氪玩家'},
+    {min:20000,max:59999,name:'中坚翘楚',color:'#55efc4',tier:'小额付费玩家'},
+    {min:60000,max:99999,name:'富甲强者',color:'#ffeaa7',tier:'中额付费玩家'},
+    {min:100000,max:199999,name:'雄霸一城',color:'#fab1a0',tier:'大额付费玩家'},
+    {min:200000,max:499999,name:'传奇圣域',color:'#ff7675',tier:'超高付费玩家'},
+    {min:500000,max:99999999,name:'神话天龙',color:'#fd79a8',tier:'顶级神豪'}
+  ];
+  S.combatTiers.forEach(function(t){
+    if(!/^#[0-9a-fA-F]{6}$/.test(t.color||''))t.color='#b2bec3';
+  });
+}
+
+function getCombatTier(cp){
+  initCombatTiers();
+  for(var i=S.combatTiers.length-1;i>=0;i--){
+    var t=S.combatTiers[i];
+    if(cp>=t.min)return t;
+  }
+  return S.combatTiers[0];
+}
+
+// 公式类型与参数标签动态切换
+function switchCombatFormula(){
+  var t=document.getElementById('cb-formula-type').value;
+  var row2=document.getElementById('cb-params-row2');
+  var pc=document.getElementById('cb-pc');
+  var pa=document.getElementById('cb-pa');
+  var pb=document.getElementById('cb-pb');
+  var preview=document.getElementById('cb-formula-preview');
+  if(t==='sub'){
+    row2.style.display='none';
+    pc.parentNode.querySelector('label').textContent='基础层系数';
+    pa.parentNode.querySelector('label').textContent='攻击增益系数';
+    pb.parentNode.querySelector('label').textContent='防御免伤系数';
+    preview.textContent='伤害 = 攻击×c + (攻击×a - 防御×b)';
+  }else if(t==='div'){
+    row2.style.display='none';
+    pc.parentNode.querySelector('label').textContent='未启用参数';
+    pa.parentNode.querySelector('label').textContent='攻击系数';
+    pb.parentNode.querySelector('label').textContent='防御公式权重';
+    preview.textContent='伤害 = 攻击×a × (1 - 防御/(防御+等级免伤常数×b))';
+  }else if(t==='mul'){
+    row2.style.display='flex';
+    pc.parentNode.querySelector('label').textContent='基础系数';
+    pa.parentNode.querySelector('label').textContent='攻击系数';
+    pb.parentNode.querySelector('label').textContent='防御免伤百分比';
+    preview.textContent='伤害 = 攻击×a×c × (1-减伤%) × (1+暴伤%) × (1+增伤%)';
+  }else if(t==='half'){
+    row2.style.display='none';
+    pc.parentNode.querySelector('label').textContent='未启用参数';
+    pa.parentNode.querySelector('label').textContent='减法段权重';
+    pb.parentNode.querySelector('label').textContent='加法段权重';
+    preview.textContent='伤害 = (攻击-防御)×a + 攻击×b';
+  }else if(t==='stair'){
+    row2.style.display='flex';
+    pc.parentNode.querySelector('label').textContent='保底伤害系数';
+    pa.parentNode.querySelector('label').textContent='攻击系数';
+    pb.parentNode.querySelector('label').textContent='防御免伤系数';
+    preview.textContent='伤害 = 攻击 - 防御 ; 当防御>攻击×90%时 = 攻击×c';
+  }else if(t==='combo'){
+    row2.style.display='flex';
+    pc.parentNode.querySelector('label').textContent='基础系数';
+    pa.parentNode.querySelector('label').textContent='攻击系数';
+    pb.parentNode.querySelector('label').textContent='防御减项系数';
+    preview.textContent='伤害 = (攻击×a - 防御×b)×c × (1+增伤%) × 暴击';
+  }
+  runCombatSim2();
+}
+
+// 核心伤害公式计算器（按所选模型返回单次伤害）
+function calcDamageByFormula(atk,def,hp,critRate,critDmgPct,bonusPct,minPctPct){
+  var t=document.getElementById('cb-formula-type').value;
+  var c=parseFloat(document.getElementById('cb-pc').value||0);
+  var a=parseFloat(document.getElementById('cb-pa').value||0);
+  var b=parseFloat(document.getElementById('cb-pb').value||0);
+  var dmg=0;
+  if(t==='sub'){
+    dmg=atk*c+(atk*a-def*b);
+  }else if(t==='div'){
+    // 等级免伤常数 f(lv) 简化为 10×等级，b作为权重调节
+    var fLv=Math.max(100,atk*0.5)*b;
+    var dr=def/(def+fLv);
+    dmg=atk*a*Math.max(0.05,1-dr);
+  }else if(t==='mul'){
+    var dr2=b/100;
+    var critMul=1+critDmgPct/100;
+    dmg=atk*a*c*Math.max(0.05,1-dr2)*(1+bonusPct/100)*critMul;
+  }else if(t==='half'){
+    dmg=Math.max(0,(atk-def))*a+atk*b;
+  }else if(t==='stair'){
+    if(def>atk*0.9) dmg=atk*c;
+    else dmg=Math.max(0,atk*a-def*b)+atk*(minPctPct/100);
+  }else if(t==='combo'){
+    var base=Math.max(0,(atk*a-def*b))*c;
+    dmg=base*(1+bonusPct/100)*(1+critDmgPct/100);
+  }
+  if(dmg<=0&&atk>0) dmg=atk*(minPctPct/100);
+  return Math.round(dmg);
+}
+
+function renderCombatTierTable(){
+  initCombatTiers();
+  var tbody=document.querySelector('#tbl-cb-tier tbody');
+  if(!tbody){setTimeout(renderCombatTierTable,100);return;}
+  tbody.innerHTML='';
+  for(var i=0;i<S.combatTiers.length;i++){
+    var t=S.combatTiers[i];
+    var maxStr=t.max>=99999999?'∞':t.max.toLocaleString();
+    tbody.innerHTML+='<tr>'
+      +'<td><input type="text" class="fc" value="'+t.name+'" onchange="S.combatTiers['+i+'].name=this.value" style="width:120px;font-weight:bold;color:'+t.color+'"></td>'
+      +'<td><input type="number" class="fc" value="'+t.min+'" onchange="S.combatTiers['+i+'].min=parseFloat(this.value);runCombatSim2()" style="width:100px"> ~ <input type="number" class="fc" value="'+(t.max>=99999999?99999999:t.max)+'" onchange="S.combatTiers['+i+'].max=parseFloat(this.value);runCombatSim2()" style="width:100px"></td>'
+      +'<td><input type="text" class="fc" value="'+t.tier+'" onchange="S.combatTiers['+i+'].tier=this.value" style="width:100px"></td>'
+      +'<td><input type="color" class="fc" value="'+t.color+'" onchange="S.combatTiers['+i+'].color=this.value;runCombatSim2()" style="width:50px;height:28px;padding:2px"> <button class="btn btn-danger btn-xs" onclick="removeCombatTier('+i+')">删</button></td>'
+      +'</tr>';
+  }
+}
+
+function addCombatTier(){
+  initCombatTiers();
+  var last=S.combatTiers[S.combatTiers.length-1];
+  S.combatTiers.push({min:(last?last.max+1:0),max:(last?last.max+100000:100000),name:'新层级',tier:'自定义',color:'#74b9ff'});
+  renderCombatTierTable();
+  runCombatSim2();
+}
+function removeCombatTier(i){
+  initCombatTiers();
+  S.combatTiers.splice(i,1);
+  renderCombatTierTable();
+  runCombatSim2();
+}
+function resetCombatTier(){S.combatTiers=JSON.parse(JSON.stringify([
+    {min:0,max:4999,name:'初出茅庐',color:'#b2bec3',tier:'免费玩家'},
+    {min:5000,max:19999,name:'普通大众',color:'#74b9ff',tier:'微氪玩家'},
+    {min:20000,max:59999,name:'中坚翘楚',color:'#55efc4',tier:'小额付费玩家'},
+    {min:60000,max:99999,name:'富甲强者',color:'#ffeaa7',tier:'中额付费玩家'},
+    {min:100000,max:199999,name:'雄霸一城',color:'#fab1a0',tier:'大额付费玩家'},
+    {min:200000,max:499999,name:'传奇圣域',color:'#ff7675',tier:'超高付费玩家'},
+    {min:500000,max:99999999,name:'神话天龙',color:'#fd79a8',tier:'顶级神豪'}
+  ]));renderCombatTierTable();runCombatSim2();}
+
+var cbBattleFrames=[];
+window.cbBattleFrames=cbBattleFrames;
+var cbBattleTimer=null;
+var cbBattleInitialHp=1;
+var cbBattleInitialAttackerHp=1;
+var cbBattleInitialDefenderHp=1;
+
+function setCombatHpBar(id,textId,value,total){
+  var bar=document.getElementById(id),txt=document.getElementById(textId);
+  var pct=total>0?Math.max(0,Math.min(100,value/total*100)):0;
+  if(bar){bar.style.width=pct.toFixed(1)+'%';bar.classList.toggle('danger',pct<=30);}
+  if(txt)txt.textContent=Math.round(value).toLocaleString()+' / '+Math.round(total).toLocaleString();
+}
+
+function setCombatRoleStats(id,stats){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  el.innerHTML=attrs.map(function(attr){
+    var key=getCombatAttrKey(attr);
+    var raw=stats[key] ?? stats.attrs?.[attr.id] ?? attr.base ?? 0;
+    var suffix=key==='crit'||key==='critDmg'?'%':'';
+    return [attr.name,(Number(raw)||0).toLocaleString()+suffix];
+  }).map(function(row){
+    return '<div class="role-stat"><b>'+row[0]+'</b><span>'+row[1].toLocaleString()+'</span></div>';
+  }).join('');
+}
+
+function getCombatAttrKey(attr){
+  var id=String(attr&&attr.id||'').toLowerCase();
+  var name=String(attr&&attr.name||'').toLowerCase();
+  var text=id+' '+name;
+  if(id==='a1'||/(攻击|攻擊|attack|atk)/i.test(text))return 'atk';
+  if(id==='a2'||/(防御|防禦|defense|def)/i.test(text))return 'def';
+  if(id==='a3'||/(生命|血量|气血|hp|health)/i.test(text))return 'hp';
+  if(/暴击伤害|暴擊傷害|crit.*dmg|critdamage|cdmg/i.test(text))return 'critDmg';
+  if(/暴击|暴擊|crit/i.test(text))return 'crit';
+  if(/速度|speed|spd/i.test(text))return 'spd';
+  return attr&&attr.id||'';
+}
+
+function getCombatAttrInputId(attrId){
+  return 'cb-attr-'+String(attrId||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+}
+
+function renderCombatAttrInputs(){
+  var box=document.getElementById('combat-attr-inputs');
+  if(!box)return;
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  var sig=attrs.map(function(attr){return attr.id+'|'+attr.name+'|'+attr.base;}).join('||');
+  if(box.dataset.attrSig===sig&&box.children.length)return;
+  var previous={};
+  box.querySelectorAll('[data-combat-attr]').forEach(function(input){
+    previous[input.dataset.combatAttr]=input.value;
+  });
+  box.innerHTML=attrs.length?attrs.map(function(attr){
+    var inputId=getCombatAttrInputId(attr.id);
+    var val=previous[attr.id] ?? attr.base ?? 0;
+    return '<div class="field"><label>'+attr.name+'</label><input type="number" class="fc" id="'+inputId+'" data-combat-attr="'+attr.id+'" value="'+val+'" oninput="runCombatSim2()"></div>';
+  }).join(''):'<div class="help-block">请先在“属性与权重”页配置基础二级属性。</div>';
+  box.dataset.attrSig=sig;
+}
+
+function readCombatAttrs(){
+  var values={};
+  var semantic={};
+  var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  attrs.forEach(function(attr){
+    var input=document.getElementById(getCombatAttrInputId(attr.id));
+    var val=parseFloat(input?input.value:attr.base);
+    if(!Number.isFinite(val))val=Number(attr.base||0);
+    values[attr.id]=val;
+    var key=getCombatAttrKey(attr);
+    if(semantic[key]===undefined)semantic[key]=val;
+  });
+  return {
+    attrs:values,
+    atk:Number(semantic.atk ?? 1000),
+    def:Number(semantic.def ?? 300),
+    hp:Number(semantic.hp ?? 5000),
+    crit:Number(semantic.crit ?? 15),
+    critDmg:Number(semantic.critDmg ?? 50),
+    spd:Number(semantic.spd ?? 100)
+  };
+}
+
+function resetCombatAnimation(){
+  if(cbBattleTimer){clearInterval(cbBattleTimer);cbBattleTimer=null;}
+  var stage=document.getElementById('cb-battle-stage');if(stage)stage.dataset.state='idle';
+  setCombatHpBar('cb-attacker-hp','cb-attacker-hp-text',cbBattleInitialAttackerHp,cbBattleInitialAttackerHp);
+  setCombatHpBar('cb-defender-hp','cb-defender-hp-text',cbBattleInitialDefenderHp,cbBattleInitialDefenderHp);
+  var ids=['cb-attacker-card','cb-defender-card'];
+  ids.forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('attacking','hit');});
+  var dmg=document.getElementById('cb-float-damage');if(dmg){dmg.textContent='';dmg.classList.remove('pop');}
+  var round=document.getElementById('cb-battle-round');if(round)round.textContent='待机';
+  var result=document.getElementById('cb-battle-result');if(result)result.textContent='点击发动';
+  var timeline=document.getElementById('cb-battle-timeline');if(timeline)timeline.style.width='0%';
+}
+
+function renderCombatAnimationFrame(frame,idx,total){
+  var attacker=document.getElementById('cb-attacker-card');
+  var defender=document.getElementById('cb-defender-card');
+  if(attacker)attacker.classList.remove('attacking','hit');
+  if(defender)defender.classList.remove('attacking','hit');
+  setCombatHpBar('cb-attacker-hp','cb-attacker-hp-text',frame.attackerHp,cbBattleInitialAttackerHp);
+  setCombatHpBar('cb-defender-hp','cb-defender-hp-text',frame.defenderHp,cbBattleInitialDefenderHp);
+  var actor=frame.side==='defender'?defender:attacker;
+  var target=frame.side==='defender'?attacker:defender;
+  if(actor)actor.classList.add('attacking');
+  if(target)target.classList.add('hit');
+  setTimeout(function(){
+    if(actor)actor.classList.remove('attacking');
+    if(target)target.classList.remove('hit');
+  },220);
+  var dmg=document.getElementById('cb-float-damage');
+  if(dmg){
+    dmg.classList.remove('pop');
+    void dmg.offsetWidth;
+    dmg.textContent=(frame.side==='defender'?'守方 ':'攻方 ')+'-'+Math.round(frame.dmg).toLocaleString()+(frame.isCrit?' 暴击':'');
+    dmg.classList.add('pop');
+  }
+  var round=document.getElementById('cb-battle-round');if(round)round.textContent='第 '+frame.round+' 回合';
+  var result=document.getElementById('cb-battle-result');
+  if(result)result.textContent=frame.winner?(frame.winner==='attacker'?'攻方胜':'守方胜'):(frame.isCrit?'暴击压制':'双方交锋');
+  var timeline=document.getElementById('cb-battle-timeline');
+  if(timeline)timeline.style.width=(total?((idx+1)/total*100):0).toFixed(1)+'%';
+}
+
+function playCombatAnimation(){
+  runCombatSim2();
+  if(cbBattleTimer){clearInterval(cbBattleTimer);cbBattleTimer=null;}
+  var stage=document.getElementById('cb-battle-stage');if(stage)stage.dataset.state='playing';
+  if(!cbBattleFrames.length){resetCombatAnimation();return;}
+  var idx=0;
+  renderCombatAnimationFrame(cbBattleFrames[idx],idx,cbBattleFrames.length);
+  idx++;
+  cbBattleTimer=setInterval(function(){
+    if(idx>=cbBattleFrames.length){
+      clearInterval(cbBattleTimer);cbBattleTimer=null;
+      if(stage)stage.dataset.state='complete';
+      var result=document.getElementById('cb-battle-result');if(result)result.textContent='演算完成';
+      return;
+    }
+    renderCombatAnimationFrame(cbBattleFrames[idx],idx,cbBattleFrames.length);
+    idx++;
+  },520);
+}
+
+function runCombatSim2(){
+  // 安全读取输入值
+  var $=function(id){var el=document.getElementById(id);return el?el:null;};
+  renderCombatAttrInputs();
+  var combatAttrs=readCombatAttrs();
+  var atk=combatAttrs.atk;
+  var def=combatAttrs.def;
+  var hp=combatAttrs.hp;
+  var crit=combatAttrs.crit;
+  var critDmg=combatAttrs.critDmg;
+  var bonus=parseFloat($('cb-bonus')?$('cb-bonus').value:0)||0;
+  var minPct=parseFloat($('cb-min-pct')?$('cb-min-pct').value:10)||10;
+  var spd=combatAttrs.spd;
+
+  // ── 战力评分计算：综合战力 = 攻击×权重 + 防御×权重 + 血量×权重 + 暴击期望 + 速度 ──
+  // 引用魔与道2/寻道大千模型：ATK权重1.0 + DEF权重0.8 + HP权重0.2 + 暴击期望2.5 + 速度0.3
+  var critExpected=1+(crit/100)*(critDmg/100);
+  var cp=Math.round((S.attrs||[]).reduce(function(sum,attr){
+    var val=combatAttrs.attrs[attr.id] ?? Number(attr.base||0);
+    return sum+Number(val||0)*Number(attr.weight||0);
+  },0));
+
+  // ── 战斗结果推演 ──
+  var dmgNormal=calcDamageByFormula(atk,def,hp,crit,critDmg,bonus,minPct);
+  if(!dmgNormal||isNaN(dmgNormal)||dmgNormal<=0) dmgNormal=Math.round(atk*0.5);
+  var dmgCrit=Math.round(dmgNormal*(1+critDmg/100));
+  var expectedDmg=Math.round(dmgNormal*(1+crit/100*critDmg/100));
+  var rounds=expectedDmg>0?Math.ceil(hp/expectedDmg):999;
+  if(rounds>25) rounds=25;
+
+  // 写入解析器
+  var elMax=document.getElementById('cb-dmg-max');if(elMax)elMax.textContent=dmgCrit.toLocaleString();
+  var elExp=document.getElementById('cb-expected-dmg');if(elExp)elExp.textContent=expectedDmg.toLocaleString();
+  var elRds=document.getElementById('cb-rounds');if(elRds)elRds.textContent=rounds>=25?'25+(未结束)':rounds;
+  var elPower=document.getElementById('cb-cp');if(elPower)elPower.textContent=cp.toLocaleString();
+  var tier=getCombatTier(cp);
+  var elTier=document.getElementById('cb-tier-name');
+  if(elTier){elTier.textContent=tier.name;elTier.style.color=tier.color;}
+
+  // ── 沙盘对决水位表 ──
+  var tbl=document.querySelector('#tbl-cb-log tbody');
+  if(tbl) tbl.innerHTML='';
+  var attackerHp=hp;var defenderHp=hp;var rounds2=0;var hpHist=[hp];var attackerHist=[hp];var lbls=['初始'];
+  var defenderAtk=Math.max(1,Math.round(atk*0.88));
+  var defenderDef=Math.max(1,Math.round(def*1.05));
+  var defenderSpd=Math.max(1,Math.round(spd*0.92));
+  var defenderCrit=Math.max(0,Math.round(crit*0.75));
+  var defenderAttrValues=Object.assign({},combatAttrs.attrs);
+  (S.attrs||[]).forEach(function(attr){
+    var key=getCombatAttrKey(attr);
+    if(key==='atk')defenderAttrValues[attr.id]=defenderAtk;
+    else if(key==='def')defenderAttrValues[attr.id]=defenderDef;
+    else if(key==='hp')defenderAttrValues[attr.id]=hp;
+    else if(key==='spd')defenderAttrValues[attr.id]=defenderSpd;
+    else if(key==='crit')defenderAttrValues[attr.id]=defenderCrit;
+    else if(key==='critDmg')defenderAttrValues[attr.id]=critDmg;
+  });
+  setCombatRoleStats('cb-attacker-stats',{atk:atk,def:def,hp:hp,spd:spd,crit:crit,critDmg:critDmg,attrs:combatAttrs.attrs});
+  setCombatRoleStats('cb-defender-stats',{atk:defenderAtk,def:defenderDef,hp:hp,spd:defenderSpd,crit:defenderCrit,critDmg:critDmg,attrs:defenderAttrValues});
+  var defenderDmgNormal=calcDamageByFormula(defenderAtk,defenderDef,hp,defenderCrit,critDmg,bonus,minPct);
+  if(!defenderDmgNormal||isNaN(defenderDmgNormal)||defenderDmgNormal<=0) defenderDmgNormal=Math.round(defenderAtk*0.5);
+  var defenderDmgCrit=Math.round(defenderDmgNormal*(1+critDmg/100));
+  cbBattleInitialHp=hp;
+  cbBattleInitialAttackerHp=hp;
+  cbBattleInitialDefenderHp=hp;
+  cbBattleFrames=[];
+  window.cbBattleFrames=cbBattleFrames;
+  var attackerFirst=spd>=defenderSpd;
+  function pushCombatAction(side,roundNo,actionIndex){
+    var isAttacker=side==='attacker';
+    var isCrit=isAttacker?(roundNo%3===0):(roundNo%4===0);
+    var dmg=isAttacker?(isCrit?dmgCrit:dmgNormal):(isCrit?defenderDmgCrit:defenderDmgNormal);
+    if(dmg<=0)dmg=Math.max(1,Math.round((isAttacker?atk:defenderAtk)*0.1));
+    if(isAttacker)defenderHp=Math.max(0,defenderHp-dmg);
+    else attackerHp=Math.max(0,attackerHp-dmg);
+    var winner=defenderHp<=0?'attacker':(attackerHp<=0?'defender':'');
+    cbBattleFrames.push({round:roundNo,action:actionIndex,side:side,dmg:dmg,isCrit:isCrit,attackerHp:attackerHp,defenderHp:defenderHp,winner:winner});
+    return {dmg:dmg,isCrit:isCrit,winner:winner};
+  }
+  while(attackerHp>0&&defenderHp>0&&rounds2<25){
+    rounds2++;
+    var firstSide=attackerFirst?'attacker':'defender';
+    var secondSide=attackerFirst?'defender':'attacker';
+    var first=pushCombatAction(firstSide,rounds2,1);
+    var second=null;
+    if(!first.winner) second=pushCombatAction(secondSide,rounds2,2);
+    hpHist.push(defenderHp);attackerHist.push(attackerHp);lbls.push('第'+rounds2+'轮');
+    if(tbl&&rounds2<=12){
+      var status=(first.winner||second&&second.winner)?'战斗结束':'双方完成出手';
+      var statusColor=(first.winner||second&&second.winner)?'var(--accent)':'var(--text2)';
+      var firstLabel=firstSide==='attacker'?'攻方':'守方';
+      var secondLabel=secondSide==='attacker'?'攻方':'守方';
+      var dmgText=firstLabel+' -'+first.dmg.toLocaleString()+(first.isCrit?' 暴击':'');
+      if(second)dmgText+=' / '+secondLabel+' -'+second.dmg.toLocaleString()+(second.isCrit?' 暴击':'');
+      tbl.innerHTML+='<tr><td>第 '+rounds2+' 回合</td><td style="color:var(--danger)">'+dmgText+'</td><td style="font-variant-numeric:tabular-nums;font-weight:bold;color:var(--accent2)">攻 '+attackerHp.toLocaleString()+' / 守 '+defenderHp.toLocaleString()+'</td><td style="color:'+statusColor+'">'+status+'</td></tr>';
+    }
+  }
+  var stage=document.getElementById('cb-battle-stage');
+  if(stage&&stage.dataset.state!=='playing'){
+    resetCombatAnimation();
+  }
+
+  // ── 战力分层表渲染 ──
+  renderCombatTierTable();
+
+  // ── 图表 ──
+  var canvas=document.getElementById('cbChart');
+  syncCombatChartCanvasSize(canvas);
+  var ctx=canvas&&canvas.getContext('2d');
+  if(!ctx)return;
+  if(cbChart)cbChart.destroy();
+  cbChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:lbls,datasets:[
+      {label:'守方生命曲线',data:hpHist,borderColor:'#ff4757',backgroundColor:'rgba(255,71,87,0.04)',fill:true,tension:0.1},
+      {label:'攻方生命曲线',data:attackerHist,borderColor:'#00c9a7',backgroundColor:'rgba(0,201,167,0.04)',fill:false,tension:0.1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||1,plugins:{legend:{labels:{color:''}}},scales:{x:{grid:{color:'#2d3148'},ticks:{color:''}},y:{grid:{color:'#2d3148'},ticks:{color:''}}}}
+  });
+  requestAnimationFrame(function(){
+    syncCombatChartCanvasSize(canvas);
+    if(cbChart&&typeof cbChart.draw==='function')cbChart.draw();
+    else if(cbChart&&typeof cbChart.resize==='function')cbChart.resize();
+  });
+}
+
+// ===== ROI 养成系统投资模拟器 =====
+
+// 从 S.cultivations 构建 SYSTEMS 数组
+function roiBuildSystems(){
+  var systems=[],COLORS=['cs1','cs2','cs3','cs4','cs5'];
+  if(!S.cultivations||!S.cultivations.length)return systems;
+  var ci=0;
+  for(var li=0;li<S.cultivations.length;li++){
+    var line=S.cultivations[li];
+    if(!line.branches||!line.branches.length)continue;
+    for(var bi=0;bi<line.branches.length;bi++){
+      var b=line.branches[bi];
+      // 兼容新旧格式：consumes[] / gains[]
+      var costs=b.consumes||(b.resId?[{resId:b.resId,qty:b.qty||1,cvId:b.cvId||''}]:[]);
+      var attrs=b.gains||(b.attrId?[{attrId:b.attrId,val:b.attrVal||10}]:[]);
+      var firstCost=costs[0]||{resId:'',qty:1,cvId:''};
+      var firstGain=attrs[0]||{attrId:'',val:10};
+      var cv=S.curves?S.curves.find(function(x){return x.id===firstCost.cvId;}):null;
+      var res=S.resources?S.resources.find(function(x){return x.id===firstCost.resId;}):null;
+      // 多条消耗的总价 = 各条 qty*price 之和
+      var totalCost=0;
+      costs.forEach(function(c){
+        var r=S.resources?S.resources.find(function(x){return x.id===c.resId;}):null;
+        totalCost+=(r?r.price:0.1)*(c.qty||1);
+      });
+      // 多条属性的总增益 = 各条 val 之和
+      var totalVal=0;
+      attrs.forEach(function(a){totalVal+=a.val||0;});
+      systems.push({
+        id:b.id,
+        name:line.name+'-'+b.name,
+        color:COLORS[ci%5],
+        maxLevels:b.maxLevel||10,
+        perLvl:totalVal||10,
+        basePower:0,
+        resPrice:totalCost>0?totalCost:0.1,
+        qty:1,
+        curveType:cv?cv.type:'linear',
+        params:cv?cv.params:{}
+      });
+      ci++;
+    }
+  }
+  return systems;
+}
+
+// 状态
+var roiState;
+
+function roiResetAll(){
+  if(!roiState)roiState={systems:[],invested:{},power:{},history:[],budget:10000,day:1,totalPower:0};
+  var el=document.getElementById('roi-budget');
+  roiState.budget=parseFloat(el?el.value:10000)||10000;
+  roiState.day=1;
+  roiState.history=[];
+  roiState.systems=roiBuildSystems();
+  roiState.invested={};
+  roiState.power={};
+  roiState.totalPower=0;
+  roiState.systems.forEach(function(s){roiState.invested[s.id]=0;roiState.power[s.id]=0;});
+  roiRenderAll();
+}
+
+function roiFindSys(id){var ss=roiState.systems;for(var i=0;i<ss.length;i++){if(ss[i].id===id)return ss[i];}return null;}
+
+function roiCurveCalc(curveType,a,level,params){
+  if(!curveType||curveType==='linear') return a*(level+1);
+  if(curveType==='diminishing'||curveType==='边际递减'){
+    var coeffs=[1.0,0.75,0.5,0.35,0.25,0.18,0.13,0.10,0.08,0.06,0.05,0.04,0.03,0.03,0.02,0.02,0.015,0.015,0.01,0.01];
+    return a*(coeffs[level]||0.01);
+  }
+  if(curveType==='logarithmic'||curveType==='对数') return a*Math.log(level+1+0.01);
+  if(curveType==='sqrt'||curveType==='平方根') return a*Math.sqrt(level+1);
+  if(curveType==='power'||curveType==='幂函数'){
+    var b=params&&params.b!==undefined?params.b:0.5;
+    return a*Math.pow(level+1,b);
+  }
+  if(curveType==='exponential'||curveType==='指数饱和'){
+    var k=params&&params.k!==undefined?params.k:0.05;
+    return a*(1-Math.exp(-k*(level+1)));
+  }
+  if(curveType==='sigmoid'||curveType==='平滑过渡型'){
+    var sk=params&&params.k!==undefined?params.k:0.08;
+    var x0=params&&params.x0!==undefined?params.x0:8;
+    return a/(1+Math.exp(-sk*((level+1)-x0)));
+  }
+  return a;
+}
+
+function roiBranchPower(sysId,level){
+  var sys=roiFindSys(sysId);
+  if(!sys)return 0;
+  return Math.round(roiCurveCalc(sys.curveType,sys.perLvl,level,sys.params||{}));
+}
+
+function roiSystemTotalPower(sysId,levels){
+  var sys=roiFindSys(sysId);
+  if(!sys)return 0;
+  var total=sys.basePower||0;
+  for(var i=0;i<levels;i++) total+=roiBranchPower(sysId,i);
+  return Math.round(total);
+}
+
+function roiLevelCost(levels){
+  // 基于资源单价×数量，每级递增20%
+  return Math.round(500*(1+levels*0.3));
+}
+
+function roiRecalc(){
+  var total=0;
+  roiState.systems.forEach(function(s){
+    var p=roiSystemTotalPower(s.id,roiState.invested[s.id]||0);
+    roiState.power[s.id]=p;
+    total+=p;
+  });
+  roiState.totalPower=total;
+}
+
+function roiGetStars(){
+  var p=roiState.totalPower;
+  if(p<3000)return 1;if(p<6000)return 2;if(p<10000)return 3;if(p<15000)return 4;return 5;
+}
+
+function roiInvest(sysId){
+  var sys=roiFindSys(sysId);
+  if(!sys)return;
+  var lvl=roiState.invested[sysId]||0;
+  if(lvl>=sys.maxLevels)return;
+  var cost=roiLevelCost(lvl);
+  if(roiState.budget<cost)return;
+  var prev=roiState.totalPower;
+  roiState.budget-=cost;
+  roiState.invested[sysId]++;
+  roiRecalc();
+  var delta=roiState.totalPower-prev;
+  roiState.history.push({system:sysId,cost:cost,powerDelta:delta,day:roiState.day});
+  roiRenderAll();
+}
+
+function roiAutoInvest(){
+  var limit=500,rounds=0;
+  while(roiState.budget>0&&rounds<limit){
+    var bestSys=null,bestR=-1;
+    roiState.systems.forEach(function(s){
+      var lvl=roiState.invested[s.id]||0;
+      if(lvl>=s.maxLevels)return;
+      var nP=roiSystemTotalPower(s.id,lvl+1);
+      var cP=roiSystemTotalPower(s.id,lvl);
+      var c=roiLevelCost(lvl);
+      if(roiState.budget>=c&&(nP-cP)/c>bestR){bestR=(nP-cP)/c;bestSys=s.id;}
+    });
+    if(bestSys){
+      var cost=roiLevelCost(roiState.invested[bestSys]||0);
+      roiState.budget-=cost;
+      roiState.invested[bestSys]++;
+      roiState.history.push({system:bestSys,cost:cost,powerDelta:0,day:roiState.day});
+      rounds++;
+    }else break;
+  }
+  roiRecalc();
+  roiRenderAll();
+}
+
+function roiAdvanceDay(){
+  var limitEl=document.getElementById('roi-day-limit');
+  var maxDay=parseInt(limitEl?limitEl.value:7)||7;
+  if(roiState.day>=maxDay)return;
+  roiState.day++;
+  // 每日刷新预算
+  roiState.budget+=Math.round(5000*(1+roiState.day*0.1));
+  roiRenderAll();
+}
+
+function roiRenderAll(){
+  // ── 预算/战力/天数 ──
+  var elBl=document.getElementById('roi-budget-left');if(elBl)elBl.textContent='¥'+roiState.budget.toLocaleString();
+  var elTp=document.getElementById('roi-total-power');if(elTp)elTp.textContent=roiState.totalPower.toLocaleString();
+  var limitEl=document.getElementById('roi-day-limit');
+  var maxDay=parseInt(limitEl?limitEl.value:7)||7;
+  var elDy=document.getElementById('roi-day');if(elDy)elDy.textContent='第'+roiState.day+'/'+maxDay+'天';
+
+  // ── 系统卡片 ──
+  var grid=document.getElementById('roi-sys-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  roiState.systems.forEach(function(sys){
+    var lvl=roiState.invested[sys.id]||0;
+    var cost=roiLevelCost(lvl);
+    var power=roiState.power[sys.id]||0;
+    var maxLv=sys.maxLevels;
+    var barW=Math.min(100,(power/((sys.perLvl||100)*15))*100);
+    // 小条形图
+    var bars=[];
+    for(var i=0;i<Math.min(lvl,10);i++){
+      var v=roiBranchPower(sys.id,i);
+      var h=Math.min(100,(v/((sys.perLvl||100)*1.5))*100);
+      bars.push('<div class="bar" style="height:'+Math.max(2,h)+'%;background:var(--accent2)"></div>');
+    }
+    var isMaxed=lvl>=maxLv;
+    var canInvest=roiState.budget>=cost&&!isMaxed;
+    var bg1='var(--accent)';var bg2='#c0392b';
+    if(sys.color==='cs2'){bg1='#4fc3f7';bg2='#0097a7';}
+    else if(sys.color==='cs3'){bg1='#4ecca3';bg2='#00897b';}
+    else if(sys.color==='cs4'){bg1='#ba68c8';bg2='#8e24aa';}
+    else if(sys.color==='cs5'){bg1='#ff8a65';bg2='#e64a19';}
+
+    grid.innerHTML+='<div class="roi-sys-card '+sys.color+'">'
+      +'<div class="roi-sys-hd"><span class="roi-sys-name">'+sys.name+'</span><span class="roi-sys-power">'+power.toLocaleString()+' 战力</span></div>'
+      +'<div class="roi-sys-sub">已升 '+lvl+'/'+maxLv+' 级 | 下一级成本: ¥'+cost.toLocaleString()+'</div>'
+      +'<div class="roi-bar-track"><div class="roi-bar-fill '+sys.color+'" style="width:'+Math.min(100,barW)+'%"></div></div>'
+      +'<div class="roi-sys-graph">'+(bars.length?bars.join(''):'<div style="color:var(--text3);font-size:10px;padding:8px;width:100%;text-align:center">未投资</div>')+'</div>'
+      +'<button class="roi-sys-btn" style="background:linear-gradient(135deg,'+bg1+','+bg2+')" onclick="roiInvest(\''+sys.id+'\')" '+(canInvest?'':'disabled')+'>投资 ¥'+cost.toLocaleString()+'</button>'
+      +'<div class="roi-sys-info">每级增长: +'+sys.perLvl+' 战力 | 曲线: '+ ({linear:'线性',diminishing:'边际递减',logarithmic:'对数',sqrt:'平方根',power:'幂函数',expo:'指数',exponential:'指数饱和',sigmoid:'平滑过渡型'}[sys.curveType]||sys.curveType||'线性')+'</div>'
+      +'</div>';
+  });
+
+  // ── 各系统投入产出表 ──
+  var tbody=document.querySelector('#roi-results-tbl tbody');
+  if(tbody){
+    tbody.innerHTML='';
+    var rows=[];
+    roiState.systems.forEach(function(sys){
+      var lvl=roiState.invested[sys.id]||0;
+      var totalInv=0;
+      roiState.history.forEach(function(h){if(h.system===sys.id)totalInv+=h.cost;});
+      var power=roiState.power[sys.id]||0;
+      var ppc=totalInv>0?+(power/totalInv).toFixed(2):0;
+      rows.push({sys:sys,totalInv:totalInv,power:power,ppc:ppc});
+    });
+    var validRows=rows.filter(function(r){return r.totalInv>0;});
+    var maxPPC=validRows.length?Math.max.apply(Math,validRows.map(function(r){return r.ppc;})):0;
+    rows.forEach(function(r){
+      var ppcColor='';
+      if(r.totalInv>0&&maxPPC>0){
+        if(r.ppc===maxPPC)ppcColor='color:#4fc3f7;font-weight:bold';
+      }
+      tbody.innerHTML+='<tr><td style="font-weight:600">'+r.sys.name+'</td><td>¥'+r.totalInv.toLocaleString()+'</td><td style="color:var(--accent2);font-weight:bold">'+r.power.toLocaleString()+'</td><td style="'+ppcColor+'">'+r.ppc.toFixed(2)+'/¥1</td></tr>';
+    });
+    // 星级
+    var stars=roiGetStars();
+    var sh='';
+    for(var si=0;si<5;si++)sh+=si<stars?'<span style="color:var(--warning)">★</span>':'<span style="color:var(--text3)">★</span>';
+    var elStar=document.getElementById('roi-stars');
+    if(elStar)elStar.innerHTML=sh+' <span style="font-size:11px;color:var(--text3)">战力评级</span>';
+  }
+
+  // ── 策略对比 ──
+  var compArea=document.getElementById('roi-comp-area');
+  if(!compArea)return;
+  var totalSpent=0;
+  roiState.history.forEach(function(h){totalSpent+=h.cost;});
+  if(totalSpent===0){
+    compArea.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">尚未投资 — 点击下方卡片上的"投资"按钮开始测试</div>';
+    return;
+  }
+  var active=roiState.systems;
+  // 玩家实际
+  var playerPower=0;
+  active.forEach(function(s){playerPower+=roiState.power[s.id];});
+  // 全堆第一个系统
+  var concL=0,tb=totalSpent;
+  var firstSys=active.length?active[0]:null;
+  var concP=0;
+  if(firstSys){
+    var fm=firstSys.maxLevels;
+    while(concL<fm){var cc=roiLevelCost(concL);if(tb>=cc){tb-=cc;concL++;}else break;}
+    concP=roiSystemTotalPower(firstSys.id,concL);
+  }
+  // 均等分配
+  var balP=0;
+  var balLev=Math.min(Math.floor(totalSpent/(Math.max(active.length,1)*500)),20);
+  active.forEach(function(s){balP+=roiSystemTotalPower(s.id,balLev);});
+  // 贪心最优
+  var optP=0,optB=totalSpent,optLv={};
+  active.forEach(function(s){optLv[s.id]=0;});
+  for(var gi=0;gi<200;gi++){
+    var bestSys=null,bestR=-1;
+    active.forEach(function(s){
+      if(optLv[s.id]>=s.maxLevels)return;
+      var nP=roiSystemTotalPower(s.id,optLv[s.id]+1);
+      var cP=roiSystemTotalPower(s.id,optLv[s.id]);
+      var cc=roiLevelCost(optLv[s.id]);
+      if(optB>=cc&&(nP-cP)/cc>bestR){bestR=(nP-cP)/cc;bestSys=s.id;}
+    });
+    if(bestSys){optB-=roiLevelCost(optLv[bestSys]);optLv[bestSys]++;}else break;
+  }
+  active.forEach(function(s){optP+=roiSystemTotalPower(s.id,optLv[s.id]);});
+
+  var strategies=[
+    {label:'你的实际分配',power:playerPower},
+    {label:'全堆最高',power:concP},
+    {label:'均等分配',power:balP},
+    {label:'智能分配',power:optP}
+  ];
+  var maxP=Math.max.apply(Math,strategies.map(function(s){return s.power;}));
+  compArea.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">以你实际已花 ¥'+totalSpent.toLocaleString()+' 为预算：</div>'
+    +strategies.map(function(s){
+      var pct=maxP>0?(s.power/maxP*100).toFixed(0):0;
+      var isBest=s.power===Math.max.apply(Math,strategies.map(function(ss){return ss.power;}));
+      var isPlayer=(s.label==='你的实际分配');
+      var color=isBest?'#4ecca3':isPlayer?'#ffc107':'#666';
+      return '<div class="roi-comp-row"><div class="roi-comp-label">'+s.label+'</div>'
+        +'<div class="roi-comp-bar"><div class="roi-comp-fill" style="width:'+pct+'%;background:'+color+'">'+s.power.toLocaleString()+'</div></div>'
+        +'<div class="roi-comp-val" style="color:'+color+'">¥'+totalSpent.toLocaleString()+'</div></div>';
+    }).join('');
+}
+
+function renderROIPanel2(){
+  if(!S.cultivations||!S.cultivations.length){/*空状态自动显示暂无数据*/}
+  roiResetAll();
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      var p=t.dataset.p;
+      if(p==='panel-eco')renderEconomyPanel();
+      if(p==='panel-combat2')runCombatSim2();
+      if(p==='panel-roi2')renderROIPanel2();
+      if(p==='panel-cult'){_initRealmModals();setTimeout(renderRealms,50);setTimeout(rCult,50);}
+    });
+  });
+});
+
+// ── 境界修炼系统 (可编辑版: 大境界10列+可配小境界) ────────
+// 每大境界含 levels[] 数组，由用户自由增删改
+const REALM_TYPES = {
+  cultivation: {
+    realms: (function mkCult(){
+      const ds=[{n:'炼气境',d:'修仙之始',bp:100,spd:1.0,br:0.85,sup:1.0,hp:100,atk:10},
+        {n:'筑基境',d:'铸就道基',bp:500,spd:1.8,br:0.70,sup:1.5,hp:500,atk:50},
+        {n:'金丹境',d:'凝丹成核',bp:2500,spd:3.2,br:0.55,sup:2.8,hp:2000,atk:200},
+        {n:'元婴境',d:'元婴初成',bp:12000,spd:5.5,br:0.40,sup:5.0,hp:8000,atk:800},
+        {n:'化神境',d:'元神出窍',bp:60000,spd:9.0,br:0.28,sup:9.5,hp:35000,atk:3500},
+        {n:'合体境',d:'天人合一',bp:300000,spd:14.0,br:0.18,sup:18.0,hp:150000,atk:15000},
+        {n:'大乘境',d:'道果将成',bp:1500000,spd:22.0,br:0.10,sup:35.0,hp:800000,atk:80000},
+        {n:'渡劫境',d:'天劫淬炼',bp:8000000,spd:35.0,br:0.04,sup:70.0,hp:5000000,atk:500000}];
+      return ds.map(o=>({name:o.n,desc:o.d,levels:_genLvs(o.bp,o.spd,o.br,o.sup,o.hp,o.atk)}));
+    })()
+  },
+  body: {
+    realms: (function mkBody(){
+      const ds=[{n:'铜皮境',d:'外功淬体',bp:80,spd:1.0,br:0.88,sup:1.0,hp:150,atk:8},
+        {n:'铁骨境',d:'筋骨初成',bp:400,spd:1.5,br:0.75,sup:1.3,hp:700,atk:40},
+        {n:'玉肌境',d:'肤如白玉',bp:2000,spd:2.8,br:0.60,sup:2.2,hp:3000,atk:160},
+        {n:'钢筋境',d:'钢筋铁骨',bp:10000,spd:4.5,br:0.45,sup:4.0,hp:12000,atk:700},
+        {n:'不灭境',d:'肉身不灭',bp:50000,spd:7.5,br:0.30,sup:7.5,hp:50000,atk:3000},
+        {n:'圣体境',d:'圣体大成',bp:250000,spd:12.0,br:0.20,sup:14.0,hp:200000,atk:12000},
+        {n:'斗圣境',d:'肉身成圣',bp:1200000,spd:19.0,br:0.12,sup:28.0,hp:1000000,atk:60000},
+        {n:'混沌境',d:'混沌归一',bp:6000000,spd:30.0,br:0.05,sup:55.0,hp:6000000,atk:400000}];
+      return ds.map(o=>({name:o.n,desc:o.d,levels:_genLvs(o.bp,o.spd,o.br,o.sup,o.hp,o.atk)}));
+    })()
+  }
+};
+function _genLvs(bp,spd,br,sup,hp,atk){
+  const a=[];
+  for(let i=1;i<=10;i++){const m=1+(i-1)*0.12;
+    a.push({level:i,bp:Math.round(bp*m),spd:Math.round(spd*(1-(i-1)*0.03)*100)/100,
+      br:Math.round(Math.max(br*(1-(i-1)*0.04),0.01)*10000)/100,
+      hp:Math.round(hp*m),atk:Math.round(atk*m),sup:Math.round(sup*m*100)/100});}
+  return a;
+}
+let realmType='cultivation',realmIdx=0,realmLevel=1;
+
+function _R(){return REALM_TYPES[realmType].realms;}
+function _RL(){return _R()[realmIdx].levels;}
+function _lv(){const l=_RL().find(x=>x.level===realmLevel);return l||_RL()[0]||{level:1,bp:0,spd:0,br:0,hp:0,atk:0,sup:0};}
+
+function buildRealmChart(svgId,vals,color){
+  const svg=$(svgId);if(!svg)return;
+  const w=(svg.parentElement&&svg.parentElement.clientWidth)||280,h=80,py=6,px=10;
+  const pw=w-px*2,ph=h-py*2,mn=Math.min(...vals),mx=Math.max(...vals),rg=mx-mn||1;
+  const n=vals.length-1||1;
+  const pts=vals.map((v,i)=>{const x=px+(i/n)*pw;const y=py+ph-((v-mn)/rg)*ph;return `${x.toFixed(1)},${y.toFixed(1)}`;}).join(' ');
+  const ai=_RL().findIndex(x=>x.level===realmLevel);
+  const ai2=ai<0?0:ai;
+  const ax=px+(ai2/n)*pw,ay=py+ph-((vals[ai2]-mn)/rg)*ph;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  svg.innerHTML=`<defs><marker id="m${svgId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="${color}" stroke-width="1"/></marker></defs>
+    ${[0,0.25,0.5,0.75,1].map(r=>`<line x1="${px}" y1="${(py+r*ph).toFixed(1)}" x2="${(px+pw).toFixed(1)}" y2="${(py+r*ph).toFixed(1)}" stroke="var(--border)" stroke-width="0.5"/>`).join('')}
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="3" fill="${color}" stroke="var(--bg)" stroke-width="1.5"/>
+    <line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${(h-2).toFixed(1)}" stroke="${color}" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="${(w/2).toFixed(1)}" y="${(h-2).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--text3)">${vals[ai2].toLocaleString()}</text>`;
+}
+
+function renderRealms(){
+  const g=$('realm-grid'),lb=$('level-bar'),mt=$('realm-metrics');
+  const realms=_R();
+  g.innerHTML=realms.map((r,i)=>{
+    const act=i===realmIdx?' active':'';
+    return `<div class="realm-card${act}" onclick="selectRealm(${i})">
+      <div class="rn">${r.name}</div>
+      <div class="rl">${r.desc}(${r.levels.length}层)</div>
+      <div class="rc-ops">
+        <button onclick="openRealmEditModal(${i})">编辑</button>
+        <button onclick="deleteRealm(${i})" style="color:var(--danger)">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const r=_R()[realmIdx];
+  $('cr-name').textContent=r.name;
+  $('cr-sub').textContent=r.desc;
+  $('cr-level-count').textContent=r.levels.length+' 层';
+  $('realm-type-label').textContent=realmType==='cultivation'?'修为':'炼体';
+  const lvs=_RL();
+  lb.innerHTML=lvs.map(l=>{
+    const act=l.level===realmLevel?' active':'';
+    return `<div class="level-dot${act}" onclick="selectLevel(${l.level})">
+      <div class="lv-line1">第${l.level}层: ${l.bp>=1000?(l.bp/1000).toFixed(1)+'k':l.bp}</div>
+      <div class="lv-line2">
+        <button onclick="openLevelEditModal(${l.level})" style="padding:1px 5px;font-size:10px;border-radius:3px;border:0.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">编辑</button>
+        <button onclick="deleteLevel(${l.level})" style="padding:1px 5px;font-size:10px;border-radius:3px;border:0.5px solid var(--border);background:transparent;color:var(--danger);cursor:pointer">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+  if(!lvs.length)lb.innerHTML='<span style="color:var(--text3);font-size:11px;padding:10px 0">暂无小境界，点击上方"+添加小境界"创建</span>';
+  const d=_lv();
+  $('cr-lvl').textContent=d.level;
+  mt.innerHTML=[
+    {l:'基础战力',v:d.bp.toLocaleString(),c:'#ff8a65'},
+    {l:'修炼速度',v:d.spd+'x',c:'#4fc3f7'},
+    {l:'突破成功率',v:d.br+'%',c:'#4ecca3'},
+    {l:'境界压制',v:d.sup+'x',c:'#ba68c8'}
+  ].map(m=>`<div class="metric-c"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+  _drawCurves();
+}
+function _drawCurves(){
+  const lvs=_RL();
+  if(!lvs.length){['chart-power','chart-speed','chart-break'].forEach(id=>{const s=$(id);if(s)s.innerHTML='';});return;}
+  const data={pwr:[],spd:[],brk:[]};
+  lvs.forEach(l=>{data.pwr.push(l.bp);data.spd.push(l.spd);data.brk.push(l.br);});
+  buildRealmChart('chart-power',data.pwr,'#ff8a65');
+  buildRealmChart('chart-speed',data.spd,'#4fc3f7');
+  buildRealmChart('chart-break',data.brk,'#4ecca3');
+}
+function selectRealm(i){realmIdx=i;realmLevel=(_RL()[0]||{}).level||1;renderRealms();}
+function selectLevel(l){realmLevel=l;renderRealms();}
+function switchRealmType(t){realmType=t;realmIdx=0;realmLevel=(_RL()[0]||{}).level||1;renderRealms();}
+
+// ── 大境界 CRUD ──
+let _realmEditIdx=-1;
+function addRealm(){
+  const n=_R().length+1;_R().push({name:'新境界'+n,desc:'自定义',levels:[{level:1,bp:100,spd:1.0,br:0.85,sup:1.0,hp:100,atk:10}]});
+  realmIdx=_R().length-1;realmLevel=1;renderRealms();save();
+}
+function generateLevelRows(n){
+  n = Math.max(1, Math.min(20, n));
+  var c = $('realm-level-rows');
+  var existing = c.querySelectorAll('.level-row').length;
+  if (existing === n) return;
+  c.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    var lv = i + 1;
+    var bp = Math.round(100 + i * 80);
+    var spd = Math.max(0.1, (1 - i * 0.03)).toFixed(2);
+    var br = Math.max(0.01, (0.85 - i * 0.05)).toFixed(2);
+    var sup = (1 + i * 0.12).toFixed(1);
+    c.innerHTML += '<div class="level-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:4px 6px;background:var(--bg3);border-radius:4px">'
+    + '<span style="font-size:11px;color:var(--text2);min-width:32px;font-weight:600">第' + lv + '层</span>'
+      + '<label style="font-size:10px;color:var(--text3);display:flex;flex-direction:column;gap:1px">战力<input type="number" class="fc" data-rl-bp value="' + bp + '" min="0" style="width:70px;font-size:11px;padding:2px 4px"></label>'
+      + '<label style="font-size:10px;color:var(--text3);display:flex;flex-direction:column;gap:1px">速度<input type="number" class="fc" data-rl-spd value="' + spd + '" step="0.1" min="0" style="width:60px;font-size:11px;padding:2px 4px"></label>'
+      + '<label style="font-size:10px;color:var(--text3);display:flex;flex-direction:column;gap:1px">成功率<input type="number" class="fc" data-rl-br value="' + br + '" step="0.01" min="0" max="1" style="width:65px;font-size:11px;padding:2px 4px"></label>'
+      + '<label style="font-size:10px;color:var(--text3);display:flex;flex-direction:column;gap:1px">压制<input type="number" class="fc" data-rl-sup value="' + sup + '" step="0.1" min="0" style="width:60px;font-size:11px;padding:2px 4px"></label>'
+      + '</div>';
+  }
+  $('realm-edit-levels').value = n;
+}
+function openRealmEditModal(idx){
+  if(idx===undefined){_realmEditIdx=-1;$('realm-edit-title').textContent='新增大境界';}else{_realmEditIdx=idx;$('realm-edit-title').textContent='编辑大境界';}
+  const r=idx>=0?_R()[idx]:{name:'',desc:'',levels:[{level:1,bp:100,spd:1.0,br:0.85,sup:1.0,hp:100,atk:10}]};
+  if(!r)return;
+  $('realm-edit-name').value=r.name;
+  $('realm-edit-desc').value=r.desc;
+  // 预填层数并从已有 levels 恢复
+  var lvCount = (r.levels||[]).length || 1;
+  generateLevelRows(lvCount);
+  // 用已有数据覆盖默认值
+  (r.levels||[]).forEach(function(lv, i){
+    var row = $('realm-level-rows').children[i];
+    if (!row) return;
+    var bp = row.querySelector('[data-rl-bp]');
+    var spd = row.querySelector('[data-rl-spd]');
+    var br = row.querySelector('[data-rl-br]');
+    var sup = row.querySelector('[data-rl-sup]');
+    if (bp) bp.value = lv.bp;
+    if (spd) spd.value = lv.spd;
+    if (br) br.value = lv.br;
+    if (sup) sup.value = lv.sup;
+  });
+  $('m-realm-edit').style.display='flex';
+}
+function saveRealmEdit(){
+  var name = $('realm-edit-name').value.trim();
+  if (!name) return toast('境界名称不能为空','e');
+  // 收集小境界数据
+  var levels = [];
+  var rows = $('realm-level-rows').querySelectorAll('.level-row');
+  rows.forEach(function(row, i){
+    levels.push({
+      level: i + 1,
+      bp: parseInt(row.querySelector('[data-rl-bp]')?.value) || 100,
+      spd: parseFloat(row.querySelector('[data-rl-spd]')?.value) || 1,
+      br: parseFloat(row.querySelector('[data-rl-br]')?.value) || 0.85,
+      sup: parseFloat(row.querySelector('[data-rl-sup]')?.value) || 1,
+      hp: parseInt(row.querySelector('[data-rl-bp]')?.value) ? parseInt(row.querySelector('[data-rl-bp]').value) * 2 : 200,
+      atk: 10
+    });
+  });
+  if (!levels.length) return toast('至少配置1层小境界','e');
+
+  if (_realmEditIdx >= 0) {
+    // 编辑已有境界
+    var r = _R()[_realmEditIdx];
+    r.name = name;
+    r.desc = $('realm-edit-desc').value.trim() || r.desc;
+    r.levels = levels;
+  } else {
+    // 新增境界
+    _R().push({ name: name, desc: $('realm-edit-desc').value.trim(), levels: levels });
+    realmIdx = _R().length - 1;
+    realmLevel = levels[0].level;
+  }
+  cm('m-realm-edit');renderRealms();save();
+}
+function deleteRealm(idx){
+  if(!confirm('确认删除大境界 "'+_R()[idx].name+'" ？'))return;
+  _R().splice(idx,1);
+  if(realmIdx>=_R().length)realmIdx=_R().length-1;
+  if(realmIdx<0){realmIdx=0;realmLevel=1;}
+  realmLevel=(_RL()[0]||{}).level||1;
+  renderRealms();save();
+}
+
+// ── 小境界 CRUD ──
+let _levelEditLv=-1;
+function addLevel(){
+  const lvs=_RL();
+  let base=lvs.length?lvs[lvs.length-1]:{bp:100,spd:1.0,br:0.85,sup:1.0,hp:100,atk:10};
+  const newLv=lvs.length?lvs[lvs.length-1].level+1:1;
+  const m=1+((newLv-1)%10)*0.12;
+  lvs.push({level:newLv,bp:Math.round(base.bp*m),spd:Math.round(base.spd*(1-((newLv-1)%10)*0.03)*100)/100,
+    br:Math.round(Math.max(base.br*(1-((newLv-1)%10)*0.04),0.01)*10000)/100,
+    hp:Math.round(base.hp*m),atk:Math.round(base.atk*m),sup:Math.round(base.sup*m*100)/100});
+  realmLevel=newLv;renderRealms();save();
+}
+function openLevelEditModal(lv){
+  _levelEditLv=lv;$('level-edit-title').textContent='编辑小境界·第'+lv+'层';
+  const d=_RL().find(x=>x.level===lv);
+  if(!d)return;
+  $('le-level').value=d.level;$('le-bp').value=d.bp;$('le-spd').value=d.spd;
+  $('le-br').value=d.br;$('le-sup').value=d.sup;$('le-hp').value=d.hp;$('le-atk').value=d.atk;
+  $('m-level-edit').style.display='flex';
+}
+function saveLevelEdit(){
+  const lvs=_RL();const idx=lvs.findIndex(x=>x.level===_levelEditLv);
+  if(idx<0){cm('m-level-edit');return;}
+  lvs[idx]={level:parseInt($('le-level').value)||lvs[idx].level,bp:parseFloat($('le-bp').value)||lvs[idx].bp,
+    spd:parseFloat($('le-spd').value)||lvs[idx].spd,br:parseFloat($('le-br').value)||lvs[idx].br,
+    sup:parseFloat($('le-sup').value)||lvs[idx].sup,hp:parseFloat($('le-hp').value)||lvs[idx].hp,
+    atk:parseFloat($('le-atk').value)||lvs[idx].atk};
+  realmLevel=lvs[idx].level;cm('m-level-edit');renderRealms();save();
+}
+function deleteLevel(lv){
+  const lvs=_RL();
+  if(lvs.length<=1){alert('至少保留1个小境界');return;}
+  const idx=lvs.findIndex(x=>x.level===lv);
+  if(idx<0)return;
+  lvs.splice(idx,1);
+  for(let j=idx;j<lvs.length;j++)lvs[j].level=lvs[j].level-1;
+  realmLevel=lvs.length?lvs[Math.min(idx,lvs.length-1)].level:1;
+  renderRealms();save();
+}
+function resetRealms(){
+  REALM_TYPES.cultivation.realms=(function mkCult(){
+    const ds=[{n:'炼气境',d:'修仙之始',bp:100,spd:1.0,br:0.85,sup:1.0,hp:100,atk:10},
+      {n:'筑基境',d:'铸就道基',bp:500,spd:1.8,br:0.70,sup:1.5,hp:500,atk:50},
+      {n:'金丹境',d:'凝丹成核',bp:2500,spd:3.2,br:0.55,sup:2.8,hp:2000,atk:200},
+      {n:'元婴境',d:'元婴初成',bp:12000,spd:5.5,br:0.40,sup:5.0,hp:8000,atk:800},
+      {n:'化神境',d:'元神出窍',bp:60000,spd:9.0,br:0.28,sup:9.5,hp:35000,atk:3500},
+      {n:'合体境',d:'天人合一',bp:300000,spd:14.0,br:0.18,sup:18.0,hp:150000,atk:15000},
+      {n:'大乘境',d:'道果将成',bp:1500000,spd:22.0,br:0.10,sup:35.0,hp:800000,atk:80000},
+      {n:'渡劫境',d:'天劫淬炼',bp:8000000,spd:35.0,br:0.04,sup:70.0,hp:5000000,atk:500000}];
+    return ds.map(o=>({name:o.n,desc:o.d,levels:_genLvs(o.bp,o.spd,o.br,o.sup,o.hp,o.atk)}));
+  })();
+  REALM_TYPES.body.realms=(function mkBody(){
+    const ds=[{n:'铜皮境',d:'外功淬体',bp:80,spd:1.0,br:0.88,sup:1.0,hp:150,atk:8},
+      {n:'铁骨境',d:'筋骨初成',bp:400,spd:1.5,br:0.75,sup:1.3,hp:700,atk:40},
+      {n:'玉肌境',d:'肤如白玉',bp:2000,spd:2.8,br:0.60,sup:2.2,hp:3000,atk:160},
+      {n:'钢筋境',d:'钢筋铁骨',bp:10000,spd:4.5,br:0.45,sup:4.0,hp:12000,atk:700},
+      {n:'不灭境',d:'肉身不灭',bp:50000,spd:7.5,br:0.30,sup:7.5,hp:50000,atk:3000},
+      {n:'圣体境',d:'圣体大成',bp:250000,spd:12.0,br:0.20,sup:14.0,hp:200000,atk:12000},
+      {n:'斗圣境',d:'肉身成圣',bp:1200000,spd:19.0,br:0.12,sup:28.0,hp:1000000,atk:60000},
+      {n:'混沌境',d:'混沌归一',bp:6000000,spd:30.0,br:0.05,sup:55.0,hp:6000000,atk:400000}];
+    return ds.map(o=>({name:o.n,desc:o.d,levels:_genLvs(o.bp,o.spd,o.br,o.sup,o.hp,o.atk)}));
+  })();
+  realmType='cultivation';realmIdx=0;realmLevel=1;renderRealms();save();
+}
+
+// 养成面板激活时自动渲染
+/* merged into first DOMContentLoaded */
+// ── 动态创建弹窗挂body下 ──
+function _mkModal(id,html){
+  const el=document.createElement('div');el.id=id;el.style.display='none';
+  el.innerHTML='<div class="modal-overlay" onclick="if(event.target===this)cm(\''+id+'\')">'+html+'</div>';
+  document.body.appendChild(el);
+  return el;
+}
+function _initRealmModals(){
+  if(document.getElementById('m-realm-edit'))return;
+  _mkModal('m-realm-edit',
+    '<div class="modal" style="max-width:700px"><div class="modal-header"><span class="modal-title" id="realm-edit-title">编辑大境界</span><button class="btn btn-ghost btn-xs" onclick="cm(\'m-realm-edit\')">✕</button></div>'
+    +'<div class="modal-body">'
+    +'<div class="grid-2"><div class="form-group"><label>境界名称</label><input class="fc" id="realm-edit-name" placeholder="如: 炼气境"></div><div class="form-group"><label>描述(简短)</label><input class="fc" id="realm-edit-desc" placeholder="如: 修仙之始"></div></div>'
+    +'<div class="form-group"><label>小境界层数</label><input type="number" class="fc" id="realm-edit-levels" value="1" min="1" max="20" oninput="generateLevelRows(parseInt(this.value)||1)"></div>'
+    +'<div style="border:1px dashed var(--border);padding:10px;border-radius:6px;max-height:320px;overflow:auto">'
+    +'<div style="font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px">小境界明细（第1层为入门，逐层递增）</div>'
+    +'<div id="realm-level-rows" style="display:flex;flex-direction:column;gap:6px"></div></div>'
+    +'</div><div class="modal-footer"><button class="btn btn-ghost" onclick="cm(\'m-realm-edit\')">取消</button><button class="btn btn-primary" onclick="saveRealmEdit()">保存</button></div></div>');
+  _mkModal('m-level-edit',
+    '<div class="modal"><div class="modal-header"><span class="modal-title" id="level-edit-title">编辑小境界</span><button class="btn btn-ghost btn-xs" onclick="cm(\'m-level-edit\')">✕</button></div>'
+    +'<div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<div class="form-group"><label>层级编号</label><input type="number" class="fc" id="le-level" min="1"></div>'
+    +'<div class="form-group"><label>基础战力</label><input type="number" class="fc" id="le-bp" min="0"></div>'
+    +'<div class="form-group"><label>修炼速度</label><input type="number" step="0.1" class="fc" id="le-spd" min="0"></div>'
+    +'<div class="form-group"><label>突破成功率</label><input type="number" step="0.01" class="fc" id="le-br" min="0" max="1"></div>'
+    +'<div class="form-group"><label>境界压制</label><input type="number" step="0.1" class="fc" id="le-sup" min="0"></div>'
+    +'<div class="form-group"><label>生命加成</label><input type="number" class="fc" id="le-hp" min="0"></div>'
+    +'<div class="form-group"><label>攻击加成</label><input type="number" class="fc" id="le-atk" min="0"></div></div>'
+    +'<div class="modal-footer"><button class="btn btn-ghost" onclick="cm(\'m-level-edit\')">取消</button><button class="btn btn-primary" onclick="saveLevelEdit()">保存</button></div></div>');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  _initRealmModals();
+  renderRealms();
+});
+</script>
+
+<!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
+<script type="module" src="src/index-loader.js"></script>
+</body>
+</html>

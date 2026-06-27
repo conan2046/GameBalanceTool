@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/static-server.mjs --port 8080",
+    "test": "node node_modules/playwright/cli.js test",
+    "test:ui": "node node_modules/playwright/cli.js test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "serve": "^14.2.4",
+    "playwright": "^1.61.1"
+  }
+}

@@ -1,0 +1,360 @@
+/**
+ * GBT v3.0 — 模块加载桥接器
+ * 将 src/ 目录下的 ES Module 接口挂载到 window，
+ * 使 inline onclick 可调用，同时注入 IndexedDB 持久化 + Web Worker。
+ *
+ * 运行时机：作为 <script type="module"> 加载，在 v2.1 inline script 之后执行。
+ * v2.1 原有逻辑完整保留不受影响。
+ */
+
+// ── 1. 导入 v3.0 全部模块 ────────────────────────────────
+import { REALM_DATA } from './data/realms.js';
+import { EQUIPMENT_DATA } from './data/equipment.js';
+import { CLASS_DATA } from './data/classes.js';
+import { CURRENCY_DATA } from './data/currencies.js';
+
+import { initClassPanel, selectClass, toggleDamageType, addClass, deleteClass, addDamageType, deleteDamageType, editClass, saveClass, setSimCount, setClassLevel } from './ui/class-panel.js';
+import { initRealmPanel, switchRealmType, selectRealm, updateRealmField, renderRealmDiffTable, addRealm, deleteRealm, resetRealms } from './ui/realm-panel.js';
+import { initEquipmentPanel, previewQualityEffect, calcEquipTotalPower, updateRefineDisplay, addSlot, deleteSlot, resetEquipment, openSlotModal, saveSlotModal } from './ui/equipment-panel.js';
+import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, deleteCurrency, resetCurrencies, addVip, deleteVip, resetVip } from './ui/economy-panel.js';
+import { renderCultPanel, toggleLine, previewBranchCurve } from './ui/cultivation-panel.js';
+import { renderRefinePanel } from './ui/refine-panel.js';
+import { ATTRS, ATTR_MAP } from './data/attrs.js';
+
+import { drawLineChart, drawBarChart, drawPieChart, drawMixedChart, drawCultivationCurve, drawCurveComparison } from './chart/growth-chart.js';
+
+import { initDB, saveGame, loadGame, listSaves, deleteSave, autoSave } from './export/db.js';
+import { exportVersionedProject, importVersionedProject } from './export/io.js';
+import { ProjectState } from './core/project-state.js';
+import { EventBus } from './core/event-bus.js';
+import { patchV3Snapshot } from './export/migration.js';
+import { calcDamage, simulateCombat, simulateRoundBattle } from './engine/combat.js';
+import { initCurveLibraryPanel } from './curve/curve-panel.js';
+import { installBranchEditor, openBranchModal, addBranchCostRow, addBranchAttrRow, previewBranch, saveBranch, deleteBranch } from './ui/cultivation-branch-editor.js';
+import { initSimulatorPanel, runSimulationV34, roiResetAllV34, roiInvestV34, roiAutoInvestV34, roiAdvanceDayV34, roiRenderAllV34 } from './ui/simulator-panel.js';
+import { initProjectScenarioPanel, renderProjectScenarioPanel } from './ui/project-scenario-panel.js';
+import { initPaymentPanel, renderPaymentPanel } from './ui/payment-panel.js';
+
+// ── 2. 挂载到 window — 让 inline onclick 可调用 ───────────
+
+// Tab3: 职业设定
+window.initClassPanel = initClassPanel;
+window.selectClass = selectClass;
+window.toggleDamageType = toggleDamageType;
+window.addClass = addClass;
+window.deleteClass = deleteClass;
+window.addDamageType = addDamageType;
+window.deleteDamageType = deleteDamageType;
+window.editClass = editClass;
+window.saveClass = saveClass;
+window.setSimCount = setSimCount;
+window.setClassLevel = setClassLevel;
+
+// Tab4: 境界 — 渲染由 inline script 接管（10层/行布局），模块仅保留数据层
+// 不移除 import，以便其他模块 (combat 等) 可引用 REALM_DATA
+
+// Tab4: 装备
+window.initEquipmentPanel = initEquipmentPanel;
+window.updateRefineDisplay = updateRefineDisplay;
+window.addSlot = addSlot;
+window.deleteSlot = deleteSlot;
+window.resetEquipment = resetEquipment;
+window.previewQualityEffect = previewQualityEffect;
+window.openSlotModal = openSlotModal;
+window.saveSlotModal = saveSlotModal;
+
+// 暴露装备数据给 inline script（养成树精炼计算器需要）
+window.EQUIPMENT_REFINE = EQUIPMENT_DATA.refine;
+window.EQUIPMENT_DATA = EQUIPMENT_DATA;
+
+// Tab6: 经济
+window.initEconomyPanel = initEconomyPanel;
+window.addCurrency = addCurrency;
+window.deleteCurrency = deleteCurrency;
+window.resetCurrencies = resetCurrencies;
+window.addVip = addVip;
+window.deleteVip = deleteVip;
+window.resetVip = resetVip;
+
+// 导出/持久化
+window.exportV3Data = exportV3Data;
+window.importV3Data = importV3Data;
+window.ProjectState = ProjectState;
+window.EventBus = EventBus;
+window.exportVersionedProject = () => exportVersionedProject(ProjectState.get());
+window.renderProjectScenarioPanel = renderProjectScenarioPanel;
+
+// Tab4: 养成系统 — 覆盖内联 rCult / toggleLine
+window.rCult = renderCultPanel;
+window.toggleLine = toggleLine;
+window.renderCultPanel = renderCultPanel;
+window.renderRefinePanel = renderRefinePanel;
+window.previewBranchCurve = previewBranchCurve;
+window.openBranchModal = openBranchModal;
+window.addBranchCostRow = addBranchCostRow;
+window.addBranchAttrRow = addBranchAttrRow;
+window.previewBranch = previewBranch;
+window.saveBranch = saveBranch;
+window.delBranch = deleteBranch;
+
+// 暴露属性定义
+window.ATTRS = ATTRS;
+window.ATTR_MAP = ATTR_MAP;
+
+// 图表渲染
+window.drawCultivationCurve = drawCultivationCurve;
+window.drawCurveComparison = drawCurveComparison;
+window.drawLineChart = drawLineChart;
+window.initCurveLibraryPanel = initCurveLibraryPanel;
+window.installBranchEditor = installBranchEditor;
+
+// v3.4 Simulator 统一数据源
+window.initSimulatorPanel = initSimulatorPanel;
+window.runSimulation = runSimulationV34;
+window.roiResetAll = roiResetAllV34;
+window.roiInvest = roiInvestV34;
+window.roiAutoInvest = roiAutoInvestV34;
+window.roiAdvanceDay = roiAdvanceDayV34;
+window.roiRenderAll = roiRenderAllV34;
+window.renderROIPanel2 = roiResetAllV34;
+window.initPaymentPanel = initPaymentPanel;
+window.renderPaymentPanel = renderPaymentPanel;
+
+// ── 3. 合成 v3.0 全量快照（用于 IndexedDB 存档） ─────────
+
+function getLegacyState() {
+  return (typeof S !== 'undefined' && S) ? S : (window.S || {});
+}
+
+function getV3Snapshot() {
+  const base = ProjectState.snapshot({ from: '3.5' });
+  return {
+    ...base,
+    version: '3.6',
+    timestamp: Date.now(),
+    v2State: ProjectState.snapshot(),
+    realms: JSON.parse(JSON.stringify(REALM_DATA)),
+    equipment: JSON.parse(JSON.stringify(EQUIPMENT_DATA)),
+    classes: JSON.parse(JSON.stringify(CLASS_DATA)),
+    currencies: JSON.parse(JSON.stringify(CURRENCY_DATA))
+  };
+}
+
+function restoreV3Snapshot(data) {
+  if (!data) return;
+  if (data.realms) {
+    const cult = REALM_DATA.cultivation;
+    cult.length = 0;
+    data.realms.cultivation.forEach(r => cult.push(r));
+    const body = REALM_DATA.body;
+    body.length = 0;
+    data.realms.body.forEach(r => body.push(r));
+  }
+  if (data.equipment) {
+    const slots = EQUIPMENT_DATA.slots;
+    slots.length = 0;
+    // 迁移旧key(attack→a1, defense→a2, health→a3)
+    data.equipment.slots.forEach(s => {
+      if (s.baseAttrs) {
+        const old = s.baseAttrs;
+        const mig = {};
+        if (old.a1 || old.attack) mig.a1 = old.a1 || old.attack;
+        if (old.a2 || old.defense) mig.a2 = old.a2 || old.defense;
+        if (old.a3 || old.health) mig.a3 = old.a3 || old.health;
+        s.baseAttrs = mig;
+      }
+      slots.push(s);
+    });
+  }
+  if (data.classes) {
+    const cls = CLASS_DATA.classes;
+    cls.length = 0;
+    data.classes.classes.forEach(c => {
+      // 兼容旧存档：补全 primaries
+      if (!c.primaries) c.primaries = { power: 4, spirit: 0, agility: 2, endurance: 1, physique: 3 };
+      cls.push(c);
+    });
+    const dt = CLASS_DATA.damageTypes;
+    dt.length = 0;
+    data.classes.damageTypes.forEach(d => dt.push(d));
+    const km = CLASS_DATA.killMatrix;
+    km.length = 0;
+    data.classes.killMatrix.forEach(k => km.push(k));
+  }
+  if (data.currencies) {
+    const tiers = CURRENCY_DATA.tiers;
+    tiers.length = 0;
+    data.currencies.tiers.forEach(t => tiers.push(t));
+    const vips = CURRENCY_DATA.vipThresholds;
+    vips.length = 0;
+    data.currencies.vipThresholds.forEach(v => vips.push(v));
+  }
+}
+
+// ── 4. IndexedDB 持久化 ──────────────────────────────────
+
+async function exportV3Data() {
+  return exportVersionedProject(ProjectState.get());
+}
+
+async function importV3Data() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const imported = await importVersionedProject(file);
+      const data = imported.data;
+      ProjectState.restore(data, 'json-import-v3.6');
+      restoreV3Snapshot(data);
+      // 重新渲染所有面板
+      initClassPanel();
+      initRealmPanel();
+      initEquipmentPanel();
+      initEconomyPanel();
+      initProjectScenarioPanel();
+      if (typeof toast === 'function') toast('v3.6 版本化工程导入成功');
+    } catch (err) {
+      if (typeof toast === 'function') toast('导入失败: ' + err.message, 'e');
+    }
+  };
+  input.click();
+}
+
+// ── 5. Web Worker 战斗模拟 ───────────────────────────────
+
+let combatWorker = null;
+
+function initCombatWorker() {
+  if (combatWorker) return;
+  try {
+    combatWorker = new Worker('./workers/combat.worker.js');
+    console.log('[v3.0] Web Worker 已创建');
+  } catch (e) {
+    console.warn('[v3.0] Web Worker 创建失败，将使用主线程模拟:', e.message);
+  }
+}
+
+/**
+ * 通过 Worker 执行战斗模拟
+ * @param {Object} params - { count, attacker, defender }
+ * @param {Function} callback - (result) => void
+ */
+window.runWorkerCombat = function(params, callback) {
+  initCombatWorker();
+  if (combatWorker) {
+    const handler = (e) => {
+      combatWorker.removeEventListener('message', handler);
+      callback(e.data.payload);
+    };
+    combatWorker.addEventListener('message', handler);
+    combatWorker.postMessage({ type: 'SIMULATE_COMBAT', payload: params });
+  } else {
+    // fallback: 主线程
+    const result = simulateCombat(params.count || 1000, params);
+    callback(result);
+  }
+};
+
+/**
+ * Worker 回合制战斗
+ */
+window.runWorkerRoundBattle = function(params, callback) {
+  initCombatWorker();
+  if (combatWorker) {
+    const handler = (e) => {
+      combatWorker.removeEventListener('message', handler);
+      callback(e.data.payload);
+    };
+    combatWorker.addEventListener('message', handler);
+    combatWorker.postMessage({ type: 'ROUND_BATTLE', payload: params });
+  } else {
+    const result = simulateRoundBattle(params.attacker, params.defender);
+    callback(result);
+  }
+};
+
+// ── 6. Tab 切换时自动初始化 v3.0 面板 ───────────────────
+
+function initV3Panels() {
+  initClassPanel();
+  // initRealmPanel — 由 inline script 的渲染函数接管
+  initEquipmentPanel();
+  initEconomyPanel();
+  initCurveLibraryPanel();
+  installBranchEditor();
+  initSimulatorPanel();
+  initProjectScenarioPanel();
+  initPaymentPanel();
+  // 养成树 — v3.0 模块在 rAll 调用后自动接管 rCult
+}
+
+// 拦截原有 tab click：在切换后调用 v3.0 面板初始化
+document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化 IndexedDB
+  try {
+    await initDB();
+    ProjectState.bind(getLegacyState(), { saveAdapter: saveGame });
+    console.log('[v3.1] IndexedDB 已就绪，ProjectState 已绑定');
+
+    // 尝试恢复上一次存档；v3.6 之后统一走版本化封包迁移入口。
+    const saved = await loadGame('v3main');
+    if (saved && (saved.schema === 'gbt-project' || saved.schema === 'gbt-project-state' || saved.v2State || saved.data)) {
+      ProjectState.restore(saved, 'idb-restore');
+      restoreV3Snapshot(saved.data || (saved.v2State && saved.v2State.data) || saved);
+      if (typeof window.rAll === 'function') window.rAll();
+    } else if (saved && saved.version && saved.classes) {
+      // 铁律 #6: 旧存档补全缺失字段
+      const patched = patchV3Snapshot(saved);
+      restoreV3Snapshot(patched);
+    } else if (saved) {
+      console.log('[v3.0] 存档版本不匹配，使用默认数据');
+    }
+  } catch (e) {
+    console.warn('[v3.0] IndexedDB 不可用:', e.message);
+  }
+
+  // 初始化面板
+  initV3Panels();
+
+  // 监听 tab 切换 - 补充 v3.0 面板初始化
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      const p = t.dataset.p;
+      // DOM 已由 v2.1 切换，只需确保面板已渲染
+      if (p === 'panel-class') initClassPanel();
+      if (p === 'panel-cult') {
+        // 养成树由 v3.0 cultivation-panel 接管渲染
+        if (typeof window.renderRealms === 'function') window.renderRealms();
+        renderCultPanel();
+        renderRefinePanel();
+        initEquipmentPanel();
+      }
+      if (p === 'panel-eco') initEconomyPanel();
+      if (p === 'panel-sim') { initSimulatorPanel(); initProjectScenarioPanel(); }
+      if (p === 'panel-payment') initPaymentPanel();
+      if (p === 'panel-curve') {
+        initCurveLibraryPanel();
+  installBranchEditor();
+        // 曲线库全曲线对比图
+        if (window.S && window.S.curves) {
+          setTimeout(function(){ drawCurveComparison('cv-compare', window.S.curves, 20); }, 100);
+        }
+      }
+    });
+  });
+
+  // 自动存档定时器（每 30 秒）
+  setInterval(async () => {
+    try {
+      await ProjectState.persist('autosave');
+      await saveGame('v3main-v3modules', getV3Snapshot());
+    } catch (e) {
+      // 静默
+    }
+  }, 30000);
+
+  console.log('[v3.1] 桥接器已完成初始化');
+});

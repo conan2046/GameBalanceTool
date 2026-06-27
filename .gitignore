@@ -1,0 +1,12 @@
+node_modules/
+test-results/
+playwright-report/
+.codex-runtime/
+
+%SystemDrive%/
+.agents/
+.git/
+
+*.log
+*.tmp
+*.bak
