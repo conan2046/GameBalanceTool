@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.7 envelopes', () => {
+test('project versioning restores current v3.10.8 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.7 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.7');
+  expect(restored.to).toBe('3.10.8');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.7');
-  await expect(page.locator('#app-release-name')).toHaveText('击杀矩阵工具条修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.8');
+  await expect(page.locator('#app-release-name')).toHaveText('境界指标横排修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -50,6 +50,32 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();
   await expect(page.locator('#realm-metrics')).not.toBeEmpty();
+  const realmMetricLayout = await page.locator('#realm-metrics').evaluate(metrics => {
+    const cards = Array.from(metrics.querySelectorAll('.metric-c')).map(card => {
+      const box = card.getBoundingClientRect();
+      const label = card.querySelector('.ml').getBoundingClientRect();
+      const value = card.querySelector('.mv').getBoundingClientRect();
+      return {
+        text: card.textContent.trim(),
+        top: Math.round(box.top),
+        labelTop: Math.round(label.top),
+        valueTop: Math.round(value.top),
+        labelRight: Math.round(label.right),
+        valueLeft: Math.round(value.left),
+        height: Math.round(box.height),
+      };
+    });
+    return {
+      count: cards.length,
+      sameRow: cards.every(card => card.top === cards[0].top),
+      inlineContent: cards.every(card => Math.abs(card.labelTop - card.valueTop) < 8 && card.labelRight <= card.valueLeft),
+      cards,
+    };
+  });
+  expect(realmMetricLayout.count).toBe(4);
+  expect(realmMetricLayout.sameRow).toBe(true);
+  expect(realmMetricLayout.inlineContent).toBe(true);
+  expect(realmMetricLayout.cards[0].text).toMatch(/基础战力：\d/);
   await expect(page.locator('#cult-tree')).not.toBeEmpty();
   await expect(page.locator('#panel-cult')).not.toContainText('精炼增幅计算器');
   await expect(page.locator('#refine-panel')).toHaveCount(0);

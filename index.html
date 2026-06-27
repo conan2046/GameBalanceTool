@@ -221,9 +221,9 @@ textarea.fc{resize:vertical;min-height:70px}
 .level-ops .btn-xs{padding:3px 8px;font-size:10px;border-radius:4px}
 .level-ops span{font-size:11px;color:var(--text2)}
 .realm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.metric-c{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;text-align:center}
-.metric-c .ml{font-size:11px;color:var(--text2);margin-bottom:4px}
-.metric-c .mv{font-size:18px;font-weight:700}
+.metric-c{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:4px;min-height:42px;text-align:left}
+.metric-c .ml{font-size:12px;color:var(--text2);margin:0;white-space:nowrap}
+.metric-c .mv{font-size:18px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chart-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .chart-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px}
 .chart-box .ct{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;text-align:center}
@@ -319,8 +319,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.7</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">击杀矩阵工具条修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.8</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">境界指标横排修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -3275,7 +3275,7 @@ function renderRealms(){
     {l:'修炼速度',v:d.spd+'x',c:'#4fc3f7'},
     {l:'突破成功率',v:d.br+'%',c:'#4ecca3'},
     {l:'境界压制',v:d.sup+'x',c:'#ba68c8'}
-  ].map(m=>`<div class="metric-c"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+  ].map(m=>`<div class="metric-c"><span class="ml">${m.l}：</span><span class="mv" style="color:${m.c}">${m.v}</span></div>`).join('');
   _drawCurves();
 }
 function _drawCurves(){
