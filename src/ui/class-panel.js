@@ -216,12 +216,12 @@ function renderKillMatrix() {
   `;
 
   // 鐭╅樀琛ㄦ牸
-  html += '<table class="tbl"><thead><tr><th>攻方\\守方</th>';
+  html += '<table class="tbl kill-matrix-table"><thead><tr><th class="kill-axis">攻方\\守方</th>';
   classes.forEach(cls => { html += `<th>${cls.name}</th>`; });
   html += '</tr></thead><tbody>';
 
   classes.forEach(attCls => {
-    html += `<tr><td><b>${attCls.name}</b></td>`;
+    html += `<tr><td class="kill-axis">${attCls.name}</td>`;
     classes.forEach(defCls => {
       const result = simulate1v1(simCount, attCls.id, defCls.id);
       if (!result) {
@@ -229,10 +229,12 @@ function renderKillMatrix() {
       } else {
         const winRate = result.attackerWinRate;
         const color = winRate > 0.6 ? 'var(--success)' : winRate > 0.4 ? 'var(--warning)' : 'var(--danger)';
-        html += `<td style="color:${color};text-align:center;font-size:12px">
-          <b>${winRate >= 0.5 ? '胜' : '负'}</b>
-          <span style="font-size:18px;font-weight:700">${(winRate * 100).toFixed(1)}%</span>
-          <span style="display:block;font-size:10px;color:var(--text3)">${result.avgRounds}回合</span>
+        html += `<td style="color:${color}">
+          <div class="kill-matrix-result">
+            <b>${winRate >= 0.5 ? '胜' : '负'}</b>
+            <span class="rate">${(winRate * 100).toFixed(1)}%</span>
+          </div>
+          <span class="rounds">${result.avgRounds}回合</span>
         </td>`;
       }
     });

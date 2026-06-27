@@ -203,11 +203,16 @@ textarea.fc{resize:vertical;min-height:70px}
 .class-stat-item .label{white-space:nowrap;text-align:right}
 .class-stat-item .value{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
 .class-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);justify-content:center}
-.kill-matrix-toolbar{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;min-height:56px;flex-wrap:wrap}
+.kill-matrix-toolbar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;min-height:56px;flex-wrap:wrap}
 .kill-matrix-toolbar label{font-size:12px;color:var(--text2);line-height:32px;margin:0;white-space:nowrap}
 .kill-matrix-toolbar .fc{width:120px;height:32px;line-height:32px;padding:0 12px;margin:0}
 .kill-matrix-toolbar .hint{font-size:10px;color:var(--text3);line-height:32px;white-space:nowrap}
 .kill-matrix-toolbar .btn{height:32px;display:inline-flex;align-items:center}
+.kill-matrix-table th,.kill-matrix-table td{text-align:center;vertical-align:middle}
+.kill-matrix-table .kill-axis{font-weight:700;color:var(--text)}
+.kill-matrix-result{display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;line-height:1.2}
+.kill-matrix-result .rate{font-size:18px;font-weight:700}
+.kill-matrix-table .rounds{display:block;font-size:10px;color:var(--text3);margin-top:2px}
 .damage-type-card{display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px}
 .damage-type-card .dt-name{font-size:14px;font-weight:700;min-width:60px}
 .damage-type-card .dt-desc{font-size:12px;color:var(--text2);flex:1}
@@ -336,8 +341,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.25</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">职业卡片排版修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.26</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">击杀矩阵居中修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -3566,6 +3571,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.25"></script>
+<script type="module" src="src/index-loader.js?v=3.10.26"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.25 envelopes', () => {
+test('project versioning restores current v3.10.26 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.25 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.25');
+  expect(restored.to).toBe('3.10.26');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.25');
-  await expect(page.locator('#app-release-name')).toHaveText('职业卡片排版修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.26');
+  await expect(page.locator('#app-release-name')).toHaveText('击杀矩阵居中修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -488,12 +488,23 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
     const hint = toolbar.querySelector('.hint').getBoundingClientRect();
     const button = toolbar.querySelector('button').getBoundingClientRect();
     const toolbarBox = toolbar.getBoundingClientRect();
+    const table = matrix.querySelector('.kill-matrix-table');
+    const headCell = table.querySelector('thead th');
+    const rowCell = table.querySelector('tbody td');
+    const resultCell = table.querySelector('tbody tr td:nth-child(2)');
+    const result = resultCell.querySelector('.kill-matrix-result').getBoundingClientRect();
+    const resultBox = resultCell.getBoundingClientRect();
     return {
       leftPadding: Math.round(label.left - toolbarBox.left),
       topPadding: Math.round(label.top - toolbarBox.top),
       inputHeight: Math.round(input.height),
       sameCenterLine: [input, hint, button].every(rect => Math.abs((label.top + label.height / 2) - (rect.top + rect.height / 2)) < 3),
       toolbarHeight: Math.round(toolbarBox.height),
+      toolbarCentered: Math.abs((label.left + button.right) / 2 - (toolbarBox.left + toolbarBox.width / 2)) < 40,
+      headerCentered: getComputedStyle(headCell).textAlign === 'center',
+      rowHeaderCentered: getComputedStyle(rowCell).textAlign === 'center',
+      resultCentered: getComputedStyle(resultCell).textAlign === 'center',
+      resultBlockCentered: Math.abs((result.left + result.width / 2) - (resultBox.left + resultBox.width / 2)) < 3,
     };
   });
   expect(killMatrixToolbarLayout.leftPadding).toBeGreaterThanOrEqual(14);
@@ -501,6 +512,11 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(killMatrixToolbarLayout.inputHeight).toBe(32);
   expect(killMatrixToolbarLayout.sameCenterLine).toBe(true);
   expect(killMatrixToolbarLayout.toolbarHeight).toBeGreaterThanOrEqual(54);
+  expect(killMatrixToolbarLayout.toolbarCentered).toBe(true);
+  expect(killMatrixToolbarLayout.headerCentered).toBe(true);
+  expect(killMatrixToolbarLayout.rowHeaderCentered).toBe(true);
+  expect(killMatrixToolbarLayout.resultCentered).toBe(true);
+  expect(killMatrixToolbarLayout.resultBlockCentered).toBe(true);
   await expect(page.locator('#kill-matrix')).not.toContainText(/妯℃嫙|鍦烘|鑼冨洿|閲嶆柊|鍥炲悎|缂栬緫|鍒犻櫎/);
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#slot-editor')).toContainText('速度');
