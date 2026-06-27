@@ -10,7 +10,7 @@ import { getCurveName } from './components/curve-binding.js';
 import { renderBranchGrowthTable } from './branch-growth-table.js';
 
 /** 主线展开状态 */
-const openLines = new Set();
+const openLines = new Set(['l1']);
 
 /**
  * 渲染养成树 → #cult-tree
@@ -65,6 +65,7 @@ function _buildBranchCard(line, b) {
   // 兼容旧格式：单条 → 数组
   var costs = b.consumes || (b.resId ? [{resId:b.resId, qty:b.qty||1, cvId:b.cvId||''}] : []);
   var attrs = b.gains  || (b.attrId ? [{attrId:b.attrId, val:b.attrVal||10}] : []);
+  var isRefine = b.id === 'b_refine';
 
   // 消耗行
   var costHtml = costs.length
@@ -77,15 +78,17 @@ function _buildBranchCard(line, b) {
   // 属性行
   var attrHtml = attrs.length
     ? attrs.map(function(a) {
-        var name = getAttrName(a.attrId);
-        return '<span style="color:var(--success)">'+name+' <b>+'+a.val+'</b><small style="color:var(--text3);margin-left:4px">'+getCurveName(a.cvId)+'</small></span>';
+        var name = getBranchAttrLabel(a.attrId);
+        var suffix = isPercentBranchAttr(a.attrId) ? '%' : '';
+        return '<span style="color:var(--success)">'+name+' <b>+'+a.val+suffix+'</b><small style="color:var(--text3);margin-left:4px">'+getCurveName(a.cvId)+'</small></span>';
       }).join('')
     : '<span style="color:var(--text3)">无属性</span>';
+  var refineSummary = isRefine ? buildRefineSummary(b, costs, attrs) : '';
 
   var item = document.createElement('div');
   item.className = 'rule-item';
   item.innerHTML =
-    '<div class="rule-badge">分支</div>' +
+    '<div class="rule-badge">'+(isRefine ? '精炼' : '分支')+'</div>' +
     '<div class="rule-name" style="font-size:14px;font-weight:700">' + b.name + '</div>' +
     '<div class="rule-lvl" style="display:flex;align-items:center;gap:6px;margin:4px 0">' +
       '<span style="font-size:12px;color:var(--text3)">等级上限</span>' +
@@ -97,6 +100,7 @@ function _buildBranchCard(line, b) {
     '<div class="rule-attr" style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px">' +
       attrHtml +
     '</div>' +
+    refineSummary +
     '<div style="display:flex;gap:4px;justify-content:flex-end;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">' +
       '<button class="btn btn-ghost btn-xs" onclick="previewBranchCurve(\''+line.id+'\',\''+b.id+'\')">预览曲线</button>' +
       '<button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">编辑</button>' +
@@ -104,6 +108,32 @@ function _buildBranchCard(line, b) {
     '</div>';
 
   return item;
+}
+
+function getBranchAttrLabel(attrId) {
+  if (attrId === 'dmgBonus') return '增伤';
+  if (attrId === 'dmgRed') return '减伤';
+  return getAttrName(attrId);
+}
+
+function isPercentBranchAttr(attrId) {
+  return attrId === 'dmgBonus' || attrId === 'dmgRed';
+}
+
+function buildRefineSummary(branch, costs, gains) {
+  var firstCost = costs[0] || {};
+  var resource = (window.S && window.S.resources) ? window.S.resources.find(function(r){ return r.id === firstCost.resId; }) : null;
+  var material = resource ? resource.name : (firstCost.resId || '未配置材料');
+  var baseCost = Number(firstCost.qty || 0);
+  var gainText = gains.length
+    ? gains.map(function(g){ return getBranchAttrLabel(g.attrId) + ' +' + (g.val || 0) + (isPercentBranchAttr(g.attrId) ? '%' : ''); }).join(' / ')
+    : '未配置收益';
+  return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin-top:8px;font-size:11px">' +
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">材料</span><b style="display:block;color:var(--warning)">'+material+'</b></div>' +
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">单级基础消耗</span><b style="display:block;color:var(--text)">'+baseCost.toLocaleString()+'</b></div>' +
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">每级收益</span><b style="display:block;color:var(--success)">'+gainText+'</b></div>' +
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">归属模型</span><b style="display:block;color:var(--accent2)">三层养成线</b></div>' +
+  '</div>';
 }
 
 /**

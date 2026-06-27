@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.8.2 envelopes', () => {
+test('project versioning restores current v3.9.0 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.8.2 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.8.2');
+  expect(restored.to).toBe('3.9.0');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.8.2');
-  await expect(page.locator('#app-release-name')).toHaveText('职业矩阵修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.9.0');
+  await expect(page.locator('#app-release-name')).toHaveText('养成精炼整合版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
 
   await page.locator('.tab[data-p="panel-curve"]').click();
@@ -49,6 +49,11 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();
   await expect(page.locator('#realm-metrics')).not.toBeEmpty();
   await expect(page.locator('#cult-tree')).not.toBeEmpty();
+  await expect(page.locator('#panel-cult')).not.toContainText('精炼增幅计算器');
+  await expect(page.locator('#refine-panel')).toHaveCount(0);
+  await expect(page.locator('#cult-tree')).toContainText('精炼系统');
+  await expect(page.locator('#cult-tree')).toContainText('三层养成线');
+  await expect(page.locator('#cult-tree')).toContainText('每级收益');
   const cultSectionState = await page.locator('#panel-cult').evaluate(panel => {
     const sections = Array.from(panel.querySelectorAll('.section'));
     return {
@@ -58,12 +63,10 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
       toggleCount: sections.filter(section => section.querySelector(':scope > .section-header > .section-collapse-toggle')).length,
     };
   });
-  expect(cultSectionState.count).toBeGreaterThan(3);
+  expect(cultSectionState.count).toBeGreaterThanOrEqual(3);
   expect(cultSectionState.firstThreeOpen).toBe(true);
-  expect(cultSectionState.fourthCollapsed).toBe(true);
+  if (cultSectionState.count > 3) expect(cultSectionState.fourthCollapsed).toBe(true);
   expect(cultSectionState.toggleCount).toBe(cultSectionState.count);
-  await page.locator('#panel-cult .section').nth(3).locator(':scope > .section-header').click();
-  await expect(page.locator('#panel-cult .section').nth(3)).not.toHaveClass(/is-collapsed/);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

@@ -1,4 +1,4 @@
-# GameBalanceTool V3.8.2 功能清单与自测报告
+# GameBalanceTool V3.9.0 功能清单与自测报告
 
 测试日期：2026-06-26  
 测试地址：`http://127.0.0.1:8080/`  
@@ -82,7 +82,7 @@
 |---|---|---|
 | 装备槽位 | 检查 `#slot-editor .slot-card` | 通过，9 槽位 |
 | 装备品质 | 检查 `#quality-editor .quality-card` | 通过，6 品质 |
-| 精炼面板 | 调用 `renderRefinePanel()` | 通过 |
+| 精炼分支 | 检查 `#cult-tree` 内“精炼系统”分支与“三层养成线”归属摘要 | 通过 |
 | 养成树 | 调用 `renderCultPanel()` | 通过 |
 | 分支曲线预览 | 调用 `previewBranchCurve(lineId, branchId)` | 通过 |
 | 修为/炼体切换 | 调用 `switchRealmType('body')` / `switchRealmType('cultivation')` | 通过，但依赖先渲染 |

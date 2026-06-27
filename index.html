@@ -301,8 +301,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.8.2</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">职业矩阵修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.9.0</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成精炼整合版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -526,15 +526,6 @@ textarea.fc{resize:vertical;min-height:70px}
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- ========== 精炼系统计算器 ========== -->
-      <div class="section">
-        <div class="section-header">
-          <span class="section-title">精炼增幅计算器</span>
-          <button class="btn btn-ghost btn-xs" onclick="openBranchModal('l1','b_refine')">编辑精炼规则</button>
-        </div>
-        <div class="section-body" id="refine-panel"></div>
       </div>
       
       <!-- ========== 保留原有: 三层养成线 ========== -->
@@ -1675,13 +1666,31 @@ function rCult(){
         var badgeLabel = isRefine ? '精炼' : '分支';
         var btnLabel = isRefine ? '编辑参数' : '编辑参数';
         var delLabel = isRefine ? '删除' : '删除';
+        var refineSummary = '';
+        if(isRefine){
+          var firstCost = costs[0] || {};
+          var res0 = S.resources ? S.resources.find(function(x){return x.id===firstCost.resId;}) : null;
+          var gainText = attrs.map(function(a){
+            var attr = S.attrs ? S.attrs.find(function(x){return x.id===a.attrId;}) : null;
+            var label = attr ? attr.name : (a.attrId==='dmgBonus' ? '增伤' : a.attrId==='dmgRed' ? '减伤' : a.attrId);
+            var suffix = (a.attrId==='dmgBonus'||a.attrId==='dmgRed') ? '%' : '';
+            return label+' +'+(a.val||0)+suffix;
+          }).join(' / ') || '未配置收益';
+          refineSummary = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin-top:8px;font-size:11px">'
+            +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">材料</span><b style="display:block;color:var(--warning)">'+(res0?res0.name:(firstCost.resId||'未配置材料'))+'</b></div>'
+            +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">单级基础消耗</span><b style="display:block;color:var(--text)">'+Number(firstCost.qty||0).toLocaleString()+'</b></div>'
+            +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">每级收益</span><b style="display:block;color:var(--success)">'+gainText+'</b></div>'
+            +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px"><span style="color:var(--text3)">归属模型</span><b style="display:block;color:var(--accent2)">三层养成线</b></div>'
+            +'</div>';
+        }
         item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
           +'<div><span class="badge badge-w">'+badgeLabel+'</span> <b style="font-size:13px;color:var(--accent2)">'+b.name+'</b> <span style="color:var(--text2);font-size:12px;margin-left:8px">等级上限: '+b.maxLevel+'级</span></div>'
           +'<div><button class="btn btn-ghost btn-xs" onclick="openBranchModal(\''+line.id+'\',\''+b.id+'\')">'+btnLabel+'</button> <button class="btn btn-danger btn-xs" onclick="delBranch(\''+line.id+'\',\''+b.id+'\')">'+delLabel+'</button></div>'
           +'</div>'
           +'<div style="display:flex;gap:16px;font-size:12px;color:var(--text2);flex-wrap:wrap">'
           +'<div>每级消耗: '+costHtml+'</div>'
-          +'<div>属性增益: '+attrHtml+'</div></div>';
+          +'<div>属性增益: '+attrHtml+'</div></div>'
+          +refineSummary;
         lb.appendChild(item);
       });
     }

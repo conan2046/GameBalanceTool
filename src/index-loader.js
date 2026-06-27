@@ -18,7 +18,6 @@ import { initRealmPanel, switchRealmType, selectRealm, updateRealmField, renderR
 import { initEquipmentPanel, previewQualityEffect, calcEquipTotalPower, updateRefineDisplay, addSlot, deleteSlot, resetEquipment, openSlotModal, saveSlotModal } from './ui/equipment-panel.js';
 import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, deleteCurrency, resetCurrencies, addVip, deleteVip, resetVip } from './ui/economy-panel.js';
 import { renderCultPanel, toggleLine, previewBranchCurve } from './ui/cultivation-panel.js';
-import { renderRefinePanel } from './ui/refine-panel.js';
 import { ATTRS, ATTR_MAP } from './data/attrs.js';
 
 import { drawLineChart, drawBarChart, drawPieChart, drawMixedChart, drawCultivationCurve, drawCurveComparison } from './chart/growth-chart.js';
@@ -97,7 +96,6 @@ window.renderProjectScenarioPanel = renderProjectScenarioPanel;
 window.rCult = renderCultPanel;
 window.toggleLine = toggleLine;
 window.renderCultPanel = renderCultPanel;
-window.renderRefinePanel = renderRefinePanel;
 window.previewBranchCurve = previewBranchCurve;
 window.openBranchModal = openBranchModal;
 window.addBranchCostRow = addBranchCostRow;
@@ -342,7 +340,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 养成树由 v3.0 cultivation-panel 接管渲染
         if (typeof window.renderRealms === 'function') window.renderRealms();
         renderCultPanel();
-        renderRefinePanel();
         initEquipmentPanel();
       }
       if (p === 'panel-eco') initEconomyPanel();

@@ -1,15 +1,15 @@
 import { clonePaymentConfig } from '../data/payment-defaults.js';
 
 /**
- * GBT v3.8 — Project Versioning
+ * GBT v3.9 — Project Versioning
  * 统一工程封包、版本号、导入导出迁移入口。
  */
 
 export const PROJECT_SCHEMA = 'gbt-project';
-export const PROJECT_VERSION = '3.8.2';
+export const PROJECT_VERSION = '3.9.0';
 export const APP_VERSION_LABEL = `v${PROJECT_VERSION}`;
-export const APP_RELEASE_NAME = '职业矩阵修订版';
-export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0', '3.7.1', '3.8.0', '3.8.1', '3.8.2'];
+export const APP_RELEASE_NAME = '养成精炼整合版';
+export const COMPATIBLE_IMPORTS = ['2.1', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.6.0', '3.7', '3.7.0', '3.7.1', '3.8.0', '3.8.1', '3.8.2', '3.9.0'];
 
 function clone(data) { return JSON.parse(JSON.stringify(data || {})); }
 function nowISO() { return new Date().toISOString(); }
