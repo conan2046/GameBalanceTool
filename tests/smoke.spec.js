@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.17 envelopes', () => {
+test('project versioning restores current v3.10.18 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.17 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.17');
+  expect(restored.to).toBe('3.10.18');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.17');
-  await expect(page.locator('#app-release-name')).toHaveText('投放卡片三列修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.18');
+  await expect(page.locator('#app-release-name')).toHaveText('曲线表格横排修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -63,6 +63,20 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(curveLayout.tableWidth).toBeGreaterThan(curveLayout.stackWidth * 0.95);
   expect(curveLayout.previewWidth).toBeGreaterThan(curveLayout.stackWidth * 0.95);
   expect(curveLayout.previewTop).toBeGreaterThan(curveLayout.tableBottom);
+  const curveInlineLayout = await page.locator('#t-curve tbody tr').first().evaluate(row => {
+    const nameWrap = row.children[1].querySelector('.curve-cell-inline');
+    const typeWrap = row.children[2].querySelector('.curve-cell-inline');
+    const nameMain = nameWrap.children[0].getBoundingClientRect();
+    const nameSub = nameWrap.children[1].getBoundingClientRect();
+    const typeMain = typeWrap.children[0].getBoundingClientRect();
+    const typeSub = typeWrap.children[1].getBoundingClientRect();
+    return {
+      nameInline: Math.abs((nameMain.top + nameMain.height / 2) - (nameSub.top + nameSub.height / 2)) < 3 && nameSub.left > nameMain.right,
+      typeInline: Math.abs((typeMain.top + typeMain.height / 2) - (typeSub.top + typeSub.height / 2)) < 3 && typeSub.left > typeMain.right,
+    };
+  });
+  expect(curveInlineLayout.nameInline).toBe(true);
+  expect(curveInlineLayout.typeInline).toBe(true);
 
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();

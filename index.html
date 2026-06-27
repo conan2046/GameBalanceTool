@@ -81,6 +81,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
 select.fc option{background:var(--bg3)}
 textarea.fc{resize:vertical;min-height:70px}
 .help-block{font-size:12px;color:var(--text3);line-height:1.4}
+#t-curve .curve-cell-inline{display:flex;align-items:center;gap:8px;white-space:nowrap}
+#t-curve .curve-cell-inline .help-block{display:inline;margin:0;font-size:11px;line-height:1.2}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:15px}
 .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r);width:100%;max-width:540px;box-shadow:var(--sh);display:flex;flex-direction:column;max-height:90%}
 .modal-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -333,8 +335,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.17</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投放卡片三列修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.18</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">曲线表格横排修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -1641,7 +1643,7 @@ function rCurves(){
   S.curves.forEach(c=>{
     const map={linear:'线性',diminishing:'边际递减',logarithmic:'对数',sqrt:'平方根',power:'幂函数',expo:'指数',exponential:'指数饱和',sigmoid:'平滑过渡型',stair:'阶梯',fix:'恒定'};
     const r=document.createElement('tr');
-    r.innerHTML=`<td><span class="badge badge-s">${c.id}</span></td><td><b>${c.name}</b></td><td><span class="badge badge-w">${map[c.type]}</span></td>
+    r.innerHTML=`<td><span class="badge badge-s">${c.id}</span></td><td><div class="curve-cell-inline"><b>${c.name}</b></div></td><td><div class="curve-cell-inline"><span class="badge badge-w">${map[c.type]}</span></div></td>
     <td><button class="btn btn-ghost btn-xs" onclick="openCurveModal('${c.id}')">修正</button> <button class="btn btn-danger btn-xs" onclick="delCurve('${c.id}')">擦除</button></td>`;
     r.addEventListener('click',()=>drawCurveGraph(c));
     b.appendChild(r);

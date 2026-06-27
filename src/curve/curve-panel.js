@@ -79,8 +79,8 @@ function renderCurveTable() {
     tr.style.cursor = 'pointer';
     tr.innerHTML = `
       <td><span class="badge badge-s">${curve.id}</span></td>
-      <td><b>${curve.name}</b><div class="help-block">${def.formula}</div></td>
-      <td><span class="badge badge-w">${def.name}</span><div class="help-block">${def.category}</div></td>
+      <td><div class="curve-cell-inline"><b>${curve.name}</b><span class="help-block">${def.formula}</span></div></td>
+      <td><div class="curve-cell-inline"><span class="badge badge-w">${def.name}</span><span class="help-block">${def.category}</span></div></td>
       <td><span class="badge badge-t">${countUsage(curve.id)}处引用</span></td>
       <td><button class="btn btn-ghost btn-xs" data-act="edit">修正</button> <button class="btn btn-danger btn-xs" data-act="del">擦除</button></td>`;
     tr.addEventListener('click', (e) => {
