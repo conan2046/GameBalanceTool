@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.11 envelopes', () => {
+test('project versioning restores current v3.10.12 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.11 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.11');
+  expect(restored.to).toBe('3.10.12');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.11');
-  await expect(page.locator('#app-release-name')).toHaveText('曲线库上下布局修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.12');
+  await expect(page.locator('#app-release-name')).toHaveText('沙盘属性横排修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -286,6 +286,20 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#cb-attacker-card .fighter-weapon')).toBeVisible();
   await expect(page.locator('#cb-defender-card .fighter-weapon')).toBeVisible();
   await expect(page.locator('#cb-attacker-stats')).not.toContainText(/ATK|DEF|HP|SPD|CRIT|CDMG/);
+  const combatStatLayout = await page.locator('#cb-attacker-stats').evaluate(container => {
+    const stat = container.querySelector('.role-stat');
+    const label = stat.querySelector('b').getBoundingClientRect();
+    const value = stat.querySelector('span').getBoundingClientRect();
+    const box = stat.getBoundingClientRect();
+    return {
+      labelLeftOfValue: label.right <= value.left,
+      sameCenterLine: Math.abs((label.top + label.height / 2) - (value.top + value.height / 2)) < 3,
+      boxHeight: Math.round(box.height),
+    };
+  });
+  expect(combatStatLayout.labelLeftOfValue).toBeTruthy();
+  expect(combatStatLayout.sameCenterLine).toBeTruthy();
+  expect(combatStatLayout.boxHeight).toBeLessThanOrEqual(32);
 
   await page.evaluate(() => {
     window.S.attrs.push({ id: 'a_speed_test', name: '速度', base: 77, weight: 0.3 });

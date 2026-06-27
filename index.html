@@ -282,9 +282,9 @@ textarea.fc{resize:vertical;min-height:70px}
 .fighter-header{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px}
 .fighter-name{font-size:12px;color:var(--text2);font-weight:700;text-align:center}
 .role-stats{width:100%;max-width:360px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-self:center}
-.role-stat{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 5px;text-align:center}
-.role-stat b{display:block;font-size:10px;color:var(--text3);font-weight:600}
-.role-stat span{display:block;font-size:11px;color:var(--text);font-variant-numeric:tabular-nums;font-weight:700}
+.role-stat{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 6px;display:flex;align-items:center;justify-content:center;gap:5px;min-height:28px;text-align:center}
+.role-stat b{display:inline;font-size:10px;color:var(--text3);font-weight:600;white-space:nowrap}
+.role-stat span{display:inline;font-size:11px;color:var(--text);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .hp-wrap{width:100%;max-width:360px;align-self:center}
 .hp-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px}
 .hp-track{height:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -328,8 +328,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.11</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">曲线库上下布局修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.12</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">沙盘属性横排修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
