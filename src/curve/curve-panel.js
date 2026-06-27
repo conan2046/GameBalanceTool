@@ -62,8 +62,9 @@ function drawSvg(svgId, vals) {
   const sx = i => px + (W - px * 2) * i / (vals.length - 1 || 1);
   const sy = v => H - py - (H - py * 2) * (v - min) / rng;
   const pts = vals.map((v, i) => `${sx(i)},${sy(v)}`).join(' ');
+  const labelStyle = 'fill="#f3f6ff" font-size="12" font-weight="700"';
   const labels = vals.map((v, i) => (i === 0 || i === Math.floor(vals.length / 2) || i === vals.length - 1)
-    ? `<text x="${sx(i)}" y="${H - 4}" fill="var(--text3)" font-size="9" text-anchor="middle">L${i + 1}</text><text x="${sx(i)}" y="${sy(v) - 4}" fill="var(--text2)" font-size="9" text-anchor="middle">${Math.round(v)}</text>`
+    ? `<text x="${sx(i)}" y="${H - 5}" ${labelStyle} text-anchor="middle">L${i + 1}</text><text x="${sx(i)}" y="${sy(v) - 6}" ${labelStyle} text-anchor="middle">${Math.round(v)}</text>`
     : '').join('');
   svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>${labels}`;
 }

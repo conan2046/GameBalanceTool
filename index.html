@@ -335,8 +335,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.18</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">曲线表格横排修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.19</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">曲线图表清晰修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -1710,7 +1710,8 @@ function drawChart(svgId,vals){
   const x=i=>px+(W-px*2)*i/(vals.length-1||1);
   const y=v=>H-py-(H-py*2)*(v-min)/rng;
   let pts=vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
-  let txts=vals.map((v,i)=>i===0||i===7||i===14?`<text x="${x(i)}" y="${H-4}" fill="var(--text3)" font-size="9" text-anchor="middle">L${i+1}</text><text x="${x(i)}" y="${y(v)-4}" fill="var(--text2)" font-size="9" text-anchor="middle">${Math.round(v)}</text>`:'').join('');
+  let labelStyle='fill="#f3f6ff" font-size="12" font-weight="700"';
+  let txts=vals.map((v,i)=>i===0||i===7||i===14?`<text x="${x(i)}" y="${H-5}" ${labelStyle} text-anchor="middle">L${i+1}</text><text x="${x(i)}" y="${y(v)-6}" ${labelStyle} text-anchor="middle">${Math.round(v)}</text>`:'').join('');
   svg.innerHTML=`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>`+txts;
 }
 function openCurveModal(id=''){
@@ -3507,6 +3508,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js"></script>
+<script type="module" src="src/index-loader.js?v=3.10.19"></script>
 </body>
 </html>

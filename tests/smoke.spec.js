@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.18 envelopes', () => {
+test('project versioning restores current v3.10.19 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.18 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.18');
+  expect(restored.to).toBe('3.10.19');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.18');
-  await expect(page.locator('#app-release-name')).toHaveText('曲线表格横排修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.19');
+  await expect(page.locator('#app-release-name')).toHaveText('曲线图表清晰修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -77,6 +77,42 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   });
   expect(curveInlineLayout.nameInline).toBe(true);
   expect(curveInlineLayout.typeInline).toBe(true);
+  const curveSvgTextStyle = await page.locator('#cv-svg').evaluate(svg => {
+    const texts = Array.from(svg.querySelectorAll('text'));
+    return {
+      count: texts.length,
+      fills: [...new Set(texts.map(t => t.getAttribute('fill')))],
+      fontSizes: [...new Set(texts.map(t => t.getAttribute('font-size')))],
+      weights: [...new Set(texts.map(t => t.getAttribute('font-weight')))],
+    };
+  });
+  expect(curveSvgTextStyle.count).toBeGreaterThan(0);
+  expect(curveSvgTextStyle.fills).toEqual(['#f3f6ff']);
+  expect(curveSvgTextStyle.fontSizes).toEqual(['12']);
+  expect(curveSvgTextStyle.weights).toEqual(['700']);
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('#cv-compare');
+    return canvas && canvas._chart && canvas.width > 300;
+  });
+  const curveCanvasSharpness = await page.locator('#cv-compare').evaluate(canvas => {
+    const box = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const chart = canvas._chart;
+    const options = chart?.options || chart?.config?.options || {};
+    return {
+      cssWidth: Math.round(box.width),
+      cssHeight: Math.round(box.height),
+      backingWidth: canvas.width,
+      backingHeight: canvas.height,
+      dpr,
+      tickSize: options?.scales?.x?.ticks?.font?.size,
+      maintainAspectRatio: options?.maintainAspectRatio,
+    };
+  });
+  expect(curveCanvasSharpness.backingWidth).toBeGreaterThanOrEqual(Math.floor(curveCanvasSharpness.cssWidth * curveCanvasSharpness.dpr * 0.95));
+  expect(curveCanvasSharpness.backingHeight).toBeGreaterThanOrEqual(Math.floor(curveCanvasSharpness.cssHeight * curveCanvasSharpness.dpr * 0.95));
+  expect(curveCanvasSharpness.tickSize).toBe(13);
+  expect(curveCanvasSharpness.maintainAspectRatio).toBe(false);
 
   await page.locator('.tab[data-p="panel-cult"]').click();
   await expect(page.locator('#realm-grid .realm-card').first()).toBeVisible();

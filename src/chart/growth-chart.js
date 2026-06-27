@@ -284,6 +284,14 @@ export function drawCurveComparison(canvasId, curves, maxLevel) {
   if (!canvas || !curves || !curves.length) return;
 
   if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  var cssWidth = Math.max(1, Math.round(rect.width || canvas.clientWidth || 420));
+  var cssHeight = Math.max(1, Math.round(rect.height || canvas.clientHeight || 180));
+  canvas.width = Math.round(cssWidth * dpr);
+  canvas.height = Math.round(cssHeight * dpr);
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssHeight + 'px';
 
   maxLevel = maxLevel || 20;
   var levels = [];
@@ -323,14 +331,22 @@ export function drawCurveComparison(canvasId, curves, maxLevel) {
     type: 'line',
     data: { labels: levels.map(function(l){return 'Lv.'+l;}), datasets: datasets },
     options: {
-      responsive: true,
+      responsive: false,
+      maintainAspectRatio: false,
+      devicePixelRatio: dpr,
       plugins: {
-        title: { display: true, text: '曲线库对比 (Lv.1–'+maxLevel+')', color: cText, font: {size:14} },
-        legend: { labels: { color: cText2 } }
+        title: { display: true, text: '\u66f2\u7ebf\u5e93\u5bf9\u6bd4\uff08\u7b2c1\u7ea7-' + maxLevel + '\u7ea7\uff09', color: cText, font: { size: 15, weight: '700' } },
+        legend: { labels: { color: cText, font: { size: 12, weight: '600' } } }
       },
       scales: {
-        x: { title: { display: true, text: '等级', color: cText2 }, ticks: { color: cText3 } },
-        y: { title: { display: true, text: '倍率值', color: cText2 }, ticks: { color: cText3 } }
+        x: {
+          title: { display: true, text: '\u7b49\u7ea7', color: cText2, font: { size: 12, weight: '600' } },
+          ticks: { color: cText, font: { size: 13, weight: '700' } }
+        },
+        y: {
+          title: { display: true, text: '\u500d\u7387\u503c', color: cText2, font: { size: 12, weight: '600' } },
+          ticks: { color: cText, font: { size: 13, weight: '700' } }
+        }
       }
     }
   });

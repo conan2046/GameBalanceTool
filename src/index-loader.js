@@ -349,8 +349,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         initCurveLibraryPanel();
   installBranchEditor();
         // 曲线库全曲线对比图
-        if (window.S && window.S.curves) {
-          setTimeout(function(){ drawCurveComparison('cv-compare', window.S.curves, 20); }, 100);
+        const curveState = (window.ProjectState && typeof window.ProjectState.get === 'function') ? window.ProjectState.get() : window.S;
+        if (curveState && curveState.curves) {
+          setTimeout(function(){ drawCurveComparison('cv-compare', curveState.curves, 20); }, 100);
         }
       }
       if (typeof window.initCollapsibleSections === 'function') {
