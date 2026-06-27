@@ -7,6 +7,7 @@ import { CURRENCY_DATA, getExchangeRates } from '../data/currencies.js';
 
 let editingCurrencyId = '';
 let editingVipLevel = null;
+let editingExchangeId = '';
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -103,26 +104,43 @@ function renderVipTable() {
  * 渲染兑换比率
  */
 function renderExchangeRates() {
-  const rates = getExchangeRates();
   const display = document.getElementById('exchange-rates');
   if (!display) return;
 
-  display.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-l">仙玉 → 灵石</div>
-      <div class="stat-v">${rates.jade_to_stone.toLocaleString()} : 1</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-l">灵石 → 现实</div>
-      <div class="stat-v">¥${rates.stone_to_real}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-l">仙玉 → 现实</div>
-      <div class="stat-v">¥${rates.jade_to_real}</div>
+  if (!Array.isArray(CURRENCY_DATA.exchangeRates)) resetExchangeRates(false);
+  display.innerHTML = (CURRENCY_DATA.exchangeRates || []).map(rate => {
+    const label = esc(rate.label || (rate.from + ' \u2192 ' + rate.to));
+    if (editingExchangeId === rate.id) {
+      return `
+        <div class="stat-card exchange-rate-card editing-row">
+          <input class="fc eco-edit-input" id="eco-rate-from-${rate.id}" value="${esc(rate.from)}" placeholder="\u6765\u6e90\u8d27\u5e01">
+          <input class="fc eco-edit-input" id="eco-rate-to-${rate.id}" value="${esc(rate.to)}" placeholder="\u76ee\u6807\u8d27\u5e01">
+          <input class="fc eco-edit-input" id="eco-rate-value-${rate.id}" type="number" step="0.001" value="${Number(rate.value) || 0}" placeholder="\u5151\u6362\u503c">
+          <div class="btn-group" style="justify-content:center;margin-top:8px">
+            <button class="btn btn-primary btn-xs" onclick="saveExchangeRate('${rate.id}')">\u4fdd\u5b58</button>
+            <button class="btn btn-ghost btn-xs" onclick="cancelExchangeRateEdit()">\u53d6\u6d88</button>
+          </div>
+        </div>
+      `;
+    }
+    const valueText = `${esc(rate.prefix || '')}${Number(rate.value || 0).toLocaleString()}${esc(rate.suffix || '')}`;
+    return `
+      <div class="stat-card exchange-rate-card">
+        <div class="stat-l">${label}</div>
+        <div class="stat-v">${valueText}</div>
+        <div class="btn-group" style="justify-content:center;margin-top:8px">
+          <button class="btn btn-ghost btn-xs" onclick="editExchangeRate('${rate.id}')">\u7f16\u8f91</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteExchangeRate('${rate.id}')">\u5220\u9664</button>
+        </div>
+      </div>
+    `;
+  }).join('') + `
+    <div class="btn-group" style="grid-column:1/-1;margin-top:8px">
+      <button class="btn btn-primary btn-xs" onclick="addExchangeRate()">+ \u65b0\u589e</button>
+      <button class="btn btn-ghost btn-xs" onclick="resetExchangeRates()">\u6062\u590d\u9ed8\u8ba4</button>
     </div>
   `;
 }
-
 /**
  * ROI计算
  * @param {number} budget - 总预算
@@ -245,6 +263,59 @@ export function saveVip(level) {
   editingVipLevel = null;
   CURRENCY_DATA.vipThresholds.sort((a, b) => (Number(a.level) || 0) - (Number(b.level) || 0));
   renderVipTable();
+}
+
+export function addExchangeRate() {
+  if (!Array.isArray(CURRENCY_DATA.exchangeRates)) resetExchangeRates(false);
+  const id = 'rate_' + Date.now();
+  CURRENCY_DATA.exchangeRates.push({
+    id,
+    from: '新货币',
+    to: '目标货币',
+    value: 1,
+    suffix: ''
+  });
+  editingExchangeId = id;
+  renderExchangeRates();
+}
+
+export function editExchangeRate(rateId) {
+  editingExchangeId = rateId;
+  renderExchangeRates();
+}
+
+export function cancelExchangeRateEdit() {
+  editingExchangeId = '';
+  renderExchangeRates();
+}
+
+export function saveExchangeRate(rateId) {
+  const item = CURRENCY_DATA.exchangeRates.find(rate => rate.id === rateId);
+  if (!item) return;
+  item.from = document.getElementById(`eco-rate-from-${rateId}`)?.value.trim() || item.from;
+  item.to = document.getElementById(`eco-rate-to-${rateId}`)?.value.trim() || item.to;
+  item.value = parseFloat(document.getElementById(`eco-rate-value-${rateId}`)?.value) || 0;
+  item.label = `${item.from} \u2192 ${item.to}`;
+  editingExchangeId = '';
+  renderExchangeRates();
+}
+
+export function deleteExchangeRate(rateId) {
+  const idx = CURRENCY_DATA.exchangeRates.findIndex(rate => rate.id === rateId);
+  if (idx === -1) return;
+  CURRENCY_DATA.exchangeRates.splice(idx, 1);
+  if (editingExchangeId === rateId) editingExchangeId = '';
+  renderExchangeRates();
+}
+
+export function resetExchangeRates(shouldRender = true) {
+  CURRENCY_DATA.exchangeRates = [
+    { id: 'jade_to_stone', from: '仙玉', to: '灵石', value: 10000, suffix: ': 1' },
+    { id: 'stone_to_real', from: '灵石', to: '现实', value: 0.001, prefix: '¥' },
+    { id: 'jade_to_real', from: '仙玉', to: '现实', value: 0.1, prefix: '¥' }
+  ];
+  editingExchangeId = '';
+  if (shouldRender) renderExchangeRates();
 }
 
 export function deleteVip(level) {

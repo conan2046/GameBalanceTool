@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.20 envelopes', () => {
+test('project versioning restores current v3.10.21 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.20 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.20');
+  expect(restored.to).toBe('3.10.21');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.20');
-  await expect(page.locator('#app-release-name')).toHaveText('经济配置行编辑修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.21');
+  await expect(page.locator('#app-release-name')).toHaveText('兑换比率配置修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -201,6 +201,22 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await page.locator('#vip-table button[onclick="saveVip(1)"]').click();
   await expect(page.locator('#vip-table')).toContainText('¥188');
   await expect(page.locator('#vip-table')).toContainText('测试特权');
+
+  await expect(page.locator('#exchange-rates')).toContainText('编辑');
+  await expect(page.locator('#exchange-rates')).toContainText('删除');
+  await page.locator('#exchange-rates button[onclick="editExchangeRate(\\\'jade_to_stone\\\')"]').click();
+  await page.locator('#eco-rate-from-jade_to_stone').fill('测试A');
+  await page.locator('#eco-rate-to-jade_to_stone').fill('测试B');
+  await page.locator('#eco-rate-value-jade_to_stone').fill('123');
+  await page.locator('#exchange-rates button[onclick="saveExchangeRate(\\\'jade_to_stone\\\')"]').click();
+  await expect(page.locator('#exchange-rates')).toContainText('测试A');
+  await expect(page.locator('#exchange-rates')).toContainText('123');
+  await page.locator('#exchange-rates button[onclick="addExchangeRate()"]').click();
+  await expect(page.locator('#exchange-rates .eco-edit-input')).toHaveCount(3);
+  await page.locator('#exchange-rates button[onclick="cancelExchangeRateEdit()"]').click();
+  const exchangeCardCountAfterAdd = await page.locator('#exchange-rates .exchange-rate-card').count();
+  await page.locator('#exchange-rates .exchange-rate-card').last().locator('button[onclick^="deleteExchangeRate"]').click();
+  await expect(page.locator('#exchange-rates .exchange-rate-card')).toHaveCount(exchangeCardCountAfterAdd - 1);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

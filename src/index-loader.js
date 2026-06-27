@@ -16,7 +16,7 @@ import { CURRENCY_DATA } from './data/currencies.js';
 import { initClassPanel, selectClass, toggleDamageType, addClass, deleteClass, addDamageType, deleteDamageType, editClass, saveClass, setSimCount, setClassLevel } from './ui/class-panel.js';
 import { initRealmPanel, switchRealmType, selectRealm, updateRealmField, renderRealmDiffTable, addRealm, deleteRealm, resetRealms } from './ui/realm-panel.js';
 import { initEquipmentPanel, previewQualityEffect, calcEquipTotalPower, updateRefineDisplay, addSlot, deleteSlot, resetEquipment, openSlotModal, saveSlotModal } from './ui/equipment-panel.js';
-import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, editCurrency, saveCurrency, cancelCurrencyEdit, deleteCurrency, resetCurrencies, addVip, editVip, saveVip, cancelVipEdit, deleteVip, resetVip } from './ui/economy-panel.js';
+import { initEconomyPanel, calcROI, evaluatePackQuality, addCurrency, editCurrency, saveCurrency, cancelCurrencyEdit, deleteCurrency, resetCurrencies, addVip, editVip, saveVip, cancelVipEdit, deleteVip, resetVip, addExchangeRate, editExchangeRate, saveExchangeRate, cancelExchangeRateEdit, deleteExchangeRate, resetExchangeRates } from './ui/economy-panel.js';
 import { renderCultPanel, toggleLine, previewBranchCurve } from './ui/cultivation-panel.js';
 import { ATTRS, ATTR_MAP } from './data/attrs.js';
 
@@ -89,6 +89,12 @@ window.saveVip = saveVip;
 window.cancelVipEdit = cancelVipEdit;
 window.deleteVip = deleteVip;
 window.resetVip = resetVip;
+window.addExchangeRate = addExchangeRate;
+window.editExchangeRate = editExchangeRate;
+window.saveExchangeRate = saveExchangeRate;
+window.cancelExchangeRateEdit = cancelExchangeRateEdit;
+window.deleteExchangeRate = deleteExchangeRate;
+window.resetExchangeRates = resetExchangeRates;
 
 // 导出/持久化
 window.exportV3Data = exportV3Data;

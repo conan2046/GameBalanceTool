@@ -62,6 +62,11 @@ export const CURRENCY_DATA = {
       exchangeRate: '不可交易'
     }
   ],
+  exchangeRates: [
+    { id: 'jade_to_stone', from: '仙玉', to: '灵石', value: 10000, suffix: ': 1' },
+    { id: 'stone_to_real', from: '灵石', to: '现实', value: 0.001, prefix: '¥' },
+    { id: 'jade_to_real', from: '仙玉', to: '现实', value: 0.1, prefix: '¥' }
+  ],
   vipThresholds: [
     { level: 1, cumulative: 100, perk: '自动修炼、每日礼包×1' },
     { level: 2, cumulative: 500, perk: '+1% 修为获取' },
@@ -95,9 +100,12 @@ export function getVipPerks(vipLevel) {
  * 获取货币兑换比例
  */
 export function getExchangeRates() {
-  return {
-    jade_to_stone: 10000,
-    stone_to_real: 0.001, // 1灵石 = 0.001元
-    jade_to_real: 0.1     // 1仙玉 = 0.1元 (10元=100仙玉)
-  };
+  const rates = {};
+  (CURRENCY_DATA.exchangeRates || []).forEach(rate => {
+    rates[rate.id] = Number(rate.value) || 0;
+  });
+  if (!('jade_to_stone' in rates)) rates.jade_to_stone = 10000;
+  if (!('stone_to_real' in rates)) rates.stone_to_real = 0.001;
+  if (!('jade_to_real' in rates)) rates.jade_to_real = 0.1;
+  return rates;
 }
