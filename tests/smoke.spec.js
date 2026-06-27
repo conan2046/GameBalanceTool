@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.12 envelopes', () => {
+test('project versioning restores current v3.10.13 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.12 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.12');
+  expect(restored.to).toBe('3.10.13');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.12');
-  await expect(page.locator('#app-release-name')).toHaveText('沙盘属性横排修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.13');
+  await expect(page.locator('#app-release-name')).toHaveText('职业属性紧凑修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -317,6 +317,9 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
     const input = levelRow.querySelector('input').getBoundingClientRect();
     const stats = panel.querySelector('.class-card .class-stats');
     const statItems = Array.from(stats.querySelectorAll('.class-stat-item')).map(item => item.getBoundingClientRect());
+    const firstItem = stats.querySelector('.class-stat-item');
+    const firstLabel = firstItem.querySelector('.label').getBoundingClientRect();
+    const firstValue = firstItem.querySelector('.value').getBoundingClientRect();
     const firstRowTops = statItems.slice(0, 2).map(item => Math.round(item.top));
     const secondRowTop = Math.round(statItems[2]?.top || 0);
     return {
@@ -325,6 +328,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
       gridColumns: getComputedStyle(stats).gridTemplateColumns.split(' ').length,
       firstTwoShareRow: firstRowTops.length === 2 && firstRowTops[0] === firstRowTops[1],
       thirdStartsNextRow: secondRowTop > firstRowTops[0],
+      statPairGap: Math.round(firstValue.left - firstLabel.right),
+      labelLeftOfValue: firstLabel.right <= firstValue.left,
     };
   });
   expect(classPanelLayout.sameCenterLine).toBe(true);
@@ -332,6 +337,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(classPanelLayout.gridColumns).toBe(2);
   expect(classPanelLayout.firstTwoShareRow).toBe(true);
   expect(classPanelLayout.thirdStartsNextRow).toBe(true);
+  expect(classPanelLayout.labelLeftOfValue).toBe(true);
+  expect(classPanelLayout.statPairGap).toBeLessThanOrEqual(6);
   await expect(page.locator('#kill-matrix')).toContainText('模拟场次');
   await expect(page.locator('#kill-matrix')).toContainText('重新模拟');
   await expect(page.locator('#kill-matrix')).toContainText('回合');
