@@ -696,7 +696,15 @@ textarea.fc{resize:vertical;min-height:70px}
           </div>
           <div class="combat-config-pane" id="combat-target-parser">
             <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单体系目标战力解析器</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+              <span style="font-size:12px;font-weight:700;color:var(--accent2)">进攻方属性</span>
+            </div>
             <div class="combat-attr-grid" id="combat-attr-inputs"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 6px">
+              <span style="font-size:12px;font-weight:700;color:var(--danger)">守方目标属性</span>
+              <button class="btn btn-ghost btn-xs" onclick="syncDefenderCombatAttrsFromAttacker()">按推荐生成</button>
+            </div>
+            <div class="combat-attr-grid" id="combat-defender-attr-inputs"></div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
               <div style="background:var(--bg2);padding:8px 10px;border-radius:6px;border:1px solid var(--border)">
                 <div style="font-size:11px;color:var(--text3)">单次最大伤害</div>
@@ -2347,34 +2355,58 @@ function getCombatAttrKey(attr){
   return attr&&attr.id||'';
 }
 
-function getCombatAttrInputId(attrId){
-  return 'cb-attr-'+String(attrId||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+function getCombatAttrInputId(attrId,side){
+  var prefix=side==='defender'?'cb-def-attr-':'cb-attr-';
+  return prefix+String(attrId||'').replace(/[^a-zA-Z0-9_-]/g,'_');
 }
 
-function renderCombatAttrInputs(){
-  var box=document.getElementById('combat-attr-inputs');
+function getDefaultDefenderCombatAttr(attr,attackerValues){
+  var key=getCombatAttrKey(attr);
+  var base=Number(attackerValues&&attackerValues[attr.id]!==undefined?attackerValues[attr.id]:attr.base||0);
+  if(key==='atk')return Math.max(1,Math.round(base*0.88));
+  if(key==='def')return Math.max(1,Math.round(base*1.05));
+  if(key==='spd')return Math.max(1,Math.round(base*0.92));
+  if(key==='crit')return Math.max(0,Math.round(base*0.75));
+  return base;
+}
+
+function renderCombatAttrInputGroup(boxId,side,attackerValues,forceDefaults){
+  var box=document.getElementById(boxId);
   if(!box)return;
   var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
   var sig=attrs.map(function(attr){return attr.id+'|'+attr.name+'|'+attr.base;}).join('||');
-  if(box.dataset.attrSig===sig&&box.children.length)return;
+  if(!forceDefaults&&box.dataset.attrSig===sig&&box.children.length)return;
   var previous={};
   box.querySelectorAll('[data-combat-attr]').forEach(function(input){
     previous[input.dataset.combatAttr]=input.value;
   });
   box.innerHTML=attrs.length?attrs.map(function(attr){
-    var inputId=getCombatAttrInputId(attr.id);
-    var val=previous[attr.id] ?? attr.base ?? 0;
+    var inputId=getCombatAttrInputId(attr.id,side);
+    var defaultVal=side==='defender'?getDefaultDefenderCombatAttr(attr,attackerValues):(attr.base ?? 0);
+    var val=forceDefaults?defaultVal:(previous[attr.id] ?? defaultVal);
     return '<div class="field"><label>'+attr.name+'</label><input type="number" class="fc" id="'+inputId+'" data-combat-attr="'+attr.id+'" value="'+val+'" oninput="runCombatSim2()"></div>';
   }).join(''):'<div class="help-block">请先在“属性与权重”页配置基础二级属性。</div>';
   box.dataset.attrSig=sig;
 }
 
-function readCombatAttrs(){
+function renderCombatAttrInputs(forceDefenderDefaults){
+  renderCombatAttrInputGroup('combat-attr-inputs','attacker',null,false);
+  var attackerValues=readCombatAttrs('attacker').attrs;
+  renderCombatAttrInputGroup('combat-defender-attr-inputs','defender',attackerValues,!!forceDefenderDefaults);
+}
+
+function syncDefenderCombatAttrsFromAttacker(){
+  renderCombatAttrInputs(true);
+  runCombatSim2();
+}
+
+function readCombatAttrs(side){
   var values={};
   var semantic={};
   var attrs=(S&&Array.isArray(S.attrs)?S.attrs:[]);
+  var targetSide=side==='defender'?'defender':'attacker';
   attrs.forEach(function(attr){
-    var input=document.getElementById(getCombatAttrInputId(attr.id));
+    var input=document.getElementById(getCombatAttrInputId(attr.id,targetSide));
     var val=parseFloat(input?input.value:attr.base);
     if(!Number.isFinite(val))val=Number(attr.base||0);
     values[attr.id]=val;
@@ -2455,10 +2487,11 @@ function playCombatAnimation(){
 }
 
 function runCombatSim2(){
-  // 安全读取输入值
   var $=function(id){var el=document.getElementById(id);return el?el:null;};
+  // 安全读取输入值
   renderCombatAttrInputs();
-  var combatAttrs=readCombatAttrs();
+  var combatAttrs=readCombatAttrs('attacker');
+  var defenderCombatAttrs=readCombatAttrs('defender');
   var atk=combatAttrs.atk;
   var def=combatAttrs.def;
   var hp=combatAttrs.hp;
@@ -2467,6 +2500,12 @@ function runCombatSim2(){
   var bonus=parseFloat($('cb-bonus')?$('cb-bonus').value:0)||0;
   var minPct=parseFloat($('cb-min-pct')?$('cb-min-pct').value:10)||10;
   var spd=combatAttrs.spd;
+  var defenderAtk=defenderCombatAttrs.atk;
+  var defenderDef=defenderCombatAttrs.def;
+  var defenderHpMax=defenderCombatAttrs.hp;
+  var defenderCrit=defenderCombatAttrs.crit;
+  var defenderCritDmg=defenderCombatAttrs.critDmg;
+  var defenderSpd=defenderCombatAttrs.spd;
 
   // ── 战力评分计算：综合战力 = 攻击×权重 + 防御×权重 + 血量×权重 + 暴击期望 + 速度 ──
   // 引用魔与道2/寻道大千模型：ATK权重1.0 + DEF权重0.8 + HP权重0.2 + 暴击期望2.5 + 速度0.3
@@ -2477,11 +2516,11 @@ function runCombatSim2(){
   },0));
 
   // ── 战斗结果推演 ──
-  var dmgNormal=calcDamageByFormula(atk,def,hp,crit,critDmg,bonus,minPct);
+  var dmgNormal=calcDamageByFormula(atk,defenderDef,defenderHpMax,crit,critDmg,bonus,minPct);
   if(!dmgNormal||isNaN(dmgNormal)||dmgNormal<=0) dmgNormal=Math.round(atk*0.5);
   var dmgCrit=Math.round(dmgNormal*(1+critDmg/100));
   var expectedDmg=Math.round(dmgNormal*(1+crit/100*critDmg/100));
-  var rounds=expectedDmg>0?Math.ceil(hp/expectedDmg):999;
+  var rounds=expectedDmg>0?Math.ceil(defenderHpMax/expectedDmg):999;
   if(rounds>25) rounds=25;
 
   // 写入解析器
@@ -2496,29 +2535,16 @@ function runCombatSim2(){
   // ── 沙盘对决水位表 ──
   var tbl=document.querySelector('#tbl-cb-log tbody');
   if(tbl) tbl.innerHTML='';
-  var attackerHp=hp;var defenderHp=hp;var rounds2=0;var hpHist=[hp];var attackerHist=[hp];var lbls=['初始'];
-  var defenderAtk=Math.max(1,Math.round(atk*0.88));
-  var defenderDef=Math.max(1,Math.round(def*1.05));
-  var defenderSpd=Math.max(1,Math.round(spd*0.92));
-  var defenderCrit=Math.max(0,Math.round(crit*0.75));
-  var defenderAttrValues=Object.assign({},combatAttrs.attrs);
-  (S.attrs||[]).forEach(function(attr){
-    var key=getCombatAttrKey(attr);
-    if(key==='atk')defenderAttrValues[attr.id]=defenderAtk;
-    else if(key==='def')defenderAttrValues[attr.id]=defenderDef;
-    else if(key==='hp')defenderAttrValues[attr.id]=hp;
-    else if(key==='spd')defenderAttrValues[attr.id]=defenderSpd;
-    else if(key==='crit')defenderAttrValues[attr.id]=defenderCrit;
-    else if(key==='critDmg')defenderAttrValues[attr.id]=critDmg;
-  });
+  var attackerHp=hp;var defenderHp=defenderHpMax;var rounds2=0;var hpHist=[defenderHpMax];var attackerHist=[hp];var lbls=['初始'];
+  var defenderAttrValues=Object.assign({},defenderCombatAttrs.attrs);
   setCombatRoleStats('cb-attacker-stats',{atk:atk,def:def,hp:hp,spd:spd,crit:crit,critDmg:critDmg,attrs:combatAttrs.attrs});
-  setCombatRoleStats('cb-defender-stats',{atk:defenderAtk,def:defenderDef,hp:hp,spd:defenderSpd,crit:defenderCrit,critDmg:critDmg,attrs:defenderAttrValues});
-  var defenderDmgNormal=calcDamageByFormula(defenderAtk,defenderDef,hp,defenderCrit,critDmg,bonus,minPct);
+  setCombatRoleStats('cb-defender-stats',{atk:defenderAtk,def:defenderDef,hp:defenderHpMax,spd:defenderSpd,crit:defenderCrit,critDmg:defenderCritDmg,attrs:defenderAttrValues});
+  var defenderDmgNormal=calcDamageByFormula(defenderAtk,def,hp,defenderCrit,defenderCritDmg,bonus,minPct);
   if(!defenderDmgNormal||isNaN(defenderDmgNormal)||defenderDmgNormal<=0) defenderDmgNormal=Math.round(defenderAtk*0.5);
-  var defenderDmgCrit=Math.round(defenderDmgNormal*(1+critDmg/100));
+  var defenderDmgCrit=Math.round(defenderDmgNormal*(1+defenderCritDmg/100));
   cbBattleInitialHp=hp;
   cbBattleInitialAttackerHp=hp;
-  cbBattleInitialDefenderHp=hp;
+  cbBattleInitialDefenderHp=defenderHpMax;
   cbBattleFrames=[];
   window.cbBattleFrames=cbBattleFrames;
   var attackerFirst=spd>=defenderSpd;
