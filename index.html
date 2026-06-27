@@ -162,8 +162,8 @@ textarea.fc{resize:vertical;min-height:70px}
 .roi-bar-fill.cs5{background:linear-gradient(90deg,#ff8a65,#ff5722)}
 .roi-sys-graph{display:flex;align-items:flex-end;gap:2px;height:30px;margin-bottom:8px}
 .roi-sys-graph .bar{width:14px;border-radius:2px 2px 0 0;min-height:2px;transition:height .3s}
-.roi-sys-btn{display:block;width:100%;padding:8px;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:6px;transition:opacity .2s}
-.roi-sys-btn:disabled{opacity:.35;cursor:not-allowed}
+.roi-sys-btn{display:block;width:100%;padding:8px;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:#f5f7fb;color:#111827;font-size:12px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:6px;transition:opacity .2s}
+.roi-sys-btn:disabled{opacity:1;cursor:not-allowed;background:#f5f7fb!important;color:#111827!important}
 .roi-sys-btn:hover:not(:disabled){opacity:.85}
 .roi-sys-info{font-size:10px;color:var(--text3);line-height:1.4}
 .roi-comp-area{margin-top:12px}
@@ -319,8 +319,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.8</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">境界指标横排修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.9</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投资按钮可读性修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -3059,7 +3059,7 @@ function roiRenderAll(){
       +'<div class="roi-sys-sub">已升 '+lvl+'/'+maxLv+' 级 | 下一级成本: ¥'+cost.toLocaleString()+'</div>'
       +'<div class="roi-bar-track"><div class="roi-bar-fill '+sys.color+'" style="width:'+Math.min(100,barW)+'%"></div></div>'
       +'<div class="roi-sys-graph">'+(bars.length?bars.join(''):'<div style="color:var(--text3);font-size:10px;padding:8px;width:100%;text-align:center">未投资</div>')+'</div>'
-      +'<button class="roi-sys-btn" style="background:linear-gradient(135deg,'+bg1+','+bg2+')" onclick="roiInvest(\''+sys.id+'\')" '+(canInvest?'':'disabled')+'>投资 ¥'+cost.toLocaleString()+'</button>'
+      +'<button class="roi-sys-btn" onclick="roiInvest(\''+sys.id+'\')" '+(canInvest?'':'disabled')+'>投资 ¥'+cost.toLocaleString()+'</button>'
       +'<div class="roi-sys-info">每级增长: +'+sys.perLvl+' 战力 | 曲线: '+ ({linear:'线性',diminishing:'边际递减',logarithmic:'对数',sqrt:'平方根',power:'幂函数',expo:'指数',exponential:'指数饱和',sigmoid:'平滑过渡型'}[sys.curveType]||sys.curveType||'线性')+'</div>'
       +'</div>';
   });

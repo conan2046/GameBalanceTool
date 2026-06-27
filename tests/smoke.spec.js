@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.8 envelopes', () => {
+test('project versioning restores current v3.10.9 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.8 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.8');
+  expect(restored.to).toBe('3.10.9');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.8');
-  await expect(page.locator('#app-release-name')).toHaveText('境界指标横排修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.9');
+  await expect(page.locator('#app-release-name')).toHaveText('投资按钮可读性修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -354,6 +354,22 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
 
   await page.locator('.tab[data-p="panel-roi2"]').click();
   await expect(page.locator('#roi-sys-grid .roi-sys-card').first()).toBeVisible();
+  const investButtonStyles = await page.locator('#roi-sys-grid').evaluate(grid => {
+    return Array.from(grid.querySelectorAll('.roi-sys-btn')).map(button => {
+      const style = getComputedStyle(button);
+      return {
+        background: style.backgroundColor,
+        color: style.color,
+        opacity: style.opacity,
+        text: button.textContent.trim(),
+      };
+    });
+  });
+  expect(investButtonStyles.length).toBeGreaterThan(0);
+  expect(investButtonStyles.every(style => style.text.includes('投资'))).toBe(true);
+  expect(investButtonStyles.every(style => style.background === 'rgb(245, 247, 251)')).toBe(true);
+  expect(investButtonStyles.every(style => style.color === 'rgb(17, 24, 39)')).toBe(true);
+  expect(investButtonStyles.every(style => style.opacity === '1')).toBe(true);
   await expect(page.locator('#project-scenario-panel')).not.toBeEmpty();
   const roiSectionState = await page.locator('#panel-roi2').evaluate(panel => {
     const sections = Array.from(panel.querySelectorAll('.section'));
