@@ -307,8 +307,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.2</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战力层级折叠修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.3</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">经济页折叠修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -610,53 +610,69 @@ textarea.fc{resize:vertical;min-height:70px}
     </div>
     <div class="panel" id="panel-eco">
       <!-- ========== v3.0新增: 7层货币体系 ========== -->
-      <div class="card">
-        <div class="card-title">7层货币体系</div>
-        <div class="tbl-wrap">
-          <table class="tbl" id="currency-table">
-            <thead><tr><th>货币</th><th>层级</th><th>用途</th><th>来源</th><th>兑换比率</th><th>操作</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <div class="section" id="eco-currency-section">
+        <div class="section-header">
+          <span class="section-title">7层货币体系</span>
         </div>
-        <div class="btn-group" style="margin-top:8px">
-          <button class="btn btn-primary btn-xs" onclick="addCurrency()">+ 新增</button>
-          <button class="btn btn-ghost btn-xs" onclick="resetCurrencies()">恢复默认</button>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="tbl" id="currency-table">
+              <thead><tr><th>货币</th><th>层级</th><th>用途</th><th>来源</th><th>兑换比率</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-primary btn-xs" onclick="addCurrency()">+ 新增</button>
+            <button class="btn btn-ghost btn-xs" onclick="resetCurrencies()">恢复默认</button>
+          </div>
         </div>
       </div>
       
       <!-- ========== v3.0新增: 贵宾等级特权 ========== -->
-      <div class="card">
-        <div class="card-title">贵宾等级特权体系</div>
-        <div class="tbl-wrap">
-          <table class="tbl" id="vip-table">
-            <thead><tr><th>贵宾等级</th><th>累计充值(元)</th><th>特权描述</th><th>操作</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <div class="section" id="eco-vip-section">
+        <div class="section-header">
+          <span class="section-title">贵宾等级特权体系</span>
         </div>
-        <div class="btn-group" style="margin-top:8px">
-          <button class="btn btn-primary btn-xs" onclick="addVip()">+ 新增</button>
-          <button class="btn btn-ghost btn-xs" onclick="resetVip()">恢复默认</button>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="tbl" id="vip-table">
+              <thead><tr><th>贵宾等级</th><th>累计充值(元)</th><th>特权描述</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-primary btn-xs" onclick="addVip()">+ 新增</button>
+            <button class="btn btn-ghost btn-xs" onclick="resetVip()">恢复默认</button>
+          </div>
         </div>
       </div>
       
       <!-- ========== v3.0新增: 兑换比率 ========== -->
-      <div class="card">
-        <div class="card-title">货币兑换比率</div>
-        <div id="exchange-rates" class="stats-grid" style="grid-template-columns:repeat(3,1fr)"></div>
-        <div class="help-block" style="margin-top:8px">点击数值可直接修改兑换比率</div>
+      <div class="section" id="eco-exchange-section">
+        <div class="section-header">
+          <span class="section-title">货币兑换比率</span>
+        </div>
+        <div class="section-body">
+          <div id="exchange-rates" class="stats-grid" style="grid-template-columns:repeat(3,1fr)"></div>
+          <div class="help-block" style="margin-top:8px">点击数值可直接修改兑换比率</div>
+        </div>
       </div>
       
       <!-- ========== 保留原有: 日常产出配置 ========== -->
-      <div class="card">
-        <div class="card-title">日常系统产出与副本活动产出模型配置</div>
-        <div class="tbl-wrap">
-          <table class="tbl" id="tbl-eco-config">
-            <thead><tr><th>代币/资源编号</th><th>资源名称</th><th>免费产出</th><th>小额付费加成</th><th>中额付费加成</th><th>大额付费加成</th><th>超高付费加成</th><th>单日获取上限</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <div class="section" id="eco-output-section">
+        <div class="section-header">
+          <span class="section-title">日常系统产出与副本活动产出模型配置</span>
         </div>
-        <div class="btn-group">
-          <button class="btn btn-success" onclick="saveEconomyData()">锁定产出数据</button>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="tbl" id="tbl-eco-config">
+              <thead><tr><th>代币/资源编号</th><th>资源名称</th><th>免费产出</th><th>小额付费加成</th><th>中额付费加成</th><th>大额付费加成</th><th>超高付费加成</th><th>单日获取上限</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="saveEconomyData()">锁定产出数据</button>
+          </div>
         </div>
       </div>
     </div>

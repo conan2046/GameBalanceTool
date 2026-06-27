@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.2 envelopes', () => {
+test('project versioning restores current v3.10.3 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.2 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.2');
+  expect(restored.to).toBe('3.10.3');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.2');
-  await expect(page.locator('#app-release-name')).toHaveText('战力层级折叠修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.3');
+  await expect(page.locator('#app-release-name')).toHaveText('经济页折叠修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -69,6 +69,26 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(cultSectionState.firstThreeOpen).toBe(true);
   if (cultSectionState.count > 3) expect(cultSectionState.fourthCollapsed).toBe(true);
   expect(cultSectionState.toggleCount).toBe(cultSectionState.count);
+
+  await page.locator('.tab[data-p="panel-eco"]').click();
+  const ecoSectionState = await page.locator('#panel-eco').evaluate(panel => {
+    const sections = Array.from(panel.querySelectorAll('.section'));
+    return {
+      count: sections.length,
+      firstThreeOpen: sections.slice(0, 3).every(section => !section.classList.contains('is-collapsed')),
+      fourthCollapsed: sections[3]?.classList.contains('is-collapsed') || false,
+      toggleCount: sections.filter(section => section.querySelector(':scope > .section-header > .section-collapse-toggle')).length,
+    };
+  });
+  expect(ecoSectionState.count).toBe(4);
+  expect(ecoSectionState.firstThreeOpen).toBe(true);
+  expect(ecoSectionState.fourthCollapsed).toBe(true);
+  expect(ecoSectionState.toggleCount).toBe(ecoSectionState.count);
+  await expect(page.locator('#eco-currency-section .section-body')).toBeVisible();
+  await page.locator('#eco-currency-section .section-collapse-toggle').click();
+  await expect(page.locator('#eco-currency-section')).toHaveClass(/is-collapsed/);
+  await page.locator('#eco-currency-section .section-collapse-toggle').click();
+  await expect(page.locator('#eco-currency-section')).not.toHaveClass(/is-collapsed/);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));
