@@ -241,7 +241,7 @@ textarea.fc{resize:vertical;min-height:70px}
 .level-ops{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
 .level-ops .btn-xs{padding:3px 8px;font-size:10px;border-radius:4px}
 .level-ops span{font-size:11px;color:var(--text2)}
-.realm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.realm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:-6px;margin-bottom:10px}
 .metric-c{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:4px;min-height:42px;text-align:left}
 .metric-c .ml{font-size:12px;color:var(--text2);margin:0;white-space:nowrap}
 .metric-c .mv{font-size:18px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -341,8 +341,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.26</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">击杀矩阵居中修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.27</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成图表显示修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -502,7 +502,7 @@ textarea.fc{resize:vertical;min-height:70px}
         <div class="section-header">
           <span class="section-title">境界修炼系统</span>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <span style="font-size:10px;color:var(--text3)" id="realm-type-label">修为</span>
+            <span style="display:none" id="realm-type-label"></span>
             <button class="btn btn-ghost btn-xs" onclick="switchRealmType('cultivation')">修为</button>
             <button class="btn btn-ghost btn-xs" onclick="switchRealmType('body')">炼体</button>
             <button class="btn btn-primary btn-xs" onclick="addRealm()">+大境界</button>
@@ -3315,7 +3315,7 @@ function buildRealmChart(svgId,vals,color){
     <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
     <circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="3" fill="${color}" stroke="var(--bg)" stroke-width="1.5"/>
     <line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${(h-2).toFixed(1)}" stroke="${color}" stroke-width="0.5" stroke-dasharray="2,2"/>
-    <text x="${(w/2).toFixed(1)}" y="${(h-2).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--text3)">${vals[ai2].toLocaleString()}</text>`;
+    <text x="${(w/2).toFixed(1)}" y="${(h-2).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--text)">${vals[ai2].toLocaleString()}</text>`;
 }
 
 function renderRealms(){
@@ -3336,7 +3336,7 @@ function renderRealms(){
   const r=_R()[realmIdx];
   $('cr-name').textContent=r.name;
   $('cr-sub').textContent=r.desc;
-  $('realm-type-label').textContent=realmType==='cultivation'?'修为':'炼体';
+  $('realm-type-label').textContent='';
   const lvs=_RL();
   lb.innerHTML=lvs.map(l=>{
     const act=l.level===realmLevel?' active':'';
@@ -3571,6 +3571,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.26"></script>
+<script type="module" src="src/index-loader.js?v=3.10.27"></script>
 </body>
 </html>
