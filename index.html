@@ -329,8 +329,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.15</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战力层级输入居中修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.16</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">战斗日志字段拆分修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -840,7 +840,7 @@ textarea.fc{resize:vertical;min-height:70px}
           <div class="card-title" style="font-size:13px;padding:0 0 8px 0;border:none">单回合双边生命值跌落追踪水位表</div>
           <div class="tbl-wrap combat-log-wrap">
             <table class="tbl" id="tbl-cb-log">
-              <thead><tr><th>当前轮次</th><th>伤害结算扣减</th><th>蓝方剩余生命值水位</th><th>战场即时态势评估</th></tr></thead>
+              <thead><tr><th>当前轮次</th><th>攻方伤害</th><th>守方伤害</th><th>攻方剩余生命</th><th>守方剩余生命</th><th>战场即时态势评估</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -2821,13 +2821,14 @@ function runCombatSim2(){
     if(!first.winner) second=pushCombatAction(secondSide,rounds2,2);
     hpHist.push(defenderHp);attackerHist.push(attackerHp);lbls.push('第'+rounds2+'轮');
     if(tbl&&rounds2<=12){
-      var status=(first.winner||second&&second.winner)?'战斗结束':'双方完成出手';
+      var winner=(first.winner||second&&second.winner||'');
+      var status=winner?(winner==='attacker'?'攻方胜利':'守方胜利'):'双方完成出手';
       var statusColor=(first.winner||second&&second.winner)?'var(--accent)':'var(--text2)';
-      var firstLabel=firstSide==='attacker'?'攻方':'守方';
-      var secondLabel=secondSide==='attacker'?'攻方':'守方';
-      var dmgText=firstLabel+' -'+first.dmg.toLocaleString()+(first.isCrit?' 暴击':'');
-      if(second)dmgText+=' / '+secondLabel+' -'+second.dmg.toLocaleString()+(second.isCrit?' 暴击':'');
-      tbl.innerHTML+='<tr><td>第 '+rounds2+' 回合</td><td style="color:var(--danger)">'+dmgText+'</td><td style="font-variant-numeric:tabular-nums;font-weight:bold;color:var(--accent2)">攻 '+attackerHp.toLocaleString()+' / 守 '+defenderHp.toLocaleString()+'</td><td style="color:'+statusColor+'">'+status+'</td></tr>';
+      var attackerAction=firstSide==='attacker'?first:(secondSide==='attacker'?second:null);
+      var defenderAction=firstSide==='defender'?first:(secondSide==='defender'?second:null);
+      var attackerDmg=attackerAction?('-'+attackerAction.dmg.toLocaleString()+(attackerAction.isCrit?' 暴击':'')):'-';
+      var defenderDmg=defenderAction?('-'+defenderAction.dmg.toLocaleString()+(defenderAction.isCrit?' 暴击':'')):'-';
+      tbl.innerHTML+='<tr><td>第 '+rounds2+' 回合</td><td style="color:var(--danger)">'+attackerDmg+'</td><td style="color:var(--danger)">'+defenderDmg+'</td><td style="font-variant-numeric:tabular-nums;font-weight:bold;color:var(--accent2)">'+attackerHp.toLocaleString()+'</td><td style="font-variant-numeric:tabular-nums;font-weight:bold;color:var(--accent2)">'+defenderHp.toLocaleString()+'</td><td style="color:'+statusColor+'">'+status+'</td></tr>';
     }
   }
   var stage=document.getElementById('cb-battle-stage');

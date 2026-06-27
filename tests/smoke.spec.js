@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.15 envelopes', () => {
+test('project versioning restores current v3.10.16 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.15 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.15');
+  expect(restored.to).toBe('3.10.16');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.15');
-  await expect(page.locator('#app-release-name')).toHaveText('战力层级输入居中修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.16');
+  await expect(page.locator('#app-release-name')).toHaveText('战斗日志字段拆分修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -286,6 +286,17 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(combatChartPixels.visiblePixels).toBeGreaterThan(1000);
   expect(combatChartPixels.redPixels).toBeGreaterThan(50);
   expect(combatChartPixels.greenPixels).toBeGreaterThan(50);
+  const combatLogShape = await page.locator('#tbl-cb-log').evaluate(table => {
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const lastCells = Array.from(rows[rows.length - 1].children).map(td => td.textContent.trim());
+    return { headers, rowCount: rows.length, lastCells };
+  });
+  expect(combatLogShape.headers).toEqual(['当前轮次', '攻方伤害', '守方伤害', '攻方剩余生命', '守方剩余生命', '战场即时态势评估']);
+  expect(combatLogShape.rowCount).toBeGreaterThan(0);
+  expect(combatLogShape.lastCells).toHaveLength(6);
+  expect(combatLogShape.lastCells[5]).toMatch(/攻方胜利|守方胜利/);
+  expect(combatLogShape.lastCells[5]).not.toBe('战斗结束');
 
   await expect(page.locator('#cb-attacker-card .fighter-sprite')).toBeVisible();
   await expect(page.locator('#cb-defender-card .fighter-sprite')).toBeVisible();
