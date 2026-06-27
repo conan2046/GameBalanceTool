@@ -167,6 +167,7 @@ textarea.fc{resize:vertical;min-height:70px}
 .roi-sys-btn:hover:not(:disabled){opacity:.85}
 .roi-sys-info{font-size:10px;color:var(--text3);line-height:1.4}
 .roi-comp-area{margin-top:12px}
+.roi-result-stack{display:grid;grid-template-columns:1fr;gap:16px}
 .roi-comp-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .roi-comp-label{width:130px;font-size:12px;font-weight:600;flex-shrink:0}
 .roi-comp-bar{flex:1;height:26px;background:var(--bg3);border-radius:4px;overflow:hidden}
@@ -307,8 +308,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.4</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">付费页折叠修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.5</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">投入回报页折叠修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -858,26 +859,41 @@ textarea.fc{resize:vertical;min-height:70px}
       </div>
 
       <!-- 系统卡片网格 -->
-      <div class="roi-sys-grid" id="roi-sys-grid"></div>
+      <div class="section" id="roi-system-section">
+        <div class="section-header">
+          <span class="section-title">系统投放卡片</span>
+        </div>
+        <div class="section-body">
+          <div class="roi-sys-grid" id="roi-sys-grid"></div>
+        </div>
+      </div>
 
       <!-- 结果分析 -->
-      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:16px">
-        <div class="card" style="padding:14px">
-          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">各系统投入产出分析</div>
-          <div class="tbl-wrap" style="max-height:360px;overflow:auto">
-            <table class="tbl" id="roi-results-tbl">
-              <thead><tr><th>系统</th><th>总投入</th><th>战力</th><th>每元战力</th></tr></thead>
-              <tbody></tbody>
-            </table>
+      <div class="roi-result-stack">
+        <div class="section" id="roi-results-section">
+          <div class="section-header">
+            <span class="section-title">各系统投入产出分析</span>
           </div>
-          <div class="roi-stars" id="roi-stars"></div>
+          <div class="section-body">
+            <div class="tbl-wrap" style="max-height:360px;overflow:auto">
+              <table class="tbl" id="roi-results-tbl">
+                <thead><tr><th>系统</th><th>总投入</th><th>战力</th><th>每元战力</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="roi-stars" id="roi-stars"></div>
+          </div>
         </div>
-        <div class="card" style="padding:14px">
-          <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">策略对比 — 同预算不同分配</div>
-          <div class="roi-comp-area" id="roi-comp-area">
-            <div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">尚未投资 — 点击下方卡片上的"投资"按钮开始测试</div>
+        <div class="section" id="roi-strategy-section">
+          <div class="section-header">
+            <span class="section-title">策略对比 — 同预算不同分配</span>
           </div>
-          <div id="roi-scenario-area"></div>
+          <div class="section-body">
+            <div class="roi-comp-area" id="roi-comp-area">
+              <div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">尚未投资 — 点击上方卡片上的"投资"按钮开始测试</div>
+            </div>
+            <div id="roi-scenario-area"></div>
+          </div>
         </div>
       </div>
     </div>
