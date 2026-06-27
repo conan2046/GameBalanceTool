@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.9.0 envelopes', () => {
+test('project versioning restores current v3.10.0 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.9.0 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.9.0');
+  expect(restored.to).toBe('3.10.0');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,9 +37,11 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.9.0');
-  await expect(page.locator('#app-release-name')).toHaveText('养成精炼整合版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.0');
+  await expect(page.locator('#app-release-name')).toHaveText('地图怪物占位版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
+  await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
+  await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
 
   await page.locator('.tab[data-p="panel-curve"]').click();
   await expect(page.locator('#t-curve tbody tr').first()).toBeVisible();
@@ -284,8 +286,16 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   expect(paymentDetailLayout.secondWidth).toBeGreaterThan(paymentDetailLayout.stackWidth * 0.95);
   expect(paymentDetailLayout.secondTop).toBeGreaterThan(paymentDetailLayout.firstBottom);
 
+  await page.locator('.tab[data-p="panel-map"]').click();
+  await expect(page.locator('#panel-map')).toContainText('地图模块占位');
+  await expect(page.locator('#panel-map')).toContainText('地图结构');
+
+  await page.locator('.tab[data-p="panel-monster"]').click();
+  await expect(page.locator('#panel-monster')).toContainText('怪物模块占位');
+  await expect(page.locator('#panel-monster')).toContainText('怪物模板');
+
   const forbiddenVisibleText = /ATK|DEF|HP|SPD|CRIT|CDMG|ROI|DPS|VIP|Project|Lv\./;
-  for (const panel of ['panel-attr', 'panel-matrix', 'panel-class', 'panel-cult', 'panel-res', 'panel-eco', 'panel-pack', 'panel-combat2', 'panel-payment', 'panel-roi2', 'panel-curve']) {
+  for (const panel of ['panel-attr', 'panel-matrix', 'panel-class', 'panel-cult', 'panel-res', 'panel-eco', 'panel-pack', 'panel-combat2', 'panel-payment', 'panel-map', 'panel-monster', 'panel-roi2', 'panel-curve']) {
     await page.locator(`.tab[data-p="${panel}"]`).click();
     await expect(page.locator(`#${panel}`)).not.toContainText(forbiddenVisibleText);
   }

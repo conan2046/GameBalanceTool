@@ -301,8 +301,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.9.0</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">养成精炼整合版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.0</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">地图怪物占位版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -320,6 +320,8 @@ textarea.fc{resize:vertical;min-height:70px}
     <div class="tab" data-p="panel-pack">礼包/商店</div>
     <div class="tab" data-p="panel-combat2">战斗演算</div>
     <div class="tab" data-p="panel-payment">付费模拟</div>
+    <div class="tab" data-p="panel-map">地图</div>
+    <div class="tab" data-p="panel-monster">怪物相关</div>
     <div class="tab" data-p="panel-roi2">投入回报对比</div>
     <div class="tab" data-p="panel-curve">曲线库</div>
   </div>
@@ -905,6 +907,28 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="card" style="padding:14px">
         <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">复购与付费优势风险诊断</div>
         <div id="payment-risk-list"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-map">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">地图模块占位</span>
+        </div>
+        <div class="section-body">
+          <div class="help-block">地图模块占位页，后续用于配置地图结构、区域、资源点与关卡入口。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-monster">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">怪物模块占位</span>
+        </div>
+        <div class="section-body">
+          <div class="help-block">怪物模块占位页，后续用于配置怪物模板、属性、技能、掉落与刷新规则。</div>
+        </div>
       </div>
     </div>
 

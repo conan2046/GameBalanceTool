@@ -1,8 +1,8 @@
-# GameBalanceTool V3.9.0 技术维护手册
+# GameBalanceTool V3.10.0 技术维护手册
 
 ## 1. 项目定位
 
-GameBalanceTool V3.9.0 是游戏数值模拟平台，核心目标是把属性、职业、境界、装备、养成、经济、曲线、战斗、付费模拟、ROI、多方案工程统一到一个可导入导出的本地工具内。
+GameBalanceTool V3.10.0 是游戏数值模拟平台，核心目标是把属性、职业、境界、装备、养成、经济、曲线、战斗、付费模拟、地图、怪物相关、ROI、多方案工程统一到一个可导入导出的本地工具内。
 
 当前仍是“旧 `index.html` 内联逻辑 + V3 ES Module”双轨结构，维护时必须兼顾旧 `onclick` 和 `window.xxx` 挂载。
 
@@ -40,7 +40,7 @@ tests/
 docs/
   USER_MANUAL.md            用户使用手册
   TECHNICAL_MANUAL.md       技术维护手册
-  VERSION_HISTORY.md        V3.1 到 V3.9 版本历史
+  VERSION_HISTORY.md        V3.1 到 V3.10 版本历史
 ```
 
 ## 3. 关键状态源
