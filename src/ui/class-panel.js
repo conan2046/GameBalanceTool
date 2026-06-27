@@ -69,7 +69,7 @@ function renderClassSelector() {
     <div class="class-card ${currentClass === cls.id ? 'active' : ''}" data-class-id="${cls.id}" onclick="selectClass('${cls.id}')">
       <div class="class-name">${cls.name}</div>
       <div class="class-stats">${statsHtml}</div>
-      <div style="display:flex;gap:4px;margin-top:8px;justify-content:center">
+      <div class="class-actions">
         <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editClass('${cls.id}')">编辑</button>
         <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteClass('${cls.id}')" ${CLASS_DATA.classes.length <= 1 ? 'disabled' : ''}>删除</button>
       </div>
