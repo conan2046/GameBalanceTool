@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.22 envelopes', () => {
+test('project versioning restores current v3.10.23 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.22 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.22');
+  expect(restored.to).toBe('3.10.23');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.22');
-  await expect(page.locator('#app-release-name')).toHaveText('产出模型行编辑修订版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.23');
+  await expect(page.locator('#app-release-name')).toHaveText('星级阈值配置修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -229,6 +229,24 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   const ecoOutputRowCount = await page.locator('#tbl-eco-config tbody tr').count();
   await page.locator('#tbl-eco-config button[onclick="deleteEcoOutputRow(\\\'r1\\\')"]').click();
   await expect(page.locator('#tbl-eco-config tbody tr')).toHaveCount(ecoOutputRowCount - 1);
+
+  await page.locator('.tab[data-p="panel-pack"]').click();
+  await expect(page.locator('#pack-star-config-section .section-body')).toBeVisible();
+  await expect(page.locator('#tbl-star-config')).toContainText('编辑');
+  await expect(page.locator('#tbl-star-config')).toContainText('删除');
+  await page.locator('#tbl-star-config button[onclick="editStarConfigRow(0)"]').click();
+  await page.locator('#star-min-0').fill('0.5');
+  await page.locator('#star-desc-0').fill('测试星级');
+  await page.locator('#tbl-star-config button[onclick="saveStarConfigRow(0)"]').click();
+  await expect(page.locator('#tbl-star-config')).toContainText('测试星级');
+  const starRowCount = await page.locator('#tbl-star-config tbody tr').count();
+  await page.locator('button[onclick="addStarConfigRow()"]').click();
+  await expect(page.locator('#tbl-star-config tbody tr')).toHaveCount(starRowCount + 1);
+  await page.locator(`#star-desc-${starRowCount}`).fill('新增测试档');
+  await page.locator(`#tbl-star-config button[onclick="saveStarConfigRow(${starRowCount})"]`).click();
+  await expect(page.locator('#tbl-star-config')).toContainText('新增测试档');
+  await page.locator('#tbl-star-config tbody tr').filter({ hasText: '新增测试档' }).locator('button[onclick^="deleteStarConfigRow"]').click();
+  await expect(page.locator('#tbl-star-config tbody tr')).toHaveCount(starRowCount);
 
   await page.locator('.tab[data-p="panel-combat2"]').click();
   const combatTierColors = await page.evaluate(() => (window.S.combatTiers || []).map(t => t.color));

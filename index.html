@@ -335,8 +335,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.22</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">产出模型行编辑修订版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.23</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">星级阈值配置修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -605,13 +605,22 @@ textarea.fc{resize:vertical;min-height:70px}
           </table>
         </div>
 
-        <div class="card-title" style="font-size:13px;padding:0 0 10px 0;border:none">星级倍率阈值自定义配置</div>
-        <div class="help-block" style="margin-bottom:10px;color:var(--text2);font-size:12px">直接在下表中修改各档位的倍率区间、星级数和评价描述，修改后自动生效。</div>
-        <table class="tbl" id="tbl-star-config">
-          <thead><tr><th>档位</th><th>最低倍率</th><th>最高倍率</th><th>星级数</th><th>评价描述</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div id="star-legend" style="margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:6px;font-size:12px;color:var(--text2);display:flex;gap:16px;flex-wrap:wrap;flex:1"></div>
+      </div>
+      <div class="section" id="pack-star-config-section">
+        <div class="section-header">
+          <span class="section-title">星级倍率阈值自定义配置</span>
+          <button class="btn btn-primary btn-sm" onclick="addStarConfigRow()">+ 新增档位</button>
+        </div>
+        <div class="section-body">
+          <div class="help-block" style="margin-bottom:10px;color:var(--text2);font-size:12px">配置各档位的倍率区间、星级数和评价描述，修改后自动影响礼包星级推荐。</div>
+          <div class="tbl-wrap">
+            <table class="tbl" id="tbl-star-config">
+              <thead><tr><th>档位</th><th>最低倍率</th><th>最高倍率</th><th>星级数</th><th>评价描述</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="star-legend" style="margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:6px;font-size:12px;color:var(--text2);display:flex;gap:16px;flex-wrap:wrap;flex:1"></div>
+        </div>
       </div>
     </div>
     
@@ -2297,8 +2306,8 @@ function addShopNewRow(){
 function removeShopNewRow(idx){S.shop.splice(idx,1);renderShopNewPanel();}
 function saveShopNewData(){if(typeof toast==='function')toast('礼包性价比已重算');}
 
-function renderStarConfigTable(){
-  // 确保默认值
+var editingStarConfigIndex=-1;
+function ensureStarConfig(){
   if(!S.starConfig||!S.starConfig.length)S.starConfig=[
     {min:0,max:3,stars:1,desc:'基础偏低',color:''},
     {min:3,max:6,stars:2,desc:'正常准线',color:'#74b9ff'},
@@ -2306,16 +2315,56 @@ function renderStarConfigTable(){
     {min:10,max:15,stars:4,desc:'高度推荐',color:'#ffeaa7'},
     {min:15,max:9999,stars:5,desc:'极端超值',color:'#ff7675'}
   ];
+}
+function renderStarConfigTable(){
+  ensureStarConfig();
   var tbody=document.querySelector('#tbl-star-config tbody');
   if(!tbody)return;tbody.innerHTML='';
   for(var i=0;i<S.starConfig.length;i++){
     var c=S.starConfig[i];
-    tbody.innerHTML+='<tr><td><b>'+(i+1)+'</b></td>'
-      +'<td><input type="number" step="0.1" class="fc" value="'+c.min+'" onchange="S.starConfig['+i+'].min=parseFloat(this.value);renderShopAnalysis()" style="width:80px"></td>'
-      +'<td><input type="number" step="0.1" class="fc" value="'+(c.max>=9999?9999:c.max)+'" onchange="S.starConfig['+i+'].max=parseFloat(this.value);renderShopAnalysis()" style="width:80px"></td>'
-      +'<td><input type="number" class="fc" value="'+c.stars+'" onchange="S.starConfig['+i+'].stars=parseFloat(this.value);renderShopAnalysis()" style="width:60px"></td>'
-      +'<td><input type="text" class="fc" value="'+c.desc+'" onchange="S.starConfig['+i+'].desc=this.value;renderShopAnalysis()" style="width:140px"></td></tr>';
+    if(editingStarConfigIndex===i){
+      tbody.innerHTML+='<tr><td><b>'+(i+1)+'</b></td>'
+        +'<td><input id="star-min-'+i+'" type="number" step="0.1" class="fc" value="'+c.min+'" style="width:80px;text-align:center"></td>'
+        +'<td><input id="star-max-'+i+'" type="number" step="0.1" class="fc" value="'+(c.max>=9999?9999:c.max)+'" style="width:80px;text-align:center"></td>'
+        +'<td><input id="star-count-'+i+'" type="number" class="fc" value="'+c.stars+'" style="width:60px;text-align:center"></td>'
+        +'<td><input id="star-desc-'+i+'" type="text" class="fc" value="'+c.desc+'" style="width:140px"></td>'
+        +'<td><div class="btn-group"><button class="btn btn-primary btn-xs" onclick="saveStarConfigRow('+i+')">保存</button><button class="btn btn-ghost btn-xs" onclick="cancelStarConfigEdit()">取消</button></div></td></tr>';
+    }else{
+      tbody.innerHTML+='<tr><td><b>'+(i+1)+'</b></td>'
+        +'<td>'+c.min+'</td><td>'+(c.max>=9999?9999:c.max)+'</td><td>'+c.stars+'</td><td>'+c.desc+'</td>'
+        +'<td><div class="btn-group"><button class="btn btn-ghost btn-xs" onclick="editStarConfigRow('+i+')">编辑</button><button class="btn btn-danger btn-xs" onclick="deleteStarConfigRow('+i+')">删除</button></div></td></tr>';
+    }
   }
+}
+function editStarConfigRow(i){editingStarConfigIndex=i;renderStarConfigTable();}
+function cancelStarConfigEdit(){editingStarConfigIndex=-1;renderStarConfigTable();}
+function saveStarConfigRow(i){
+  ensureStarConfig();
+  var c=S.starConfig[i];if(!c)return;
+  c.min=parseFloat(document.getElementById('star-min-'+i).value)||0;
+  c.max=parseFloat(document.getElementById('star-max-'+i).value)||0;
+  c.stars=parseInt(document.getElementById('star-count-'+i).value)||1;
+  c.desc=document.getElementById('star-desc-'+i).value||'未命名档位';
+  editingStarConfigIndex=-1;
+  S.starConfig.sort(function(a,b){return a.min-b.min;});
+  renderShopAnalysis();
+  save();
+}
+function deleteStarConfigRow(i){
+  ensureStarConfig();
+  S.starConfig.splice(i,1);
+  editingStarConfigIndex=-1;
+  renderShopAnalysis();
+  save();
+}
+function addStarConfigRow(){
+  ensureStarConfig();
+  var last=S.starConfig[S.starConfig.length-1]||{min:0,max:3,stars:1,color:'#74b9ff'};
+  var min=last.max>=9999?last.min+5:last.max;
+  S.starConfig.push({min:min,max:9999,stars:Math.min(5,(parseInt(last.stars)||1)+1),desc:'新增档位',color:last.color||'#74b9ff'});
+  editingStarConfigIndex=S.starConfig.length-1;
+  renderStarConfigTable();
+  renderStarLegend();
 }
 function renderStarLegend(){
   if(!S.starConfig||!S.starConfig.length)S.starConfig=[
@@ -3508,6 +3557,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.22"></script>
+<script type="module" src="src/index-loader.js?v=3.10.23"></script>
 </body>
 </html>
