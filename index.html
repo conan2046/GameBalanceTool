@@ -270,6 +270,8 @@ textarea.fc{resize:vertical;min-height:70px}
 .quality-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid var(--border)}
 .slot-attrs{display:grid;grid-template-columns:repeat(3,minmax(68px,1fr));gap:4px 8px;font-size:11px;color:var(--text2);line-height:1.35}
 .slot-attrs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.monster-attr-row{display:grid!important;grid-template-columns:minmax(0,1fr) 120px auto!important;gap:6px;margin-bottom:4px;align-items:center}
+.monster-attr-row .fc{font-size:12px;grid-column:auto!important}
 
 /* Combat sandbox animation */
 .battle-stage{position:relative;min-height:250px;background:radial-gradient(circle at 50% 20%,rgba(108,99,255,.16),transparent 38%),linear-gradient(180deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:14px;margin-top:10px}
@@ -350,8 +352,8 @@ textarea.fc{resize:vertical;min-height:70px}
 <body>
 <div id="app">
   <header>
-    <div class="logo">数值工具 <span id="app-version-label">v3.10.31</span></div>
-    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">怪物属性结构化版</div>
+    <div class="logo">数值工具 <span id="app-version-label">v3.10.32</span></div>
+    <div id="app-release-name" style="font-size:12px;color:var(--text3);white-space:nowrap">怪物属性横排修订版</div>
     <div id="project-title">项目：未命名游戏数值模型</div>
     <div class="header-btns">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">导出数据</button>
@@ -2158,10 +2160,9 @@ function appendMonsterAttrRow(row){
   if(!box)return;
   var item=document.createElement('div');
   item.className='monster-attr-row';
-  item.style='display:grid;grid-template-columns:1fr 120px auto;gap:6px;align-items:center';
   item.innerHTML='<select class="fc monster-attr-id">'+monsterAttrOptions(row&&row.attrId)+'</select>'
     +'<input type="number" class="fc monster-attr-val" value="'+Number((row&&row.val)||0)+'">'
-    +'<button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">删除</button>';
+    +'<div style="display:flex;gap:4px"><button class="btn btn-danger btn-xs" onclick="this.parentElement.parentElement.remove()">删除</button></div>';
   box.appendChild(item);
 }
 function addMonsterAttrRow(){
@@ -3742,6 +3743,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- v3.0 ES Module 加载桥接器：装备/经济/职业面板渲染 -->
-<script type="module" src="src/index-loader.js?v=3.10.31"></script>
+<script type="module" src="src/index-loader.js?v=3.10.32"></script>
 </body>
 </html>

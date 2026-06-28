@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createProjectEnvelope, normalizeImportedProject } from '../src/core/project-versioning.js';
 import { normalizeEquipmentLabels } from '../src/data/equipment.js';
 
-test('project versioning restores current v3.10.31 envelopes', () => {
+test('project versioning restores current v3.10.32 envelopes', () => {
   const envelope = createProjectEnvelope({
     attrs: [{ id: 'a1', name: 'attack', weight: 1 }],
     resources: [{ id: 'gold', name: 'gold', price: 1 }],
@@ -11,7 +11,7 @@ test('project versioning restores current v3.10.31 envelopes', () => {
   });
 
   const restored = normalizeImportedProject(envelope);
-  expect(restored.to).toBe('3.10.31');
+  expect(restored.to).toBe('3.10.32');
   expect(restored.data.project.schema).toBe('gbt-project');
   expect(restored.data.project.scenarios.length).toBeGreaterThan(0);
 });
@@ -37,8 +37,8 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page.locator('#app-version-label')).toHaveText('v3.10.31');
-  await expect(page.locator('#app-release-name')).toHaveText('怪物属性结构化版');
+  await expect(page.locator('#app-version-label')).toHaveText('v3.10.32');
+  await expect(page.locator('#app-release-name')).toHaveText('怪物属性横排修订版');
   await expect(page.locator('.tab[data-p="panel-curve"]')).toBeVisible();
   await expect(page.locator('.tab[data-p="panel-map"]')).toHaveText('地图');
   await expect(page.locator('.tab[data-p="panel-monster"]')).toHaveText('怪物相关');
@@ -791,6 +791,18 @@ test('main UI boots and renders v3 modules', async ({ page }) => {
   await expect(page.locator('#monster-table')).toContainText('攻击力+50；防御力+20；生命值+1000');
   await expect(page.locator('#monster-table')).toContainText('0');
   await page.locator('button[onclick="openMonsterModal()"]').click();
+  const monsterAttrLayout = await page.locator('#mm-attr-rows .monster-attr-row').first().evaluate(row => {
+    const items = Array.from(row.children).map(child => child.getBoundingClientRect());
+    const centers = items.map(item => item.top + item.height / 2);
+    return {
+      display: getComputedStyle(row).display,
+      sameRow: centers.every(center => Math.abs(center - centers[0]) < 8),
+      itemCount: items.length,
+    };
+  });
+  expect(monsterAttrLayout.display).toBe('grid');
+  expect(monsterAttrLayout.sameRow).toBe(true);
+  expect(monsterAttrLayout.itemCount).toBe(3);
   await page.locator('#mm-id').fill('10002');
   await page.locator('#mm-name').fill('测试首领');
   await page.locator('#mm-type').selectOption('3');
